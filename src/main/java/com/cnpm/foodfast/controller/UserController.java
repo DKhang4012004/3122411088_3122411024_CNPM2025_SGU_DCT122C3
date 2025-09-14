@@ -8,10 +8,7 @@ import com.cnpm.foodfast.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,10 +19,24 @@ public class UserController {
     UserService userService;
     UserMapper userMapper;
 
-    @PostMapping
+    @PostMapping({"/userCreated"})
     public APIResponse<UserResponse> createUser(@RequestBody UserCreationRequest request) {
         APIResponse<UserResponse> response = new APIResponse<>();
         response.setResult(userService.createUser(request));
         return response;
     }
+
+    @PutMapping({"/{userId}"})
+    public APIResponse<UserResponse> updateUser(@RequestBody UserCreationRequest request, @PathVariable String userId) {
+        return APIResponse.<UserResponse>builder()
+                .result(userMapper.toResponse(userService.updateUser(request, userId)))
+                .build();
+    }
+    @GetMapping({"/{userId}"})
+    public APIResponse<UserResponse> getUserById(@PathVariable String userId) {
+        return APIResponse.<UserResponse>builder()
+                .result(userService.getUserById(userId))
+                .build();
+    }
+
 }

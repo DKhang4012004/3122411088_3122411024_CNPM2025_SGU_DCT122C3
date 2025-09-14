@@ -23,6 +23,16 @@ public class UserService {
         User savedUser = userRepository.save(user);
         return mapper.toResponse(savedUser);
 
+
+    }
+    public User updateUser(UserCreationRequest request,String userid){
+        User user = userRepository.findById(userid).orElseThrow(()-> new RuntimeException("User not found"));
+        mapper.updateUser(user, request);
+        return userRepository.save(user);
+    }
+    public UserResponse getUserById(String userId){
+        User user = userRepository.findById(userId).orElseThrow(()-> new RuntimeException("User not found"));
+        return mapper.toResponse(user);
     }
 
 }
