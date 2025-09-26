@@ -1,51 +1,72 @@
 package com.cnpm.foodfast.entity;
 
 import com.cnpm.foodfast.enums.UserStatus;
+import com.cnpm.foodfast.enums.Gender;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
+@Table(name = "users")
 @Builder
 @Getter
 @Setter
-@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    Integer userId;
+    @Column(name = "id")
+    Long id;
 
-    @Column(name="username")
+    @Column(name = "username", nullable = false, unique = true, length = 50)
     String username;
 
-    @Column(name = "full_name", length = 100)
-    String fullName;
-
-    @Column(name = "email", length = 100)
+    @Column(name = "email", nullable = false, unique = true, length = 100)
     String email;
 
-    @Column(name = "phone", length = 20)
+    @Column(name = "password_hash", nullable = false, length = 255)
+    String passwordHash;
+
+    @Column(name = "full_name", nullable = false, length = 150)
+    String fullName;
+
+    @Column(name = "phone", unique = true, length = 20)
     String phone;
 
-    @Column(name = "password_hash", length = 255)
-     String password;
-
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 10)
-    UserStatus status;
+    @Column(
+            name = "status",
+            columnDefinition = "enum('ACTIVE','LOCKED','PENDING') default 'PENDING'"
+    )
+    @Builder.Default
+    UserStatus status = UserStatus.ACTIVE;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false, insertable = false)
     LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false, updatable = false)
     LocalDateTime updatedAt;
 
+    @Column(name = "date_of_birth")
+    LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", columnDefinition = "enum('MALE','FEMALE','OTHER')")
+    Gender gender;
+
+    // Many-to-Many relationship with Role through user_role table
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    Set<Roles> roles;
 }

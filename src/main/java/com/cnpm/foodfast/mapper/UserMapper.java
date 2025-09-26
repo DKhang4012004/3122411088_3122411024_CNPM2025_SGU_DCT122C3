@@ -1,25 +1,44 @@
 package com.cnpm.foodfast.mapper;
 
-import com.cnpm.foodfast.dto.request.UserCreationRequest;
-import com.cnpm.foodfast.dto.response.UserResponse;
+import com.cnpm.foodfast.dto.request.User.UserCreationRequest;
+import com.cnpm.foodfast.dto.response.User.UserResponse;
 import com.cnpm.foodfast.entity.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-@Mapper(componentModel = "spring")
+import com.cnpm.foodfast.enums.Gender;
+import org.mapstruct.*;
+import org.springframework.util.StringUtils;
+
+import java.time.LocalDate;
+
+@Mapper(componentModel = "spring", imports = {LocalDate.class, Gender.class})
 public interface UserMapper {
+
+    // Request -> Entity
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "passwordHash", source = "password") // chuyển password -> passwordHash
+    @Mapping(target = "status", ignore = true) // dùng default PENDING
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "roles", ignore = true) // roles sẽ được set riêng trong service
+    @Mapping(target = "dateOfBirth",
+            expression = "java(request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty() ? LocalDate.parse(request.getDateOfBirth()) : null)")
+    @Mapping(target = "gender",
+            expression = "java(request.getGender() != null ? Gender.valueOf(request.getGender()) : null)")
     User toUser(UserCreationRequest request);
+
+    // Entity -> Response
     UserResponse toResponse(User user);
-    @Mapping(target = "userId", ignore = true)
+
+    // Update entity từ request (patch)
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "username", ignore = true)
+    @Mapping(target = "passwordHash", source = "password")
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-
+    @Mapping(target = "roles", ignore = true) // roles không được update qua method này
+    @Mapping(target = "dateOfBirth",
+            expression = "java(request.getDateOfBirth() != null && !request.getDateOfBirth().isEmpty() ? LocalDate.parse(request.getDateOfBirth()) : null)")
+    @Mapping(target = "gender",
+            expression = "java(request.getGender() != null ? Gender.valueOf(request.getGender()) : null)")
     void updateUser(@MappingTarget User user, UserCreationRequest request);
-
 }
-

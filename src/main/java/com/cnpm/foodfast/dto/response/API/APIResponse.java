@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.dto.response;
+package com.cnpm.foodfast.dto.response.API;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
