@@ -22,7 +22,7 @@ public class Store {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    Long Id;
+    Long id;
 
     @Column(name = "owner_user_id")
     Long ownerUserId;

@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StoreResponse {
-    Long Id;
+    Long id;
     Long ownerUserId;
 
     String name;
