@@ -1,8 +1,11 @@
 package com.cnpm.foodfast.mapper;
 
 import com.cnpm.foodfast.dto.request.User.UserCreationRequest;
+import com.cnpm.foodfast.dto.request.User.UserAddressCreationRequest;
 import com.cnpm.foodfast.dto.response.User.UserResponse;
+import com.cnpm.foodfast.dto.response.User.UserAddressResponse;
 import com.cnpm.foodfast.entity.User;
+import com.cnpm.foodfast.entity.UserAddress;
 import com.cnpm.foodfast.enums.Gender;
 import org.mapstruct.*;
 import org.springframework.util.StringUtils;
@@ -15,7 +18,7 @@ public interface UserMapper {
     // Request -> Entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "passwordHash", source = "password") // chuyển password -> passwordHash
-    @Mapping(target = "status", ignore = true) // dùng default PENDING
+    @Mapping(target = "status", ignore = true) // dùng default Active
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "roles", ignore = true) // roles sẽ được set riêng trong service
@@ -41,4 +44,16 @@ public interface UserMapper {
     @Mapping(target = "gender",
             expression = "java(request.getGender() != null ? Gender.valueOf(request.getGender()) : null)")
     void updateUser(@MappingTarget User user, UserCreationRequest request);
+
+    // UserAddress mapping methods
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true) // will be set in service
+    UserAddress toUserAddress(UserAddressCreationRequest request);
+
+    UserAddressResponse toUserAddressResponse(UserAddress userAddress);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    void updateUserAddress(@MappingTarget UserAddress userAddress, UserAddressCreationRequest request);
 }
+
