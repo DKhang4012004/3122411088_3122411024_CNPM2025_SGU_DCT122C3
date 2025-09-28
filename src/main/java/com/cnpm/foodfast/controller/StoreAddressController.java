@@ -5,7 +5,9 @@ import com.cnpm.foodfast.dto.response.API.APIResponse;
 import com.cnpm.foodfast.dto.response.store.StoreAddressResponse;
 import com.cnpm.foodfast.service.StoreAddressImpl;
 import com.cnpm.foodfast.service.impl.StoreAddressService;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,9 +15,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/stores/{storeId}/addresses")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class StoreAddressController {
 
-    private final StoreAddressImpl storeAddressService;
+    StoreAddressImpl storeAddressService;
 
     @PostMapping
     public APIResponse<StoreAddressResponse> create(@PathVariable Long storeId, @RequestBody StoreAddressRequest request) {
