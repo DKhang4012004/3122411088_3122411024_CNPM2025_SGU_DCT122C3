@@ -2,8 +2,11 @@ package com.cnpm.foodfast.controller;
 
 import com.cnpm.foodfast.dto.request.Auth.LoginRequest;
 import com.cnpm.foodfast.dto.request.Auth.LogoutRequest;
+import com.cnpm.foodfast.dto.request.Auth.SignUpRequest;
+import com.cnpm.foodfast.dto.request.User.UserCreationRequest;
 import com.cnpm.foodfast.dto.response.API.APIResponse;
 import com.cnpm.foodfast.dto.response.Auth.AuthenticationResponse;
+import com.cnpm.foodfast.dto.response.User.UserResponse;
 import com.cnpm.foodfast.service.AuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,20 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
 
     AuthenticationService authenticationService;
+
+    @PostMapping("/signup")
+    public APIResponse<UserResponse> signUp(@RequestBody SignUpRequest request) {
+        APIResponse<UserResponse> response = new APIResponse<>();
+        try {
+            UserResponse userResponse = authenticationService.signUp(request);
+            response.setResult(userResponse);
+            response.setMessage("User registered successfully");
+        } catch (Exception e) {
+            response.setMessage(e.getMessage());
+            response.setCode(400);
+        }
+        return response;
+    }
 
     @PostMapping("/login")
     public APIResponse<AuthenticationResponse> login(@RequestBody LoginRequest request) {
