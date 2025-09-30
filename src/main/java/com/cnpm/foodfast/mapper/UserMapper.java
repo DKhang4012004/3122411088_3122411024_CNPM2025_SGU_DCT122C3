@@ -56,3 +56,4 @@ public interface UserMapper {
     @Mapping(target = "user", ignore = true)
     void updateUserAddress(@MappingTarget UserAddress userAddress, UserAddressCreationRequest request);
 }
+

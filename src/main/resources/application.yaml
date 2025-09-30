@@ -21,4 +21,4 @@ spring:
         format_sql: true
 
 jwt:
-  signerKey: "wXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9Dez"
+  signerKey: "wXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezwXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezABCDEFGHIJKLMNOPQRSTUVWXYZ"

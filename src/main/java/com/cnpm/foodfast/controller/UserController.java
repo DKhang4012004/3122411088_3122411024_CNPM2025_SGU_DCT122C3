@@ -89,7 +89,7 @@ public class UserController {
 
     @PutMapping("/{userId}/addresses/{addressId}/set-default")
     public APIResponse<UserAddressResponse> setDefaultAddress(@PathVariable Long userId,
-                                                              @PathVariable Long addressId) {
+                                                             @PathVariable Long addressId) {
         APIResponse<UserAddressResponse> response = new APIResponse<>();
         response.setResult(userService.setDefaultAddress(userId, addressId));
         return response;

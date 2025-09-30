@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -69,4 +70,8 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     Set<Roles> roles;
+
+    // One-to-Many relationship with UserAddress
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    List<UserAddress> addresses;
 }
