@@ -57,7 +57,7 @@ public class UserController {
     // User Address endpoints
     @PostMapping("/{userId}/addresses")
     public APIResponse<UserAddressResponse> addAddress(@PathVariable Long userId,
-                                                      @RequestBody UserAddressCreationRequest request) {
+                                                       @RequestBody UserAddressCreationRequest request) {
         APIResponse<UserAddressResponse> response = new APIResponse<>();
         response.setResult(userService.addAddress(userId, request));
         return response;
@@ -72,8 +72,8 @@ public class UserController {
 
     @PutMapping("/{userId}/addresses/{addressId}")
     public APIResponse<UserAddressResponse> updateAddress(@PathVariable Long userId,
-                                                         @PathVariable Long addressId,
-                                                         @RequestBody UserAddressCreationRequest request) {
+                                                          @PathVariable Long addressId,
+                                                          @RequestBody UserAddressCreationRequest request) {
         APIResponse<UserAddressResponse> response = new APIResponse<>();
         response.setResult(userService.updateAddress(userId, addressId, request));
         return response;

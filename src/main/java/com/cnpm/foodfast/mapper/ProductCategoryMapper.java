@@ -1,0 +1,39 @@
+package com.cnpm.foodfast.mapper;
+
+
+import com.cnpm.foodfast.dto.request.category.ProductCategoryRequest;
+import com.cnpm.foodfast.dto.response.category.ProductCategoryResponse;
+import com.cnpm.foodfast.entity.ProductCategory;
+import com.cnpm.foodfast.enums.CategoryStatus;
+import org.mapstruct.*;
+
+import java.util.List;
+
+@Mapper(componentModel = "spring")
+public interface ProductCategoryMapper {
+
+    // Map từ request -> entity (create)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "parent", ignore = true) // xử lý parent thủ công trong service
+    @Mapping(target = "status", expression = "java(mapStatus(request.getStatus()))")
+    ProductCategory toProductCategory(ProductCategoryRequest request);
+
+
+    @Mapping(target = "parentId", source = "parent.id")
+    @Mapping(target = "status", expression = "java(entity.getStatus().name())")
+    ProductCategoryResponse toProductCategoryResponse(ProductCategory entity);
+
+    List<ProductCategoryResponse> toProductCategoryResponse(List<ProductCategory> entityList);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE) //nếu null thì giữ nguyên
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "parent", ignore = true)
+    @Mapping(target = "status", expression = "java(request.getStatus() != null ? mapStatus(request.getStatus()) : productCategory.getStatus())")
+    void updateProductCategory(@MappingTarget ProductCategory productCategory, ProductCategoryRequest request);
+
+
+    default CategoryStatus mapStatus(String status) {
+        if (status == null) return CategoryStatus.ACTIVE;
+        return CategoryStatus.valueOf(status.toUpperCase());
+    }
+}

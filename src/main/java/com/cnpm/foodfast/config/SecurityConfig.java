@@ -28,18 +28,18 @@ public class SecurityConfig {
                 .requestMatchers("/auth/login", "/auth/refresh","/auth/signup").permitAll()
                 .requestMatchers("/users/userCreated").permitAll()
 
-                // Admin only endpoints
-                .requestMatchers("/users/getAllUser").hasRole("ADMIN")
-                .requestMatchers("/users/deleteUser/**").hasRole("ADMIN")
+                        // Admin only endpoints
+                        .requestMatchers("/users/getAllUser").hasRole("ADMIN")
+                        .requestMatchers("/users/deleteUser/**").hasRole("ADMIN")
 
-                // Authenticated user endpoints
-                .requestMatchers("/users/**").authenticated()
-                .requestMatchers("/auth/logout", "/auth/validate").authenticated()
+                        // Authenticated user endpoints
+                        .requestMatchers("/users/**").authenticated()
+                        .requestMatchers("/auth/logout", "/auth/validate").authenticated()
 
-                // All other requests need authentication
-                //.anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                        // All other requests need authentication
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

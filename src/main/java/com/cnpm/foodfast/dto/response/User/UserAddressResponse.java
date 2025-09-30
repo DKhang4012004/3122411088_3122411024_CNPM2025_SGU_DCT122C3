@@ -24,4 +24,3 @@ public class UserAddressResponse {
     BigDecimal longitude;
     Boolean isDefault;
 }
-
