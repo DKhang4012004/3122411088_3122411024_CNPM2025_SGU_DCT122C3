@@ -25,7 +25,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
-                .requestMatchers("/auth/login", "/auth/refresh","/auth/signup").permitAll()
+                .requestMatchers("/auth/login", "/auth/refresh","/auth/signup","/products","/category","/stores","/location","/storesaddresses").permitAll()
                 .requestMatchers("/users/userCreated").permitAll()
 
                         // Admin only endpoints
@@ -37,7 +37,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/logout", "/auth/validate").authenticated()
 
                         // All other requests need authentication
-                        .anyRequest().authenticated()
+                       // .anyRequest().authenticated()
+                            .anyRequest().permitAll()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

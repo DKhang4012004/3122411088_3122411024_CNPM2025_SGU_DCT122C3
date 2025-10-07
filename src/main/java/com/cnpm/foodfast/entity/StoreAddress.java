@@ -3,7 +3,6 @@ package com.cnpm.foodfast.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,7 +14,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StoreAddress {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -28,16 +26,16 @@ public class StoreAddress {
     @Column(name = "address_line", nullable = false)
     String addressLine;
 
-    @Column(name = "city")
-    String city;
-
-    @Column(name = "district")
-    String district;
-
-    @Column(name = "ward")
+    @Column(name = "ward", length = 255)
     String ward;
 
-    @Column(name = "country")
+    @Column(name = "district", length = 255)
+    String district;
+
+    @Column(name = "city", length = 255)
+    String city;
+
+    @Column(name = "country", length = 255)
     String country;
 
     @Column(name = "latitude")
@@ -46,5 +44,12 @@ public class StoreAddress {
     @Column(name = "longitude")
     Double longitude;
 
+    @Column(name = "flightCorridorRadius")
+    Double flightCorridorRadius; // Bán kính hành lang bay an toàn (km)
 
+    @Column(name = "updated_at",updatable = false, insertable = false)
+    LocalDateTime updatedAt;
+
+    @Column(name = "created_at",updatable = false, insertable = false)
+    LocalDateTime createdAt;
 }
