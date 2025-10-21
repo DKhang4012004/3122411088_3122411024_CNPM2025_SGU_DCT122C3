@@ -6,6 +6,8 @@ import com.cnpm.foodfast.dto.response.product.ProductResponse;
 import com.cnpm.foodfast.entity.Product;
 import com.cnpm.foodfast.entity.ProductCategory;
 import com.cnpm.foodfast.enums.ProductStatus;
+import com.cnpm.foodfast.exception.AppException;
+import com.cnpm.foodfast.exception.ErrorCode;
 import com.cnpm.foodfast.mapper.ProductMapper;
 import com.cnpm.foodfast.repository.ProductRepository;
 import com.cnpm.foodfast.service.impl.ProductService;
@@ -34,7 +36,7 @@ public class ProductServiceImpl  implements ProductService {
 
     @Override
     public ProductResponse update(Long productId, ProductRequest request) {
-        Product product= productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+        Product product= productRepository.findById(productId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
         productMapper.updateProduct(request,product);
 
         if (request.getCategoryId() != null) {
@@ -51,14 +53,14 @@ public class ProductServiceImpl  implements ProductService {
 
     @Override
     public void delete(Long productId) {
-        Product product= productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+        Product product= productRepository.findById(productId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
         productRepository.delete(product);
 
     }
 
     @Override
     public ProductResponse getById(Long productId) {
-        Product product= productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product not found"));
+        Product product= productRepository.findById(productId).orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
         return productMapper.toProductResponse(product);
 
     }

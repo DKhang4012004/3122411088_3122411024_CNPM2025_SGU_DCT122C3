@@ -5,6 +5,8 @@ import com.cnpm.foodfast.dto.request.category.ProductCategoryRequest;
 import com.cnpm.foodfast.dto.response.category.ProductCategoryResponse;
 import com.cnpm.foodfast.entity.ProductCategory;
 import com.cnpm.foodfast.enums.CategoryStatus;
+import com.cnpm.foodfast.exception.AppException;
+import com.cnpm.foodfast.exception.ErrorCode;
 import com.cnpm.foodfast.mapper.ProductCategoryMapper;
 import com.cnpm.foodfast.repository.ProductCategoryRepository;
 import com.cnpm.foodfast.service.impl.ProductCategoryService;
@@ -28,7 +30,7 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
         if (request.getParentId() != null) {
             ProductCategory parent = productCategoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.PARENT_CATEGORY_NOT_EXISTED));
             productCategory.setParent(parent);
 
             productCategory.setLevel((byte) (parent.getLevel() + 1));
@@ -57,13 +59,13 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
     @Override
     public ProductCategoryResponse updateCategory(Long id, ProductCategoryRequest request) {
         ProductCategory productCategory = productCategoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED));
 
         productCategoryMapper.updateProductCategory(productCategory, request);
 
         if (request.getParentId() != null) {
             ProductCategory parent = productCategoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new RuntimeException("Parent category not found"));
+                    .orElseThrow(() ->new AppException(ErrorCode.PARENT_CATEGORY_NOT_EXISTED));
             productCategory.setParent(parent);
 
             productCategory.setLevel((byte) (parent.getLevel() + 1));

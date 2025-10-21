@@ -4,6 +4,8 @@ import com.cnpm.foodfast.dto.request.store.StoreRequest;
 import com.cnpm.foodfast.dto.response.store.StoreResponse;
 import com.cnpm.foodfast.entity.Store;
 import com.cnpm.foodfast.enums.StoreStatus;
+import com.cnpm.foodfast.exception.AppException;
+import com.cnpm.foodfast.exception.ErrorCode;
 import com.cnpm.foodfast.mapper.StoreMapper;
 import com.cnpm.foodfast.repository.StoreRepository;
 import com.cnpm.foodfast.service.impl.StoreService;
@@ -36,7 +38,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreResponse updateStore(Long storeId, StoreRequest request) {
-        Store store= storeRepository.findById(storeId).orElseThrow(()-> new RuntimeException("store Id not found"));
+        Store store= storeRepository.findById(storeId).orElseThrow(()-> new AppException(ErrorCode.STORE_NOT_EXISTED));
         storeMapper.updateStore(store,request);
         return storeMapper.toStoreResponse(store);
 
@@ -44,7 +46,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreResponse deleteStore(Long storeId) {
-        Store store= storeRepository.findById(storeId).orElseThrow(()-> new RuntimeException("store Id not found"));
+        Store store= storeRepository.findById(storeId).orElseThrow(()->  new AppException(ErrorCode.STORE_NOT_EXISTED));
         StoreResponse storeResponse = storeMapper.toStoreResponse(store);
         storeRepository.delete(store);
         return storeResponse;
@@ -53,7 +55,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreResponse changeStatus(Long storeId, StoreStatus status) {
-        Store store= storeRepository.findById(storeId).orElseThrow(() -> new RuntimeException("store Id not found"));
+        Store store= storeRepository.findById(storeId).orElseThrow(() ->  new AppException(ErrorCode.STORE_NOT_EXISTED));
         store.setStoreStatus(status);
         store=storeRepository.save(store);
         return storeMapper.toStoreResponse(store);
@@ -61,7 +63,7 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public StoreResponse getStoreById(Long storeId) {
-        Store store= storeRepository.findById(storeId).orElseThrow(() -> new RuntimeException("store Id not found"));
+        Store store= storeRepository.findById(storeId).orElseThrow(() ->  new AppException(ErrorCode.STORE_NOT_EXISTED));
         return storeMapper.toStoreResponse(store);
     }
 

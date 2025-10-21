@@ -14,6 +14,8 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(9999, "Uncategorized exception", HttpStatus.INTERNAL_SERVER_ERROR),
     UNAUTHENTICATED(1012, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     USERNAME_INVALID(1003, "Username at must be at least 5 characters", HttpStatus.BAD_REQUEST),
+    INVALID_ROLE(1023, "Invalid role", HttpStatus.BAD_REQUEST),
+    ADDREESS_NOT_EXISTED(1024, "Address not existed", HttpStatus.NOT_FOUND),
     PASSWORD_INVALID(1004, "Password at must be at least 6 characters", HttpStatus.BAD_REQUEST),
     PHONENUMBER_INVALID(1005, "Phone number invalid", HttpStatus.BAD_REQUEST),
     INVALID_KEY(1006, "Invalid message key", HttpStatus.BAD_REQUEST),
@@ -33,6 +35,11 @@ public enum ErrorCode {
     NOT_FOUND_ITEM(1021, " Not found", HttpStatus.NOT_FOUND),
     NOT_FOUND_ORDER(1022, " Not found", HttpStatus.NOT_FOUND),
     EMPTY_CART(1020, "you haven't product in your  cart", HttpStatus.NOT_FOUND),
+    STORE_NOT_EXISTED(1026, "Store not existed", HttpStatus.NOT_FOUND),
+    UNAUTHORIZED_ADDRESS_ACCESS(1025, "Address does not belong to the specified user", HttpStatus.FORBIDDEN),
+    PRODUCT_NOT_EXISTED(1027, "Product not existed", HttpStatus.NOT_FOUND),
+    CATEGORY_NOT_EXISTED(1028, "Category not existed", HttpStatus.NOT_FOUND),
+    PARENT_CATEGORY_NOT_EXISTED(1029, "Parent Category not existed", HttpStatus.NOT_FOUND),
     INVALID_DOB(1010, "Invalid Dob", HttpStatus.BAD_REQUEST);
 
 

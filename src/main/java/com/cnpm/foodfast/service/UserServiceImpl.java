@@ -8,6 +8,8 @@ import com.cnpm.foodfast.entity.Roles;
 import com.cnpm.foodfast.entity.User;
 import com.cnpm.foodfast.entity.UserAddress;
 import com.cnpm.foodfast.enums.UserStatus;
+import com.cnpm.foodfast.exception.AppException;
+import com.cnpm.foodfast.exception.ErrorCode;
 import com.cnpm.foodfast.mapper.UserMapper;
 import com.cnpm.foodfast.repository.RoleRepository;
 import com.cnpm.foodfast.repository.UserAddressRepository;
@@ -50,7 +52,7 @@ public class UserServiceImpl implements UserService {
             Set<Roles> roles = new HashSet<>();
             for (Long roleId : request.getRoleIds()) {
                 Roles role = roleRepository.findById(roleId)
-                        .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
+                        .orElseThrow(() -> new AppException(ErrorCode.INVALID_ROLE));
                 roles.add(role);
             }
             user.setRoles(roles);
@@ -63,7 +65,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse updateUser(UserCreationRequest request, String userId) {
         User user = userRepository.findById(Long.valueOf(userId))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         // Update các field cơ bản
         mapper.updateUser(user, request);
@@ -78,7 +80,7 @@ public class UserServiceImpl implements UserService {
             Set<Roles> roles = new HashSet<>();
             for (Long roleId : request.getRoleIds()) {
                 Roles role = roleRepository.findById(roleId)
-                        .orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
+                        .orElseThrow(() -> new  AppException(ErrorCode.INVALID_ROLE));
                 roles.add(role);
             }
             user.setRoles(roles);
@@ -91,14 +93,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getUserById(String userId) {
         User user = userRepository.findById(Long.valueOf(userId))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         return mapper.toResponse(user);
     }
 
     @Override
     public String deleteUser(String userId) {
         User user = userRepository.findById(Long.valueOf(userId))
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         userRepository.delete(user);
         return "User deleted successfully";
     }
@@ -116,7 +118,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserAddressResponse addAddress(Long userId, UserAddressCreationRequest request) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         UserAddress userAddress = mapper.toUserAddress(request);
         userAddress.setUser(user);
@@ -141,7 +143,7 @@ public class UserServiceImpl implements UserService {
     public List<UserAddressResponse> getUserAddresses(Long userId) {
         // Verify user exists
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new  AppException(ErrorCode.USER_NOT_EXISTED));
 
         List<UserAddress> addresses = userAddressRepository.findByUserId(userId);
         return addresses.stream()
@@ -154,14 +156,14 @@ public class UserServiceImpl implements UserService {
     public UserAddressResponse updateAddress(Long userId, Long addressId, UserAddressCreationRequest request) {
         // Verify user exists
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new  AppException(ErrorCode.USER_NOT_EXISTED));
 
         UserAddress userAddress = userAddressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new  AppException(ErrorCode.ADDREESS_NOT_EXISTED));
 
         // Verify that the address belongs to the user
         if (!userAddress.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Address does not belong to the specified user");
+            throw new  AppException(ErrorCode.UNAUTHORIZED_ADDRESS_ACCESS);
         }
 
         // Update the address fields
@@ -182,14 +184,14 @@ public class UserServiceImpl implements UserService {
     public void deleteAddress(Long userId, Long addressId) {
         // Verify user exists
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new  AppException(ErrorCode.USER_NOT_EXISTED));
 
         UserAddress userAddress = userAddressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new  AppException(ErrorCode.ADDREESS_NOT_EXISTED));
 
         // Verify that the address belongs to the user
         if (!userAddress.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Address does not belong to the specified user");
+            throw new  AppException(ErrorCode.UNAUTHORIZED_ADDRESS_ACCESS);
         }
 
         boolean wasDefault = userAddress.getIsDefault();
@@ -211,14 +213,14 @@ public class UserServiceImpl implements UserService {
     public UserAddressResponse setDefaultAddress(Long userId, Long addressId) {
         // Verify user exists
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new  AppException(ErrorCode.USER_NOT_EXISTED));
 
         UserAddress userAddress = userAddressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("Address not found with id: " + addressId));
+                .orElseThrow(() -> new  AppException(ErrorCode.ADDREESS_NOT_EXISTED));
 
         // Verify that the address belongs to the user
         if (!userAddress.getUser().getId().equals(userId)) {
-            throw new RuntimeException("Address does not belong to the specified user");
+            throw new AppException(ErrorCode.UNAUTHORIZED_ADDRESS_ACCESS);
         }
 
         // Clear existing default and set new default
@@ -233,10 +235,10 @@ public class UserServiceImpl implements UserService {
     public UserAddressResponse getDefaultAddress(Long userId) {
         // Verify user exists
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new  AppException(ErrorCode.USER_NOT_EXISTED));
 
         UserAddress defaultAddress = userAddressRepository.findByUserIdAndIsDefaultTrue(userId)
-                .orElseThrow(() -> new RuntimeException("No default address found for user"));
+                .orElseThrow(() -> new  AppException(ErrorCode.ADDREESS_NOT_EXISTED));
 
         return mapper.toUserAddressResponse(defaultAddress);
     }
