@@ -17,4 +17,5 @@ public class StoreAddressResponse {
     private Double latitude;
     private Double longitude;
     private Long storeId;
+    private Double Distanct;
 }

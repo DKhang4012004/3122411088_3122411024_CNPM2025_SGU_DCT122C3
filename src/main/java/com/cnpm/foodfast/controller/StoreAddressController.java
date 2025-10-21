@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stores/{storeId}/addresses")
+@RequestMapping("/storesaddresses")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class StoreAddressController {
 
     StoreAddressImpl storeAddressService;
 
-    @PostMapping
+    @PostMapping("{storeId}/addresses")
     public APIResponse<StoreAddressResponse> create(@PathVariable Long storeId, @RequestBody StoreAddressRequest request) {
         return APIResponse.<StoreAddressResponse>builder()
                 .result(storeAddressService.createAddress(storeId, request))
