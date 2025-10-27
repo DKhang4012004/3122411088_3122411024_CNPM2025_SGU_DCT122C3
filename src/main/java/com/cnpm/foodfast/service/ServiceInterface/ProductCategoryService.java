@@ -1,8 +1,7 @@
-package com.cnpm.foodfast.service.impl;
+package com.cnpm.foodfast.service.ServiceInterface;
 
 import com.cnpm.foodfast.dto.request.category.ProductCategoryRequest;
 import com.cnpm.foodfast.dto.response.category.ProductCategoryResponse;
-import com.cnpm.foodfast.entity.ProductCategory;
 
 import java.util.List;
 

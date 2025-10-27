@@ -40,6 +40,7 @@ public enum ErrorCode {
     PRODUCT_NOT_EXISTED(1027, "Product not existed", HttpStatus.NOT_FOUND),
     CATEGORY_NOT_EXISTED(1028, "Category not existed", HttpStatus.NOT_FOUND),
     PARENT_CATEGORY_NOT_EXISTED(1029, "Parent Category not existed", HttpStatus.NOT_FOUND),
+    USER_DEFAULT_ADDRESS_NOT_FOUND(1030, "User default address not found", HttpStatus.NOT_FOUND),
     INVALID_DOB(1010, "Invalid Dob", HttpStatus.BAD_REQUEST);
 
 

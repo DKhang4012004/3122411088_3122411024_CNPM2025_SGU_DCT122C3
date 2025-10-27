@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.service;
+package com.cnpm.foodfast.service.impl;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

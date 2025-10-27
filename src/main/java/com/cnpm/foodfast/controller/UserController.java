@@ -5,7 +5,7 @@ import com.cnpm.foodfast.dto.request.User.UserCreationRequest;
 import com.cnpm.foodfast.dto.response.API.APIResponse;
 import com.cnpm.foodfast.dto.response.User.UserAddressResponse;
 import com.cnpm.foodfast.dto.response.User.UserResponse;
-import com.cnpm.foodfast.service.UserService;
+import com.cnpm.foodfast.service.ServiceInterface.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

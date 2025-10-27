@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.service;
+package com.cnpm.foodfast.service.impl;
 
 
 import com.cnpm.foodfast.dto.request.category.ProductCategoryRequest;
@@ -9,7 +9,7 @@ import com.cnpm.foodfast.exception.AppException;
 import com.cnpm.foodfast.exception.ErrorCode;
 import com.cnpm.foodfast.mapper.ProductCategoryMapper;
 import com.cnpm.foodfast.repository.ProductCategoryRepository;
-import com.cnpm.foodfast.service.impl.ProductCategoryService;
+import com.cnpm.foodfast.service.ServiceInterface.ProductCategoryService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

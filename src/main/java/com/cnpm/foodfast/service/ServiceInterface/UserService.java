@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.service;
+package com.cnpm.foodfast.service.ServiceInterface;
 
 import com.cnpm.foodfast.dto.request.User.UserAddressCreationRequest;
 import com.cnpm.foodfast.dto.request.User.UserCreationRequest;

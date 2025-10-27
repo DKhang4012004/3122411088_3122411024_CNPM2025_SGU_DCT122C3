@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.service.impl;
+package com.cnpm.foodfast.service.ServiceInterface;
 
 import com.cnpm.foodfast.dto.request.store.StoreRequest;
 import com.cnpm.foodfast.dto.response.store.StoreResponse;
@@ -15,4 +15,6 @@ public interface StoreService {
     StoreResponse changeStatus(Long storeId, StoreStatus status);
     StoreResponse getStoreById(Long storeId);
     List<StoreResponse> getAllStores(); // filter theo status
+
+    List<StoreResponse> getSuggestedStoresForUser(Long userId);
 }

@@ -8,7 +8,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // Import này rất quan trọng
 
 @Configuration
 @EnableWebSecurity
@@ -16,17 +16,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    // 💡 Thêm JwtAuthenticationFilter vào đây
+    private final JwtAuthenticationFilter jwtAuthFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers("/auth/login", "/auth/refresh","/auth/signup","/products","/category","/stores","/location","/storesaddresses").permitAll()
-                .requestMatchers("/users/userCreated").permitAll()
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints - completely bypass security
+                        .requestMatchers("/home/auth/**").permitAll()
+                        .requestMatchers("/home/products/**").permitAll()
+                        .requestMatchers("/home/category/**").permitAll()
+                        .requestMatchers("/home/stores/**").permitAll()
+                        .requestMatchers("/home/storesaddresses/**").permitAll()
+                        .requestMatchers("/home/users/userCreated").permitAll()
+                        .requestMatchers("/home/cart/**").permitAll() // For testing cart endpoints
 
                         // Admin only endpoints
                         .requestMatchers("/users/getAllUser").hasRole("ADMIN")
@@ -34,13 +40,12 @@ public class SecurityConfig {
 
                         // Authenticated user endpoints
                         .requestMatchers("/users/**").authenticated()
-                        .requestMatchers("/auth/logout", "/auth/validate").authenticated()
 
-                        // All other requests need authentication
-                       // .anyRequest().authenticated()
-                            .anyRequest().permitAll()
+                        // All other requests are permitted for now
+                        .anyRequest().permitAll()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // 🎯 Bổ sung dòng này để đăng ký JWT Filter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

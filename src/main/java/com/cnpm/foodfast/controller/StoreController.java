@@ -3,8 +3,7 @@ package com.cnpm.foodfast.controller;
 import com.cnpm.foodfast.dto.request.store.StoreRequest;
 import com.cnpm.foodfast.dto.response.API.APIResponse;
 import com.cnpm.foodfast.dto.response.store.StoreResponse;
-import com.cnpm.foodfast.service.StoreServiceImpl;
-import com.cnpm.foodfast.service.impl.StoreService;
+import com.cnpm.foodfast.service.impl.StoreServiceImpl;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -54,6 +53,13 @@ public class StoreController {
     public APIResponse<List<StoreResponse>> getAllStores(){
         return APIResponse.<List<StoreResponse>>builder()
                 .result(storeService.getAllStores())
+                .build();
+    }
+
+    @GetMapping("/suggestions/{userId}")
+    public APIResponse<List<StoreResponse>> getSuggestedStoresForUser(@PathVariable Long userId) {
+        return APIResponse.<List<StoreResponse>>builder()
+                .result(storeService.getSuggestedStoresForUser(userId))
                 .build();
     }
 }

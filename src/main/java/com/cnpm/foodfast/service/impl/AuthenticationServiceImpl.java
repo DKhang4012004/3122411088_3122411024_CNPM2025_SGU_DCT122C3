@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.service;
+package com.cnpm.foodfast.service.impl;
 
 import com.cnpm.foodfast.config.JwtAuthenticationFilter;
 import com.cnpm.foodfast.dto.request.Auth.LoginRequest;
@@ -12,7 +12,7 @@ import com.cnpm.foodfast.enums.UserStatus;
 import com.cnpm.foodfast.mapper.UserMapper;
 import com.cnpm.foodfast.repository.RoleRepository;
 import com.cnpm.foodfast.repository.UserRepository;
-import lombok.AccessLevel;
+import com.cnpm.foodfast.service.ServiceInterface.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;

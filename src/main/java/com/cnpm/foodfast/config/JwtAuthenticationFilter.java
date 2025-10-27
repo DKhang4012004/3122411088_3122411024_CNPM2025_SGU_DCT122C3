@@ -1,6 +1,6 @@
 package com.cnpm.foodfast.config;
 
-import com.cnpm.foodfast.service.JwtService;
+import com.cnpm.foodfast.service.impl.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

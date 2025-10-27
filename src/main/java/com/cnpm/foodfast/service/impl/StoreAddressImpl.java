@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.service;
+package com.cnpm.foodfast.service.impl;
 
 import com.cnpm.foodfast.dto.request.store.StoreAddressRequest;
 import com.cnpm.foodfast.dto.response.store.StoreAddressResponse;

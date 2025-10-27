@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.service;
+package com.cnpm.foodfast.service.impl;
 
 import com.cnpm.foodfast.dto.request.User.UserAddressCreationRequest;
 import com.cnpm.foodfast.dto.request.User.UserCreationRequest;
@@ -14,6 +14,7 @@ import com.cnpm.foodfast.mapper.UserMapper;
 import com.cnpm.foodfast.repository.RoleRepository;
 import com.cnpm.foodfast.repository.UserAddressRepository;
 import com.cnpm.foodfast.repository.UserRepository;
+import com.cnpm.foodfast.service.ServiceInterface.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

@@ -1,8 +1,7 @@
-package com.cnpm.foodfast.service;
+package com.cnpm.foodfast.service.ServiceInterface;
 
 import com.cnpm.foodfast.dto.request.Auth.LoginRequest;
 import com.cnpm.foodfast.dto.request.Auth.SignUpRequest;
-import com.cnpm.foodfast.dto.request.User.UserCreationRequest;
 import com.cnpm.foodfast.dto.response.Auth.AuthenticationResponse;
 import com.cnpm.foodfast.dto.response.User.UserResponse;
 
