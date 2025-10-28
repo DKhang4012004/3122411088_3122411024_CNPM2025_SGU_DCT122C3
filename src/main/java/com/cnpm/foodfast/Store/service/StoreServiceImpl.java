@@ -1,0 +1,74 @@
+package com.cnpm.foodfast.Store.service;
+
+import com.cnpm.foodfast.dto.request.store.StoreRequest;
+import com.cnpm.foodfast.dto.response.store.StoreResponse;
+import com.cnpm.foodfast.entity.Store;
+import com.cnpm.foodfast.enums.StoreStatus;
+import com.cnpm.foodfast.exception.AppException;
+import com.cnpm.foodfast.exception.ErrorCode;
+import com.cnpm.foodfast.mapper.StoreMapper;
+import com.cnpm.foodfast.Store.repository.StoreRepository;
+import jakarta.transaction.Transactional;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class StoreServiceImpl implements StoreService {
+
+    StoreMapper storeMapper;
+    StoreRepository storeRepository;
+
+    @Override
+    @Transactional
+    public StoreResponse createStore(StoreRequest request) {
+        Store store = storeMapper.toStore(request);
+
+        store.setStoreStatus(StoreStatus.ACTIVE);
+        store=storeRepository.save(store);
+
+        return storeMapper.toStoreResponse(store);
+    }
+
+    @Override
+    public StoreResponse updateStore(Long storeId, StoreRequest request) {
+        Store store= storeRepository.findById(storeId).orElseThrow(()-> new AppException(ErrorCode.STORE_NOT_EXISTED));
+        storeMapper.updateStore(store,request);
+        return storeMapper.toStoreResponse(store);
+
+    }
+
+    @Override
+    public StoreResponse deleteStore(Long storeId) {
+        Store store= storeRepository.findById(storeId).orElseThrow(()->  new AppException(ErrorCode.STORE_NOT_EXISTED));
+        StoreResponse storeResponse = storeMapper.toStoreResponse(store);
+        storeRepository.delete(store);
+        return storeResponse;
+    }
+
+
+    @Override
+    public StoreResponse changeStatus(Long storeId, StoreStatus status) {
+        Store store= storeRepository.findById(storeId).orElseThrow(() ->  new AppException(ErrorCode.STORE_NOT_EXISTED));
+        store.setStoreStatus(status);
+        store=storeRepository.save(store);
+        return storeMapper.toStoreResponse(store);
+    }
+
+    @Override
+    public StoreResponse getStoreById(Long storeId) {
+        Store store= storeRepository.findById(storeId).orElseThrow(() ->  new AppException(ErrorCode.STORE_NOT_EXISTED));
+        return storeMapper.toStoreResponse(store);
+    }
+
+    @Override
+    public List<StoreResponse> getAllStores() {
+        List<Store> stores= storeRepository.findAll();
+        return storeMapper.toStoreResponseList(stores);
+    }
+}
