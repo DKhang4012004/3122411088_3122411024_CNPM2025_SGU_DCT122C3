@@ -9,7 +9,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "product")
+@Table(name = "product",
+       uniqueConstraints = @UniqueConstraint(name = "uniq_store_sku", columnNames = {"store_id", "sku"}))
 @Getter
 @Setter
 @Builder
@@ -23,10 +24,11 @@ public class Product {
     Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false,
+               foreignKey = @ForeignKey(name = "fk_product_category"))
     ProductCategory category;
 
-    @Column(name = "sku", unique = true, length = 100)
+    @Column(name = "sku", nullable = false, length = 100)
     String sku;
 
     @Column(name = "name", nullable = false, length = 150)
@@ -37,23 +39,22 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
-     Store store;
+    Store store;
 
-
+    @Builder.Default
     @Column(name = "safety_stock")
-    Integer safetyStock;
+    Integer safetyStock = 0;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     ProductStatus status = ProductStatus.ACTIVE;
 
-    @Column(name = "base_price", precision = 12, scale = 2)
+    @Column(name = "base_price", nullable = false, precision = 12, scale = 2)
     BigDecimal basePrice;
 
-    @Builder.Default
     @Column(name = "currency", length = 3)
-    String currency = "VND";
+    String currency;
 
     @Column(name = "media_primary_url", length = 500)
     String mediaPrimaryUrl;
@@ -73,16 +74,19 @@ public class Product {
     @Column(name = "height_cm", precision = 6, scale = 2)
     BigDecimal heightCm;
 
+    @Builder.Default
     @Column(name = "quantity_available")
     Integer quantityAvailable = 0;
 
+    @Builder.Default
     @Column(name = "reserved_quantity")
     Integer reservedQuantity = 0;
 
-    @Column(name = "created_at",  updatable = false, insertable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false,
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
 
-
-    @Column(name = "updated_at", insertable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false,
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     LocalDateTime updatedAt;
 }

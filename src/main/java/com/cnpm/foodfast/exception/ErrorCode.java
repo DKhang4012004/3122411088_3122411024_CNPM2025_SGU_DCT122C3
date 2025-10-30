@@ -39,6 +39,7 @@ public enum ErrorCode {
     UNAUTHORIZED_ADDRESS_ACCESS(1025, "Address does not belong to the specified user", HttpStatus.FORBIDDEN),
     PRODUCT_NOT_EXISTED(1027, "Product not existed", HttpStatus.NOT_FOUND),
     CATEGORY_NOT_EXISTED(1028, "Category not existed", HttpStatus.NOT_FOUND),
+    CATEGORY_SLUG_EXISTED(1030, "Category slug already existed", HttpStatus.BAD_REQUEST),
     PARENT_CATEGORY_NOT_EXISTED(1029, "Parent Category not existed", HttpStatus.NOT_FOUND),
     INVALID_DOB(1010, "Invalid Dob", HttpStatus.BAD_REQUEST);
 

@@ -14,6 +14,5 @@ public class ProductCategoryRequest {
     String name;
     String slug;
     String description;
-    Long parentId;
     String status;
 }

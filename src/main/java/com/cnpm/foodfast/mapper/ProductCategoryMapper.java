@@ -14,12 +14,12 @@ public interface ProductCategoryMapper {
 
     // Map từ request -> entity (create)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "parent", ignore = true) // xử lý parent thủ công trong service
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "status", expression = "java(mapStatus(request.getStatus()))")
     ProductCategory toProductCategory(ProductCategoryRequest request);
 
 
-    @Mapping(target = "parentId", source = "parent.id")
     @Mapping(target = "status", expression = "java(entity.getStatus().name())")
     ProductCategoryResponse toProductCategoryResponse(ProductCategory entity);
 
@@ -27,7 +27,8 @@ public interface ProductCategoryMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE) //nếu null thì giữ nguyên
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "parent", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "status", expression = "java(request.getStatus() != null ? mapStatus(request.getStatus()) : productCategory.getStatus())")
     void updateProductCategory(@MappingTarget ProductCategory productCategory, ProductCategoryRequest request);
 

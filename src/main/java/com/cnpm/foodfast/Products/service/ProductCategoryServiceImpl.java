@@ -25,34 +25,16 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
 
     @Override
     public ProductCategoryResponse createCategory(ProductCategoryRequest request) {
+        // Kiểm tra slug đã tồn tại chưa
+        if (productCategoryRepository.existsBySlug(request.getSlug())) {
+            throw new AppException(ErrorCode.CATEGORY_SLUG_EXISTED);
+        }
+
         ProductCategory productCategory = productCategoryMapper.toProductCategory(request);
-
-        if (request.getParentId() != null) {
-            ProductCategory parent = productCategoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new AppException(ErrorCode.PARENT_CATEGORY_NOT_EXISTED));
-            productCategory.setParent(parent);
-
-            productCategory.setLevel((byte) (parent.getLevel() + 1));
-            productCategory.setPath(parent.getPath() + "/" + parent.getId());
-        }
-        else {
-            //root
-            productCategory.setParent(null);
-            productCategory.setLevel((byte) 0);
-            productCategory.setPath("");
-
-        }
         productCategory.setStatus(CategoryStatus.ACTIVE);
 
         ProductCategory saved = productCategoryRepository.save(productCategory);
-
-        // Nếu là root category, path ban đầu rỗng
-        if (saved.getPath() == null || saved.getPath().isEmpty()) {
-            saved.setPath(String.valueOf(saved.getId())); // path = chính id của nó
-            saved = productCategoryRepository.save(saved);       // update lại path
-        }
         return productCategoryMapper.toProductCategoryResponse(saved);
-
     }
 
     @Override
@@ -60,47 +42,30 @@ public class ProductCategoryServiceImpl implements ProductCategoryService {
         ProductCategory productCategory = productCategoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED));
 
+        // Kiểm tra slug mới có bị trùng không (trừ chính nó)
+        if (request.getSlug() != null && !request.getSlug().equals(productCategory.getSlug())) {
+            if (productCategoryRepository.existsBySlug(request.getSlug())) {
+                throw new AppException(ErrorCode.CATEGORY_SLUG_EXISTED);
+            }
+        }
+
         productCategoryMapper.updateProductCategory(productCategory, request);
-
-        if (request.getParentId() != null) {
-            ProductCategory parent = productCategoryRepository.findById(request.getParentId())
-                    .orElseThrow(() ->new AppException(ErrorCode.PARENT_CATEGORY_NOT_EXISTED));
-            productCategory.setParent(parent);
-
-            productCategory.setLevel((byte) (parent.getLevel() + 1));
-            productCategory.setPath(parent.getPath() + "/" + parent.getId());
-        }
-        else  {
-            //root
-            productCategory.setParent(null);
-            productCategory.setLevel((byte) 0);
-            productCategory.setPath("");
-
-        }
         ProductCategory saved = productCategoryRepository.save(productCategory);
 
-        if(saved.getParent()== null){
-            saved.setPath(String.valueOf(saved.getId()));
-        }
-        else {
-            saved.setPath(saved.getPath() + "/" + saved.getId());
-        }
-        saved= productCategoryRepository.save(saved);
         return productCategoryMapper.toProductCategoryResponse(saved);
     }
 
-
     @Override
     public void deleteCategory(Long id) {
+        ProductCategory productCategory = productCategoryRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXISTED));
 
+        productCategoryRepository.delete(productCategory);
     }
 
     @Override
     public List<ProductCategoryResponse> getAllCategories() {
         List<ProductCategory> categories = productCategoryRepository.findAll();
         return productCategoryMapper.toProductCategoryResponse(categories);
-
     }
-
-
 }

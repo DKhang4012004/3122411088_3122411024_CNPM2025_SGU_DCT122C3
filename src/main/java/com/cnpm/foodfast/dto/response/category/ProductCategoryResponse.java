@@ -17,9 +17,6 @@ public class ProductCategoryResponse {
     String slug;
     String description;
     String status;
-    Long parentId;
-    String path;
-    Byte level;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

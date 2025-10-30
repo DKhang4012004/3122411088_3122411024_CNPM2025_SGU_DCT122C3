@@ -27,18 +27,17 @@ public class Cart {
     Long userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false,
-            columnDefinition = "enum('ACTIVE','CHECKED_OUT','ABANDONED') default 'ACTIVE'")
+    @Column(name = "status", nullable = false)
     @Builder.Default
     CartStatus status = CartStatus.ACTIVE;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Builder.Default
-    LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false,
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP")
+    LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @Builder.Default
-    LocalDateTime updatedAt = LocalDateTime.now();
+    @Column(name = "updated_at", nullable = false, insertable = false,
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    LocalDateTime updatedAt;
 
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
@@ -48,15 +47,4 @@ public class Cart {
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<CartItem> cartItems;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }

@@ -21,10 +21,6 @@ public class ProductCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    ProductCategory parent;
-
     @Column(name = "name", length = 120, nullable = false)
     String name;
 
@@ -33,24 +29,18 @@ public class ProductCategory {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    CategoryStatus status ;
+    @Builder.Default
+    CategoryStatus status = CategoryStatus.ACTIVE;
 
-    @Column(name = "path", length = 500)
-    String path;
-
-    @Column(name = "level")
-    Byte level;
-
-    @Column(name = "description")
+    @Column(name = "description", length = 255)
     String description;
 
-
-    @Column(name = "created_at",  updatable = false, insertable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false,
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP")
     LocalDateTime createdAt;
 
-
-    @Column(name = "updated_at", updatable = false, insertable = false)
+    @Column(name = "updated_at", nullable = false, updatable = false, insertable = false,
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     LocalDateTime updatedAt;
-
 
 }
