@@ -1,13 +1,21 @@
 package com.cnpm.foodfast.Store.service;
 
+import com.cnpm.foodfast.dto.request.store.StoreRequest;
 import com.cnpm.foodfast.dto.response.product.ProductResponse;
+import com.cnpm.foodfast.dto.response.store.StoreResponse;
 import com.cnpm.foodfast.dto.response.store.StoreWithProductsResponse;
 import com.cnpm.foodfast.entity.Product;
 import com.cnpm.foodfast.entity.Store;
+import com.cnpm.foodfast.entity.User;
 import com.cnpm.foodfast.enums.ProductStatus;
+import com.cnpm.foodfast.enums.StoreStatus;
+import com.cnpm.foodfast.exception.AppException;
+import com.cnpm.foodfast.exception.ErrorCode;
 import com.cnpm.foodfast.exception.ResourceNotFoundException;
+import com.cnpm.foodfast.mapper.StoreMapper;
 import com.cnpm.foodfast.Products.repository.ProductRepository;
 import com.cnpm.foodfast.Store.repository.StoreRepository;
+import com.cnpm.foodfast.User.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +31,111 @@ public class StoreServiceImpl implements StoreService {
 
     private final StoreRepository storeRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final StoreMapper storeMapper;
+    private final com.cnpm.foodfast.Products.service.ProductService productService;
+
+    @Override
+    @Transactional
+    public StoreResponse createStore(StoreRequest request) {
+        log.info("Creating store for owner: {}", request.getOwnerUserId());
+
+        // Validate user exists
+        User owner = userRepository.findById(request.getOwnerUserId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Store store = storeMapper.toStore(request);
+        store.setStoreStatus(StoreStatus.ACTIVE);
+        store = storeRepository.save(store);
+
+        return storeMapper.toStoreResponse(store);
+    }
+
+    @Override
+    @Transactional
+    public StoreResponse updateStore(Long storeId, StoreRequest request) {
+        log.info("Updating store: {}", storeId);
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        // Update fields
+        storeMapper.updateStore(request, store);
+        store = storeRepository.save(store);
+
+        return storeMapper.toStoreResponse(store);
+    }
+
+    @Override
+    @Transactional
+    public void deleteStore(Long storeId) {
+        log.info("Deleting store: {}", storeId);
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        // Soft delete by changing status
+        store.setStoreStatus(StoreStatus.INACTIVE);
+        storeRepository.save(store);
+    }
+
+    @Override
+    public StoreResponse getStoreById(Long storeId) {
+        log.info("Getting store: {}", storeId);
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        return storeMapper.toStoreResponse(store);
+    }
+
+    @Override
+    public List<StoreResponse> getAllStores() {
+        log.info("Getting all stores");
+
+        List<Store> stores = storeRepository.findAll();
+        return stores.stream()
+                .map(storeMapper::toStoreResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StoreResponse> getStoresByOwner(Long ownerUserId) {
+        log.info("Getting stores by owner: {}", ownerUserId);
+
+        // Validate user exists
+        userRepository.findById(ownerUserId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        List<Store> stores = storeRepository.findByOwnerUserId(ownerUserId);
+        return stores.stream()
+                .map(storeMapper::toStoreResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public StoreResponse changeStoreStatus(Long storeId, StoreStatus status) {
+        log.info("Changing store {} status to {}", storeId, status);
+
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        store.setStoreStatus(status);
+        store = storeRepository.save(store);
+
+        return storeMapper.toStoreResponse(store);
+    }
+
+    @Override
+    public List<StoreResponse> searchStores(String keyword) {
+        log.info("Searching stores with keyword: {}", keyword);
+
+        List<Store> stores = storeRepository.findByNameContainingIgnoreCase(keyword);
+        return stores.stream()
+                .map(storeMapper::toStoreResponse)
+                .collect(Collectors.toList());
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -74,8 +187,13 @@ public class StoreServiceImpl implements StoreService {
                 .ownerUserId(store.getOwnerUserId())
                 .name(store.getName())
                 .description(store.getDescription())
+                .phoneNumber(store.getPhoneNumber())
+                .email(store.getEmail())
+                .logoUrl(store.getLogoUrl())
+                .rating(store.getRating())
                 .storeStatus(store.getStoreStatus())
                 .createdAt(store.getCreatedAt())
+                .updatedAt(store.getUpdatedAt())
                 .products(productResponses)
                 .totalProducts(products.size())
                 .availableProducts((int) availableCount)
@@ -100,6 +218,72 @@ public class StoreServiceImpl implements StoreService {
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public com.cnpm.foodfast.dto.response.product.ProductResponse createProductForStore(
+            Long storeId,
+            com.cnpm.foodfast.dto.request.product.ProductRequest request) {
+        log.info("Creating product for store: {}", storeId);
+
+        // Validate store exists
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        // Ensure request has correct storeId
+        request.setStoreId(storeId);
+
+        // Delegate to ProductService for actual creation
+        return productService.create(request);
+    }
+
+    @Override
+    @Transactional
+    public com.cnpm.foodfast.dto.response.product.ProductResponse updateProductForStore(
+            Long storeId,
+            Long productId,
+            com.cnpm.foodfast.dto.request.product.ProductRequest request) {
+        log.info("Updating product {} for store: {}", productId, storeId);
+
+        // Validate store exists
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        // Validate product exists and belongs to this store
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        if (!product.getStore().getId().equals(storeId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Ensure request has correct storeId
+        request.setStoreId(storeId);
+
+        // Delegate to ProductService for actual update
+        return productService.update(productId, request);
+    }
+
+    @Override
+    @Transactional
+    public void deleteProductForStore(Long storeId, Long productId) {
+        log.info("Deleting product {} for store: {}", productId, storeId);
+
+        // Validate store exists
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        // Validate product exists and belongs to this store
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        if (!product.getStore().getId().equals(storeId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Delegate to ProductService for actual deletion
+        productService.delete(productId);
     }
 }
 

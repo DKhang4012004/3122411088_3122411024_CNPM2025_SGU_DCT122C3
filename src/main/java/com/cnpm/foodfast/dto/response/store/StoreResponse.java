@@ -17,11 +17,13 @@ import java.time.LocalDateTime;
 public class StoreResponse {
     Long id;
     Long ownerUserId;
-
     String name;
     String description;
-
+    String phoneNumber;
+    String email;
+    String logoUrl;
+    Double rating;
     StoreStatus storeStatus;
-
     LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

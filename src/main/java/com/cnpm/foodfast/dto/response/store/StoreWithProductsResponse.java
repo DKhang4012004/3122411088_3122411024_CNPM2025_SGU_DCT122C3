@@ -18,8 +18,13 @@ public class StoreWithProductsResponse {
     Long ownerUserId;
     String name;
     String description;
+    String phoneNumber;
+    String email;
+    String logoUrl;
+    Double rating;
     StoreStatus storeStatus;
     LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
     // Danh sách sản phẩm của cửa hàng
     List<ProductResponse> products;

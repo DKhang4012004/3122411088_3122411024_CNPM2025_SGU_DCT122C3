@@ -14,18 +14,21 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface StoreMapper {
-    @Mapping(target = "id", ignore = true)           // DB tự sinh
-    @Mapping(target = "storeStatus", ignore = true) // set trong service
-    @Mapping(target = "createdAt", ignore = true)   // DB tự sinh
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "storeStatus", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "rating", ignore = true)
     Store toStore(StoreRequest request);
 
 
     StoreResponse toStoreResponse(Store store);
     List<StoreResponse> toStoreResponseList(List<Store> stores);
-    @Mapping(target = "id", ignore = true)           // DB tự sinh
-    @Mapping(target = "storeStatus", ignore = true) // set trong service
-    @Mapping(target = "createdAt", ignore = true)   // D
-    void updateStore(@MappingTarget Store store, StoreRequest request);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "storeStatus", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    void updateStore(StoreRequest request, @MappingTarget Store store);
 
     @Mapping(target = "id", ignore = true)
     StoreAddress toStoreAddress(StoreAddressRequest request);
