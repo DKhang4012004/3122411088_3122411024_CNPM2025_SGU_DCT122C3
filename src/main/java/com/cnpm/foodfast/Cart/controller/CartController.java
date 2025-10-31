@@ -1,9 +1,9 @@
 package com.cnpm.foodfast.Cart.controller;
 
 import com.cnpm.foodfast.Cart.service.CartService;
-import com.cnpm.foodfast.dto.request.AddToCartRequest;
-import com.cnpm.foodfast.dto.request.UpdateCartItemRequest;
-import com.cnpm.foodfast.dto.response.CartResponse;
+import com.cnpm.foodfast.dto.request.Cart.AddToCartRequest;
+import com.cnpm.foodfast.dto.request.Cart.UpdateCartItemRequest;
+import com.cnpm.foodfast.dto.response.Cart.CartResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

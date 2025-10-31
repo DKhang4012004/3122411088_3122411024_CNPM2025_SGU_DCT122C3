@@ -1,58 +1,41 @@
 package com.cnpm.foodfast.Store.controller;
 
-import com.cnpm.foodfast.dto.request.store.StoreRequest;
-import com.cnpm.foodfast.dto.response.API.APIResponse;
-import com.cnpm.foodfast.dto.response.store.StoreResponse;
-import com.cnpm.foodfast.Store.service.StoreServiceImpl;
-import lombok.AccessLevel;
+import com.cnpm.foodfast.dto.response.store.StoreWithProductsResponse;
+import com.cnpm.foodfast.Store.service.StoreService;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@Slf4j
+@RequestMapping("/api/stores")
 @RequiredArgsConstructor
-@RequestMapping("/stores")
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
+@CrossOrigin(origins = "*")
 public class StoreController {
-    StoreServiceImpl storeService;
 
-    @PostMapping
-    public APIResponse<StoreResponse> createStore(@RequestBody StoreRequest request) throws  Exception{
-        return APIResponse.<StoreResponse>builder()
-                .result(storeService.createStore(request))
-                .build();
+    private final StoreService storeService;
+
+    /**
+     * Get store information with all products by store ID
+     * Endpoint: GET /api/stores/{storeId}/products
+     */
+    @GetMapping("/{storeId}/products")
+    public ResponseEntity<StoreWithProductsResponse> getStoreWithProducts(@PathVariable Long storeId) {
+        log.info("REST request to get store with products: {}", storeId);
+        StoreWithProductsResponse response = storeService.getStoreWithProducts(storeId);
+        return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{storeId}")
-    public APIResponse<StoreResponse> updateStore(@RequestBody StoreRequest request, @PathVariable Long storeId) throws  Exception{
-        return APIResponse.<StoreResponse>builder()
-                .result(storeService.updateStore(storeId, request))
-                .build();
-    }
-
-    @GetMapping("/{storeId}")
-    public APIResponse<StoreResponse> getStoreById(@PathVariable Long storeId) throws  Exception {
-        return APIResponse.<StoreResponse>builder()
-                .result(storeService.getStoreById(storeId))
-                .build();
-    }
-
-    @DeleteMapping("/{storeId}")
-    public APIResponse<StoreResponse> deleteStore(@PathVariable Long storeId) throws  Exception {
-        return APIResponse.<StoreResponse>builder()
-                .result(storeService.deleteStore(storeId))
-                .message("Store with id: " + storeId + " has been deleted")
-                .build();
-    }
-
-    @GetMapping
-    public APIResponse<List<StoreResponse>> getAllStores(){
-        return APIResponse.<List<StoreResponse>>builder()
-                .result(storeService.getAllStores())
-                .build();
+    /**
+     * Get store information with all products by product ID
+     * Endpoint: GET /api/stores/by-product/{productId}
+     * Use case: User clicks on a product, see the store and all products from that store
+     */
+    @GetMapping("/by-product/{productId}")
+    public ResponseEntity<StoreWithProductsResponse> getStoreByProductId(@PathVariable Long productId) {
+        log.info("REST request to get store with products by product ID: {}", productId);
+        StoreWithProductsResponse response = storeService.getStoreWithProductsByProductId(productId);
+        return ResponseEntity.ok(response);
     }
 }

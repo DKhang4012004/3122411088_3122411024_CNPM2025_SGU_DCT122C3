@@ -1,4 +1,4 @@
-package com.cnpm.foodfast.dto.response;
+package com.cnpm.foodfast.dto.response.Cart;
 
 import com.cnpm.foodfast.enums.CartStatus;
 import lombok.*;

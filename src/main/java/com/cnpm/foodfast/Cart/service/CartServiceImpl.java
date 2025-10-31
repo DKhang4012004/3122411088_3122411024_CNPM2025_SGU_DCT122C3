@@ -1,9 +1,9 @@
 package com.cnpm.foodfast.Cart.service;
 
-import com.cnpm.foodfast.dto.request.AddToCartRequest;
-import com.cnpm.foodfast.dto.request.UpdateCartItemRequest;
-import com.cnpm.foodfast.dto.response.CartItemResponse;
-import com.cnpm.foodfast.dto.response.CartResponse;
+import com.cnpm.foodfast.dto.request.Cart.AddToCartRequest;
+import com.cnpm.foodfast.dto.request.Cart.UpdateCartItemRequest;
+import com.cnpm.foodfast.dto.response.Cart.CartItemResponse;
+import com.cnpm.foodfast.dto.response.Cart.CartResponse;
 import com.cnpm.foodfast.entity.Cart;
 import com.cnpm.foodfast.entity.CartItem;
 import com.cnpm.foodfast.entity.Product;

@@ -1,74 +1,105 @@
 package com.cnpm.foodfast.Store.service;
 
-import com.cnpm.foodfast.dto.request.store.StoreRequest;
-import com.cnpm.foodfast.dto.response.store.StoreResponse;
+import com.cnpm.foodfast.dto.response.product.ProductResponse;
+import com.cnpm.foodfast.dto.response.store.StoreWithProductsResponse;
+import com.cnpm.foodfast.entity.Product;
 import com.cnpm.foodfast.entity.Store;
-import com.cnpm.foodfast.enums.StoreStatus;
-import com.cnpm.foodfast.exception.AppException;
-import com.cnpm.foodfast.exception.ErrorCode;
-import com.cnpm.foodfast.mapper.StoreMapper;
+import com.cnpm.foodfast.enums.ProductStatus;
+import com.cnpm.foodfast.exception.ResourceNotFoundException;
+import com.cnpm.foodfast.Products.repository.ProductRepository;
 import com.cnpm.foodfast.Store.repository.StoreRepository;
-import jakarta.transaction.Transactional;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class StoreServiceImpl implements StoreService {
 
-    StoreMapper storeMapper;
-    StoreRepository storeRepository;
+    private final StoreRepository storeRepository;
+    private final ProductRepository productRepository;
 
     @Override
-    @Transactional
-    public StoreResponse createStore(StoreRequest request) {
-        Store store = storeMapper.toStore(request);
+    @Transactional(readOnly = true)
+    public StoreWithProductsResponse getStoreWithProducts(Long storeId) {
+        log.info("Getting store with products for store ID: {}", storeId);
 
-        store.setStoreStatus(StoreStatus.ACTIVE);
-        store=storeRepository.save(store);
+        // Get store information
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + storeId));
 
-        return storeMapper.toStoreResponse(store);
+        // Get all products of this store
+        List<Product> products = productRepository.findByStoreId(storeId);
+
+        return buildStoreWithProductsResponse(store, products);
     }
 
     @Override
-    public StoreResponse updateStore(Long storeId, StoreRequest request) {
-        Store store= storeRepository.findById(storeId).orElseThrow(()-> new AppException(ErrorCode.STORE_NOT_EXISTED));
-        storeMapper.updateStore(store,request);
-        return storeMapper.toStoreResponse(store);
+    @Transactional(readOnly = true)
+    public StoreWithProductsResponse getStoreWithProductsByProductId(Long productId) {
+        log.info("Getting store with products for product ID: {}", productId);
 
+        // Get product to find store
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+
+        // Get store information
+        Store store = storeRepository.findById(product.getStore().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + product.getStore().getId()));
+
+        // Get all products of this store
+        List<Product> products = productRepository.findByStoreId(store.getId());
+
+        return buildStoreWithProductsResponse(store, products);
     }
 
-    @Override
-    public StoreResponse deleteStore(Long storeId) {
-        Store store= storeRepository.findById(storeId).orElseThrow(()->  new AppException(ErrorCode.STORE_NOT_EXISTED));
-        StoreResponse storeResponse = storeMapper.toStoreResponse(store);
-        storeRepository.delete(store);
-        return storeResponse;
+    private StoreWithProductsResponse buildStoreWithProductsResponse(Store store, List<Product> products) {
+        // Convert products to ProductResponse
+        List<ProductResponse> productResponses = products.stream()
+                .map(this::convertToProductResponse)
+                .collect(Collectors.toList());
+
+        // Count available products
+        long availableCount = products.stream()
+                .filter(p -> p.getStatus() == ProductStatus.ACTIVE && p.getQuantityAvailable() > 0)
+                .count();
+
+        return StoreWithProductsResponse.builder()
+                .id(store.getId())
+                .ownerUserId(store.getOwnerUserId())
+                .name(store.getName())
+                .description(store.getDescription())
+                .storeStatus(store.getStoreStatus())
+                .createdAt(store.getCreatedAt())
+                .products(productResponses)
+                .totalProducts(products.size())
+                .availableProducts((int) availableCount)
+                .build();
     }
 
-
-    @Override
-    public StoreResponse changeStatus(Long storeId, StoreStatus status) {
-        Store store= storeRepository.findById(storeId).orElseThrow(() ->  new AppException(ErrorCode.STORE_NOT_EXISTED));
-        store.setStoreStatus(status);
-        store=storeRepository.save(store);
-        return storeMapper.toStoreResponse(store);
-    }
-
-    @Override
-    public StoreResponse getStoreById(Long storeId) {
-        Store store= storeRepository.findById(storeId).orElseThrow(() ->  new AppException(ErrorCode.STORE_NOT_EXISTED));
-        return storeMapper.toStoreResponse(store);
-    }
-
-    @Override
-    public List<StoreResponse> getAllStores() {
-        List<Store> stores= storeRepository.findAll();
-        return storeMapper.toStoreResponseList(stores);
+    private ProductResponse convertToProductResponse(Product product) {
+        return ProductResponse.builder()
+                .id(product.getId())
+                .storeId(product.getStore().getId())
+                .categoryId(product.getCategory().getId())
+                .sku(product.getSku())
+                .name(product.getName())
+                .description(product.getDescription())
+                .basePrice(product.getBasePrice())
+                .currency(product.getCurrency())
+                .mediaPrimaryUrl(product.getMediaPrimaryUrl())
+                .quantityAvailable(product.getQuantityAvailable())
+                .reservedQuantity(product.getReservedQuantity())
+                .safetyStock(product.getSafetyStock())
+                .status(product.getStatus())
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
+                .build();
     }
 }
+
