@@ -145,11 +145,28 @@ public class StoreController {
     @PostMapping("/{storeId}/products")
     public APIResponse<com.cnpm.foodfast.dto.response.product.ProductResponse> createProductForStore(
             @PathVariable Long storeId,
-            @Valid @RequestBody com.cnpm.foodfast.dto.request.product.ProductRequest request) {
+            @Valid @RequestBody com.cnpm.foodfast.dto.request.product.StoreProductRequest storeProductRequest) {
         log.info("REST request to create product for store: {}", storeId);
 
-        // Override storeId from path parameter to ensure consistency
-        request.setStoreId(storeId);
+        // Convert StoreProductRequest to ProductRequest and set storeId
+        com.cnpm.foodfast.dto.request.product.ProductRequest request = com.cnpm.foodfast.dto.request.product.ProductRequest.builder()
+                .categoryId(storeProductRequest.getCategoryId())
+                .storeId(storeId)  // Set from path parameter
+                .sku(storeProductRequest.getSku())
+                .name(storeProductRequest.getName())
+                .description(storeProductRequest.getDescription())
+                .basePrice(storeProductRequest.getBasePrice())
+                .currency(storeProductRequest.getCurrency())
+                .mediaPrimaryUrl(storeProductRequest.getMediaPrimaryUrl())
+                .safetyStock(storeProductRequest.getSafetyStock())
+                .quantityAvailable(storeProductRequest.getQuantityAvailable())
+                .reservedQuantity(storeProductRequest.getReservedQuantity())
+                .extraJson(storeProductRequest.getExtraJson())
+                .weightGram(storeProductRequest.getWeightGram())
+                .lengthCm(storeProductRequest.getLengthCm())
+                .widthCm(storeProductRequest.getWidthCm())
+                .heightCm(storeProductRequest.getHeightCm())
+                .build();
 
         return APIResponse.<com.cnpm.foodfast.dto.response.product.ProductResponse>builder()
                 .result(storeService.createProductForStore(storeId, request))
@@ -164,10 +181,28 @@ public class StoreController {
     public APIResponse<com.cnpm.foodfast.dto.response.product.ProductResponse> updateProductForStore(
             @PathVariable Long storeId,
             @PathVariable Long productId,
-            @Valid @RequestBody com.cnpm.foodfast.dto.request.product.ProductRequest request) {
+            @Valid @RequestBody com.cnpm.foodfast.dto.request.product.StoreProductRequest storeProductRequest) {
         log.info("REST request to update product {} for store: {}", productId, storeId);
 
-        request.setStoreId(storeId);
+        // Convert StoreProductRequest to ProductRequest and set storeId
+        com.cnpm.foodfast.dto.request.product.ProductRequest request = com.cnpm.foodfast.dto.request.product.ProductRequest.builder()
+                .categoryId(storeProductRequest.getCategoryId())
+                .storeId(storeId)
+                .sku(storeProductRequest.getSku())
+                .name(storeProductRequest.getName())
+                .description(storeProductRequest.getDescription())
+                .basePrice(storeProductRequest.getBasePrice())
+                .currency(storeProductRequest.getCurrency())
+                .mediaPrimaryUrl(storeProductRequest.getMediaPrimaryUrl())
+                .safetyStock(storeProductRequest.getSafetyStock())
+                .quantityAvailable(storeProductRequest.getQuantityAvailable())
+                .reservedQuantity(storeProductRequest.getReservedQuantity())
+                .extraJson(storeProductRequest.getExtraJson())
+                .weightGram(storeProductRequest.getWeightGram())
+                .lengthCm(storeProductRequest.getLengthCm())
+                .widthCm(storeProductRequest.getWidthCm())
+                .heightCm(storeProductRequest.getHeightCm())
+                .build();
 
         return APIResponse.<com.cnpm.foodfast.dto.response.product.ProductResponse>builder()
                 .result(storeService.updateProductForStore(storeId, productId, request))

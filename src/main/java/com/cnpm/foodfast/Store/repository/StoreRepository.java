@@ -8,8 +8,8 @@ import java.util.List;
 
 @Repository
 public interface StoreRepository extends JpaRepository<Store,Long> {
-
+    
     List<Store> findByOwnerUserId(Long ownerUserId);
-
+    
     List<Store> findByNameContainingIgnoreCase(String name);
 }

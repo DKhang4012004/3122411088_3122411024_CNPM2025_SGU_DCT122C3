@@ -1,0 +1,984 @@
+{
+	"info": {
+		"_postman_id": "foodfast-api-collection",
+		"name": "FoodFast API - Complete Test Collection",
+		"description": "Complete API collection for FoodFast - Food Delivery with Drone System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/home",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "storeId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "categoryId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "1.1 Sign Up",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.id) {",
+									"        pm.collectionVariables.set('userId', jsonData.result.id);",
+									"        console.log('User ID saved: ' + jsonData.result.id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"owner01\",\n  \"password\": \"password123\",\n  \"email\": \"owner01@foodfast.com\",\n  \"fullName\": \"Nguyen Van A\",\n  \"phone\": \"0912345678\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "signup"]
+						}
+					}
+				},
+				{
+					"name": "1.2 Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.token) {",
+									"        pm.collectionVariables.set('token', jsonData.result.token);",
+									"        console.log('Token saved');",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"owner01\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "1.3 Validate Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"{{token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/validate",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "validate"]
+						}
+					}
+				},
+				{
+					"name": "1.4 Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. User Management",
+			"item": [
+				{
+					"name": "2.1 Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.id) {",
+									"        pm.collectionVariables.set('userId', jsonData.result.id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"customer01\",\n  \"password\": \"password123\",\n  \"email\": \"customer01@gmail.com\",\n  \"fullName\": \"Tran Thi B\",\n  \"phone\": \"0987654321\",\n  \"dateOfBirth\": \"1995-05-15\",\n  \"gender\": \"FEMALE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/userCreated",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "userCreated"]
+						}
+					}
+				},
+				{
+					"name": "2.2 Get User By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/user/GetUserById/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "GetUserById", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "2.3 Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/user/getAllUser",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "getAllUser"]
+						}
+					}
+				},
+				{
+					"name": "2.4 Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Tran Thi B - Updated\",\n  \"phone\": \"0987654999\",\n  \"email\": \"customer01.updated@gmail.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/update/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "update", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "2.5 Add User Address",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"addressLine\": \"123 Nguyen Hue Street\",\n  \"ward\": \"Ben Nghe Ward\",\n  \"district\": \"District 1\",\n  \"city\": \"Ho Chi Minh City\",\n  \"country\": \"Vietnam\",\n  \"latitude\": 10.7769,\n  \"longitude\": 106.7009,\n  \"isDefault\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/user/{{userId}}/addresses",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "{{userId}}", "addresses"]
+						}
+					}
+				},
+				{
+					"name": "2.6 Get User Addresses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/user/{{userId}}/addresses",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "{{userId}}", "addresses"]
+						}
+					}
+				},
+				{
+					"name": "2.7 Get Default Address",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/user/{{userId}}/addresses/default",
+							"host": ["{{baseUrl}}"],
+							"path": ["user", "{{userId}}", "addresses", "default"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Store Management",
+			"item": [
+				{
+					"name": "3.1 Create Store",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.id) {",
+									"        pm.collectionVariables.set('storeId', jsonData.result.id);",
+									"        console.log('Store ID saved: ' + jsonData.result.id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ownerUserId\": {{userId}},\n  \"name\": \"Pho Ha Noi 24h\",\n  \"description\": \"Traditional Hanoi Pho - Open 24/7\",\n  \"phoneNumber\": \"0281234567\",\n  \"email\": \"phohanoi24h@gmail.com\",\n  \"logoUrl\": \"https://example.com/logo-pho-hanoi.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/stores",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores"]
+						}
+					}
+				},
+				{
+					"name": "3.2 Get Store By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}"]
+						}
+					}
+				},
+				{
+					"name": "3.3 Get All Stores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores"]
+						}
+					}
+				},
+				{
+					"name": "3.4 Get Stores By Owner",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/owner/{{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "owner", "{{userId}}"]
+						}
+					}
+				},
+				{
+					"name": "3.5 Update Store",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ownerUserId\": {{userId}},\n  \"name\": \"Pho Ha Noi 24h - Updated\",\n  \"description\": \"Traditional Hanoi Pho - Now with more options!\",\n  \"phoneNumber\": \"0281234999\",\n  \"email\": \"phohanoi.updated@gmail.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}"]
+						}
+					}
+				},
+				{
+					"name": "3.6 Change Store Status",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}/status?status=ACTIVE",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}", "status"],
+							"query": [
+								{
+									"key": "status",
+									"value": "ACTIVE",
+									"description": "ACTIVE or INACTIVE"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "3.7 Search Stores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/search?keyword=pho",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "search"],
+							"query": [
+								{
+									"key": "keyword",
+									"value": "pho"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "3.8 Delete Store (Soft Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}"]
+						}
+					}
+				},
+				{
+					"name": "3.9 Get Store With Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}", "products"]
+						}
+					}
+				},
+				{
+					"name": "3.10 Get Store By Product ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/by-product/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "by-product", "{{productId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Store Address",
+			"item": [
+				{
+					"name": "4.1 Add Store Address",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"addressLine\": \"456 Tran Hung Dao Street\",\n  \"ward\": \"Pham Ngu Lao Ward\",\n  \"district\": \"District 1\",\n  \"city\": \"Ho Chi Minh City\",\n  \"country\": \"Vietnam\",\n  \"latitude\": 10.7677,\n  \"longitude\": 106.6906,\n  \"flightCorridorRadius\": 5.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/storesaddresses/{{storeId}}/addresses",
+							"host": ["{{baseUrl}}"],
+							"path": ["storesaddresses", "{{storeId}}", "addresses"]
+						}
+					}
+				},
+				{
+					"name": "4.2 Get Store Addresses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/storesaddresses?storeId={{storeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["storesaddresses"],
+							"query": [
+								{
+									"key": "storeId",
+									"value": "{{storeId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "4.3 Update Store Address",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"addressLine\": \"456 Tran Hung Dao Street - Updated\",\n  \"ward\": \"Pham Ngu Lao Ward\",\n  \"district\": \"District 1\",\n  \"city\": \"Ho Chi Minh City\",\n  \"country\": \"Vietnam\",\n  \"latitude\": 10.7677,\n  \"longitude\": 106.6906,\n  \"flightCorridorRadius\": 7.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/storesaddresses/{addressId}",
+							"host": ["{{baseUrl}}"],
+							"path": ["storesaddresses", "{addressId}"]
+						}
+					}
+				},
+				{
+					"name": "4.4 Delete Store Address",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/storesaddresses/{addressId}",
+							"host": ["{{baseUrl}}"],
+							"path": ["storesaddresses", "{addressId}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Product Category",
+			"item": [
+				{
+					"name": "5.1 Create Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.id) {",
+									"        pm.collectionVariables.set('categoryId', jsonData.result.id);",
+									"        console.log('Category ID saved: ' + jsonData.result.id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vietnamese Noodles\",\n  \"slug\": \"vietnamese-noodles\",\n  \"description\": \"All types of Vietnamese noodle dishes\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories"]
+						}
+					}
+				},
+				{
+					"name": "5.2 Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories"]
+						}
+					}
+				},
+				{
+					"name": "5.3 Update Category",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Vietnamese Noodles - Updated\",\n  \"slug\": \"vietnamese-noodles-updated\",\n  \"description\": \"All types of traditional Vietnamese noodle dishes\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories", "{{categoryId}}"]
+						}
+					}
+				},
+				{
+					"name": "5.4 Delete Category",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/categories/{{categoryId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["categories", "{{categoryId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Product Management",
+			"item": [
+				{
+					"name": "6.1 Create Product (General)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.id) {",
+									"        pm.collectionVariables.set('productId', jsonData.result.id);",
+									"        console.log('Product ID saved: ' + jsonData.result.id);",
+									"    }",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": {{categoryId}},\n  \"storeId\": {{storeId}},\n  \"sku\": \"PHO-BO-TAI-001\",\n  \"name\": \"Pho Bo Tai\",\n  \"description\": \"Traditional Hanoi beef pho with rare beef\",\n  \"basePrice\": 50000,\n  \"currency\": \"VND\",\n  \"quantityAvailable\": 100,\n  \"safetyStock\": 20,\n  \"reservedQuantity\": 0,\n  \"mediaPrimaryUrl\": \"https://example.com/pho-bo-tai.jpg\",\n  \"weightGram\": 500,\n  \"lengthCm\": 25,\n  \"widthCm\": 20,\n  \"heightCm\": 10\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"]
+						}
+					}
+				},
+				{
+					"name": "6.2 Create Product (By Store)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": {{categoryId}},\n  \"sku\": \"PHO-GA-001\",\n  \"name\": \"Pho Ga\",\n  \"description\": \"Chicken pho with fresh herbs\",\n  \"basePrice\": 45000,\n  \"currency\": \"VND\",\n  \"quantityAvailable\": 80,\n  \"safetyStock\": 15,\n  \"mediaPrimaryUrl\": \"https://example.com/pho-ga.jpg\",\n  \"weightGram\": 450\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}", "products"]
+						}
+					}
+				},
+				{
+					"name": "6.3 Get Product By ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						}
+					}
+				},
+				{
+					"name": "6.4 Get All Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"]
+						}
+					}
+				},
+				{
+					"name": "6.5 Get Products By Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/category/{{categoryId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "category", "{{categoryId}}"]
+						}
+					}
+				},
+				{
+					"name": "6.6 Get Products By Store",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/store/{{storeId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "store", "{{storeId}}"]
+						}
+					}
+				},
+				{
+					"name": "6.7 Search Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/search?keyword=pho",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "search"],
+							"query": [
+								{
+									"key": "keyword",
+									"value": "pho"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "6.8 Update Product",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": {{categoryId}},\n  \"storeId\": {{storeId}},\n  \"sku\": \"PHO-BO-TAI-001\",\n  \"name\": \"Pho Bo Tai - Special\",\n  \"description\": \"Traditional Hanoi beef pho with rare beef - Now with extra meat!\",\n  \"basePrice\": 60000,\n  \"currency\": \"VND\",\n  \"quantityAvailable\": 150,\n  \"safetyStock\": 25\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						}
+					}
+				},
+				{
+					"name": "6.9 Update Product (By Store)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": {{categoryId}},\n  \"sku\": \"PHO-BO-TAI-001\",\n  \"name\": \"Pho Bo Tai Dac Biet\",\n  \"basePrice\": 65000,\n  \"quantityAvailable\": 200\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}", "products", "{{productId}}"]
+						}
+					}
+				},
+				{
+					"name": "6.10 Delete Product",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["products", "{{productId}}"]
+						}
+					}
+				},
+				{
+					"name": "6.11 Delete Product (By Store)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/stores/{{storeId}}/products/{{productId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "stores", "{{storeId}}", "products", "{{productId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Cart Management",
+			"item": [
+				{
+					"name": "7.1 Add Item to Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{userId}},\n  \"productId\": {{productId}},\n  \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/cart/add",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "add"]
+						}
+					}
+				},
+				{
+					"name": "7.2 Get Cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/cart?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "7.3 Get Cart Item Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/cart/count?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "count"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "7.4 Update Cart Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/cart/{cartItemId}",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "{cartItemId}"]
+						}
+					}
+				},
+				{
+					"name": "7.5 Remove Cart Item",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/cart/{cartItemId}",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "{cartItemId}"]
+						}
+					}
+				},
+				{
+					"name": "7.6 Clear Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/cart/clear?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["cart", "clear"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Location Services",
+			"item": [
+				{
+					"name": "8.1 Find Stores Within Flight Corridor (POST)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"latitude\": 10.7769,\n  \"longitude\": 106.7009\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/location/stores-within-flight-corridor",
+							"host": ["{{baseUrl}}"],
+							"path": ["location", "stores-within-flight-corridor"]
+						}
+					}
+				},
+				{
+					"name": "8.2 Find Stores Within Flight Corridor (GET)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/location/stores-within-flight-corridor?latitude=10.7769&longitude=106.7009",
+							"host": ["{{baseUrl}}"],
+							"path": ["location", "stores-within-flight-corridor"],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "10.7769"
+								},
+								{
+									"key": "longitude",
+									"value": "106.7009"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
+
+

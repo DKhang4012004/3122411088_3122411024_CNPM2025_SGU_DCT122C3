@@ -14,11 +14,9 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface StoreMapper {
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "storeStatus", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "rating", ignore = true)
+    @Mapping(target = "id", ignore = true)           // DB tự sinh
+    @Mapping(target = "storeStatus", ignore = true) // set trong service
+    @Mapping(target = "createdAt", ignore = true)   // DB tự sinh
     Store toStore(StoreRequest request);
 
 

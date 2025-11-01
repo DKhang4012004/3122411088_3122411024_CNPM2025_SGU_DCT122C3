@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodFast - Drone Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .drone-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .warning-box {
+            background: rgba(255, 152, 0, 0.3);
+            border: 2px solid #ff9800;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .warning-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .warning-text {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 0;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: scale(1.02);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .info-box {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        .countdown {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="drone-icon">🚁</div>
+            <h1>FoodFast Drone Simulator</h1>
+
+            <div class="warning-box">
+                <div class="warning-title">⚠️ Lỗi GPS Detected!</div>
+                <div class="warning-text">
+                    Bạn đang truy cập file <strong>drone-simulator.html</strong> (Real GPS).
+                    <br><br>
+                    File này cần GPS thật và chỉ hoạt động trên localhost hoặc HTTPS.
+                    <br><br>
+                    Trên điện thoại hoặc IP address, bạn sẽ gặp lỗi:
+                    <br>
+                    <em>"GPS error: Only secure origins are allowed"</em>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>✅ Giải pháp:</strong><br>
+                Sử dụng <strong>Mock GPS Simulator</strong> - không cần GPS thật, hoạt động mọi nơi!
+            </div>
+
+            <div class="countdown" id="countdown">5</div>
+
+            <a href="drone-simulator-mock.html" class="btn btn-primary" id="redirectBtn">
+                🚀 Chuyển đến Mock GPS Simulator
+            </a>
+
+            <a href="test-connection.html" class="btn btn-secondary">
+                🔍 Test Connection
+            </a>
+
+            <div style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
+                Tự động chuyển hướng sau <span id="timer">5</span> giây...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let countdown = 5;
+        const countdownEl = document.getElementById('countdown');
+        const timerEl = document.getElementById('timer');
+
+        const interval = setInterval(() => {
+            countdown--;
+            countdownEl.textContent = countdown;
+            timerEl.textContent = countdown;
+
+            if (countdown <= 0) {
+                clearInterval(interval);
+                window.location.href = 'drone-simulator-mock.html';
+            }
+        }, 1000);
+
+        // Allow manual redirect
+        document.getElementById('redirectBtn').addEventListener('click', function(e) {
+            clearInterval(interval);
+        });
+    </script>
+</body>
+</html>
+

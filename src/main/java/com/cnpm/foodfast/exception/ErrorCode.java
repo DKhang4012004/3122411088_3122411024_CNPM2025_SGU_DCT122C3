@@ -41,7 +41,10 @@ public enum ErrorCode {
     CATEGORY_NOT_EXISTED(1028, "Category not existed", HttpStatus.NOT_FOUND),
     CATEGORY_SLUG_EXISTED(1030, "Category slug already existed", HttpStatus.BAD_REQUEST),
     PARENT_CATEGORY_NOT_EXISTED(1029, "Parent Category not existed", HttpStatus.NOT_FOUND),
-    INVALID_DOB(1010, "Invalid Dob", HttpStatus.BAD_REQUEST);
+    INVALID_DOB(1010, "Invalid Dob", HttpStatus.BAD_REQUEST),
+    DRONE_NOT_FOUND(1031, "Drone not found", HttpStatus.NOT_FOUND),
+    DRONE_ALREADY_EXISTS(1032, "Drone already exists", HttpStatus.BAD_REQUEST),
+    NO_AVAILABLE_DRONE(1033, "No available drone found for this delivery", HttpStatus.NOT_FOUND);
 
 
     int code;

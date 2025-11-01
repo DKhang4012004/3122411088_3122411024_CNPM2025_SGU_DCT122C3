@@ -1,0 +1,237 @@
+{
+  "info": {
+    "name": "Drone System - Complete APIs",
+    "_postman_id": "drone-complete-2025",
+    "description": "Complete Drone APIs with all new features",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Basic Management",
+      "item": [
+        {
+          "name": "Register Drone",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"DRONE001\",\n  \"model\": \"DJI Mavic Pro\",\n  \"maxPayloadGram\": 2000,\n  \"latitude\": 10.762622,\n  \"longitude\": 106.660172\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Drones",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones"
+          }
+        },
+        {
+          "name": "Get Drone By Code",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/DRONE001"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Location & Status Update",
+      "item": [
+        {
+          "name": "Update Location",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/DRONE001/location",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 10.763622,\n  \"longitude\": 106.661172,\n  \"batteryPercent\": 98\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Status to IN_FLIGHT",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/DRONE001/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_FLIGHT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Status to AVAILABLE",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/DRONE001/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Smart Assignment (NEW)",
+      "item": [
+        {
+          "name": "Find Available Drone For Delivery",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/find-available?weightGram=1500&fromLat=10.762622&fromLng=106.660172&toLat=10.773622&toLng=106.670172",
+            "description": "Find best drone based on weight, distance, battery"
+          }
+        },
+        {
+          "name": "Get Drones Nearby (5km radius)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/nearby?lat=10.762622&lng=106.660172&radiusKm=5.0"
+          }
+        },
+        {
+          "name": "Get Drones Nearby (3km radius)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/nearby?lat=10.762622&lng=106.660172&radiusKm=3.0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Safety & Monitoring (NEW)",
+      "item": [
+        {
+          "name": "Monitor Battery",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:8080/home/drones/DRONE001/monitor-battery",
+            "description": "Check battery and auto-switch to safe mode if low"
+          }
+        },
+        {
+          "name": "Enable Safety Mode",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:8080/home/drones/DRONE001/safety-mode?reason=Strong wind detected"
+          }
+        },
+        {
+          "name": "Check Drone Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/DRONE001/health",
+            "description": "Get comprehensive health status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Calculation & Estimation (NEW)",
+      "item": [
+        {
+          "name": "Calculate Flight Distance",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/calculate-distance?fromLat=10.762622&fromLng=106.660172&toLat=10.773622&toLng=106.670172",
+            "description": "Calculate distance and estimated time"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Delivery Tracking",
+      "item": [
+        {
+          "name": "Get Current Delivery",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/DRONE001/current-delivery"
+          }
+        }
+      ]
+    },
+    {
+      "name": "SCENARIO: Complete Delivery Flow",
+      "item": [
+        {
+          "name": "Step 1: Find Available Drone",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/find-available?weightGram=1500&fromLat=10.762622&fromLng=106.660172&toLat=10.773622&toLng=106.670172"
+          }
+        },
+        {
+          "name": "Step 2: Start Flight",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/DRONE001/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_FLIGHT\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Step 3: Update Location (During Flight)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/DRONE001/location",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 10.768122,\n  \"longitude\": 106.665172,\n  \"batteryPercent\": 75\n}"
+            }
+          }
+        },
+        {
+          "name": "Step 4: Monitor Battery",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:8080/home/drones/DRONE001/monitor-battery"
+          }
+        },
+        {
+          "name": "Step 5: Arrive at Destination",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/DRONE001/location",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 10.773622,\n  \"longitude\": 106.670172,\n  \"batteryPercent\": 58\n}"
+            }
+          }
+        },
+        {
+          "name": "Step 6: Complete Delivery",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "http://localhost:8080/home/drones/DRONE001/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Step 7: Check Health After Flight",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/home/drones/DRONE001/health"
+          }
+        }
+      ]
+    }
+  ]
+}
+
