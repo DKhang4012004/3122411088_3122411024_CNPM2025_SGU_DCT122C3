@@ -37,6 +37,9 @@ public class Product {
     @Column(name = "description", columnDefinition = "TEXT")
     String description;
 
+    @Column(name = "store_id", nullable = false, insertable = false, updatable = false)
+    Long storeId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     Store store;

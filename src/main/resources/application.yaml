@@ -22,3 +22,28 @@ spring:
 
 jwt:
   signerKey: "wXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezwXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+vnpay:
+  tmn-code: "D1GOXCFX"
+  hash-secret: "FMX97DS9752G5SWI40ZPBO3R2EQMQ9H5"
+  url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  return-url: "https://shieldless-pamula-adhesively.ngrok-free.dev/home/api/v1/payments/vnpay-return"
+  api-url: "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction"
+  version: "2.1.0"
+  command: "pay"
+  order-type: "other"
+
+app:
+  commission:
+    rate: 0.20
+  payment-gateway:
+    fee-rate: 0.01
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

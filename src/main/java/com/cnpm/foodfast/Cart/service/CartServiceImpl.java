@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -172,9 +173,12 @@ public class CartServiceImpl implements CartService {
     }
 
     private CartResponse convertToCartResponse(Cart cart) {
-        List<CartItemResponse> cartItemResponses = cart.getCartItems().stream()
+        // Xử lý trường hợp cartItems là null (khi cart mới tạo)
+        List<CartItemResponse> cartItemResponses = (cart.getCartItems() != null)
+                ? cart.getCartItems().stream()
                 .map(this::convertToCartItemResponse)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+                : new ArrayList<>();
 
         int totalItems = cartItemResponses.stream()
                 .mapToInt(CartItemResponse::getQuantity)

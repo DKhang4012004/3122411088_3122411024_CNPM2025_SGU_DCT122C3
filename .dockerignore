@@ -1,0 +1,22 @@
+# Add this to .dockerignore to optimize Docker build
+target/
+!target/*.jar
+.mvn/
+mvnw
+mvnw.cmd
+*.log
+*.class
+*.jar
+*.war
+*.ear
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+

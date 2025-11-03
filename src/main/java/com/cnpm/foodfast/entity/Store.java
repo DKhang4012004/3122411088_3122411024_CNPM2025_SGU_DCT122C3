@@ -5,8 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,7 +22,7 @@ public class Store {
     @Column(name = "id")
     Long id;
 
-    @Column(name = "owner_user_id")
+    @Column(name = "owner_user_id", nullable = false)
     Long ownerUserId;
 
     @Column(name = "name")
@@ -33,10 +31,28 @@ public class Store {
     @Column(name = "description")
     String description;
 
+    @Column(name = "bank_account_name")
+    String bankAccountName;
+
+    @Column(name = "bank_account_number", length = 64)
+    String bankAccountNumber;
+
+    @Column(name = "bank_name")
+    String bankName;
+
+    @Column(name = "bank_branch")
+    String bankBranch;
+
+    @Column(name = "payout_email")
+    String payoutEmail;
+
     @Enumerated(EnumType.STRING)
-    @Column(name= "status")
+    @Column(name = "status", nullable = false)
     StoreStatus storeStatus;
 
     @Column(name = "created_at", updatable = false, insertable = false)
     LocalDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false)
+    LocalDateTime updatedAt;
 }

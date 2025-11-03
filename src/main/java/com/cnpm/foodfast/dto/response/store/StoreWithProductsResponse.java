@@ -18,8 +18,14 @@ public class StoreWithProductsResponse {
     Long ownerUserId;
     String name;
     String description;
+    String bankAccountName;
+    String bankAccountNumber;
+    String bankName;
+    String bankBranch;
+    String payoutEmail;
     StoreStatus storeStatus;
     LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 
     // Danh sách sản phẩm của cửa hàng
     List<ProductResponse> products;
@@ -28,4 +34,3 @@ public class StoreWithProductsResponse {
     Integer totalProducts;
     Integer availableProducts;
 }
-

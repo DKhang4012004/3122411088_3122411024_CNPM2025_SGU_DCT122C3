@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng - FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <span>FoodFast</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">Trang chủ</a>
+                    <a href="stores.html" class="nav-link">Cửa hàng</a>
+                    <a href="cart.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Giỏ hàng
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </a>
+                    <a href="orders.html" class="nav-link active">Đơn hàng</a>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu" id="userMenu"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="orders-section">
+        <div class="container">
+            <h1>Đơn hàng của tôi</h1>
+
+            <div class="orders-container" id="ordersContainer">
+                <div class="order-skeleton"></div>
+                <div class="order-skeleton"></div>
+            </div>
+
+            <div class="empty-state" id="emptyOrders" style="display: none;">
+                <i class="fas fa-box-open"></i>
+                <h2>Chưa có đơn hàng nào</h2>
+                <p>Hãy đặt món ngay để trải nghiệm dịch vụ của chúng tôi</p>
+                <a href="index.html" class="btn btn-primary">Đặt món ngay</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Detail Modal -->
+    <div class="modal" id="orderDetailModal">
+        <div class="modal-content modal-large">
+            <span class="close" id="closeOrderModal">&times;</span>
+            <h2>Chi tiết đơn hàng</h2>
+            <div id="orderDetailContent">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 FoodFast. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/orders.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <span>FoodFast</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">Trang chủ</a>
+                    <a href="stores.html" class="nav-link">Cửa hàng</a>
+                    <a href="cart.html" class="nav-link active">
+                        <i class="fas fa-shopping-cart"></i>
+                        Giỏ hàng
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </a>
+                    <a href="orders.html" class="nav-link">Đơn hàng</a>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu" id="userMenu"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Cart Section -->
+    <section class="cart-section">
+        <div class="container">
+            <h1>Giỏ hàng của bạn</h1>
+
+            <div class="cart-container" id="cartContainer">
+                <div class="cart-empty" id="emptyCart" style="display: none;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h2>Giỏ hàng trống</h2>
+                    <p>Hãy thêm món ăn vào giỏ hàng để tiếp tục</p>
+                    <a href="index.html" class="btn btn-primary">Khám phá món ăn</a>
+                </div>
+
+                <div class="cart-content" id="cartContent">
+                    <div class="cart-items" id="cartItems">
+                        <!-- Cart items will be loaded here -->
+                    </div>
+
+                    <div class="cart-summary">
+                        <h3>Tóm tắt đơn hàng</h3>
+                        <div class="summary-row">
+                            <span>Tạm tính:</span>
+                            <span id="subtotal">0đ</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Phí giao hàng:</span>
+                            <span id="shippingFee">0đ</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Tổng cộng:</span>
+                            <span id="total">0đ</span>
+                        </div>
+
+                        <button class="btn btn-primary btn-block" id="checkoutBtn">
+                            Tiến hành thanh toán
+                        </button>
+                        <a href="index.html" class="btn btn-outline btn-block">Tiếp tục mua sắm</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Checkout Modal -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content modal-large">
+            <span class="close" id="closeCheckoutModal">&times;</span>
+            <h2>Thông tin giao hàng</h2>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label>Địa chỉ giao hàng *</label>
+                    <input type="text" id="deliveryAddress" required placeholder="Nhập địa chỉ chi tiết">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Thành phố *</label>
+                        <input type="text" id="deliveryCity" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quận/Huyện *</label>
+                        <input type="text" id="deliveryDistrict" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại *</label>
+                    <input type="tel" id="deliveryPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Ghi chú</label>
+                    <textarea id="orderNotes" rows="3" placeholder="Ghi chú cho đơn hàng (tùy chọn)"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Phương thức thanh toán</label>
+                    <div class="payment-methods">
+                        <label class="payment-method">
+                            <input type="radio" name="paymentMethod" value="VNPAY" checked>
+                            <div class="method-card">
+                                <i class="fas fa-credit-card"></i>
+                                <span>VNPay</span>
+                            </div>
+                        </label>
+                        <label class="payment-method">
+                            <input type="radio" name="paymentMethod" value="COD">
+                            <div class="method-card">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Tiền mặt</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Đặt hàng</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 FoodFast. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+</html>
+

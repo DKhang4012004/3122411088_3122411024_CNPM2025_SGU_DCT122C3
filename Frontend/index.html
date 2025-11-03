@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodFast - Giao Đồ Ăn Nhanh</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <span>FoodFast</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link active">Trang chủ</a>
+                    <a href="stores.html" class="nav-link">Cửa hàng</a>
+                    <a href="cart.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Giỏ hàng
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </a>
+                    <a href="orders.html" class="nav-link">Đơn hàng</a>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu" id="userMenu">
+                        <button class="btn btn-primary" id="loginBtn">Đăng nhập</button>
+                        <button class="btn btn-outline" id="signupBtn">Đăng ký</button>
+                        <div class="user-dropdown" id="userDropdown" style="display: none;">
+                            <button class="user-avatar" id="userAvatar">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="userName"></span>
+                            </button>
+                            <div class="dropdown-menu" id="dropdownMenu">
+                                <a href="profile.html"><i class="fas fa-user"></i> Tài khoản</a>
+                                <a href="orders.html"><i class="fas fa-box"></i> Đơn hàng của tôi</a>
+                                <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Giao đồ ăn nhanh chóng, tiện lợi</h1>
+            <p>Đặt món yêu thích từ hàng trăm nhà hàng, giao tận nơi trong vài phút</p>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm món ăn, cửa hàng...">
+                <button class="btn btn-primary" id="searchBtn">
+                    <i class="fas fa-search"></i> Tìm kiếm
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="categories">
+        <div class="container">
+            <h2>Danh mục</h2>
+            <div class="category-grid" id="categoryGrid">
+                <div class="category-skeleton"></div>
+                <div class="category-skeleton"></div>
+                <div class="category-skeleton"></div>
+                <div class="category-skeleton"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="products">
+        <div class="container">
+            <h2>Món ăn nổi bật</h2>
+            <div class="product-grid" id="productGrid">
+                <div class="product-skeleton"></div>
+                <div class="product-skeleton"></div>
+                <div class="product-skeleton"></div>
+                <div class="product-skeleton"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="close" id="closeLoginModal">&times;</span>
+            <h2>Đăng nhập</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" id="loginUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+            </form>
+            <p class="text-center mt-3">
+                Chưa có tài khoản? <a href="#" id="switchToSignup">Đăng ký ngay</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal" id="signupModal">
+        <div class="modal-content">
+            <span class="close" id="closeSignupModal">&times;</span>
+            <h2>Đăng ký</h2>
+            <form id="signupForm">
+                <div class="form-group">
+                    <label>Tên đăng nhập</label>
+                    <input type="text" id="signupUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Số điện thoại</label>
+                    <input type="tel" id="signupPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Họ và tên</label>
+                    <input type="text" id="signupFullName" required>
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Đăng ký</button>
+            </form>
+            <p class="text-center mt-3">
+                Đã có tài khoản? <a href="#" id="switchToLogin">Đăng nhập</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>FoodFast</h3>
+                    <p>Giao đồ ăn nhanh chóng, tiện lợi</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên hệ</h4>
+                    <p><i class="fas fa-phone"></i> 1900-xxxx</p>
+                    <p><i class="fas fa-envelope"></i> support@foodfast.com</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Theo dõi chúng tôi</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 FoodFast. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
+

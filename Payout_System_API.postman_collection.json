@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "Payout System API",
+    "description": "API endpoints for Payout Batch System - Chi trả cho cửa hàng",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Get Payout Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/stores/1/summary",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "stores", "1", "summary"]
+        },
+        "description": "Lấy tổng hợp thông tin payout của store: doanh thu, hoa hồng, phí, tiền có thể chi trả"
+      }
+    },
+    {
+      "name": "2. Create Payout Batch",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"storeId\": 1,\n  \"notes\": \"Thanh toán kỳ tuần 1 tháng 11/2025\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches"]
+        },
+        "description": "Tạo payout batch mới - tổng hợp tất cả ledger UNPAID của store"
+      }
+    },
+    {
+      "name": "3. Process Payout Batch",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches/1/process",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches", "1", "process"]
+        },
+        "description": "Bắt đầu xử lý thanh toán - chuyển status từ PENDING sang PROCESSING"
+      }
+    },
+    {
+      "name": "4. Mark Payout as PAID",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches/1/mark-paid?transactionCode=BANK_TXN_20251102001",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches", "1", "mark-paid"],
+          "query": [
+            {
+              "key": "transactionCode",
+              "value": "BANK_TXN_20251102001"
+            }
+          ]
+        },
+        "description": "Đánh dấu payout batch đã thanh toán thành công - cập nhật ledgers sang PAID"
+      }
+    },
+    {
+      "name": "5. Mark Payout as FAILED",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches/2/mark-failed?reason=Insufficient+bank+balance",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches", "2", "mark-failed"],
+          "query": [
+            {
+              "key": "reason",
+              "value": "Insufficient bank balance"
+            }
+          ]
+        },
+        "description": "Đánh dấu payout batch thất bại - revert ledgers về UNPAID"
+      }
+    },
+    {
+      "name": "6. Retry Failed Payout",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches/2/retry",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches", "2", "retry"]
+        },
+        "description": "Thử lại payout batch thất bại - reset về PENDING"
+      }
+    },
+    {
+      "name": "7. Get Payout Batch Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches", "1"]
+        },
+        "description": "Lấy chi tiết một payout batch"
+      }
+    },
+    {
+      "name": "8. Get Store's Payout Batches",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/stores/1/batches",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "stores", "1", "batches"]
+        },
+        "description": "Lấy danh sách tất cả payout batch của store"
+      }
+    },
+    {
+      "name": "9. Get Batches by Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches?status=PENDING",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches"],
+          "query": [
+            {
+              "key": "status",
+              "value": "PENDING",
+              "description": "PENDING | PROCESSING | PAID | FAILED"
+            }
+          ]
+        },
+        "description": "Lọc payout batch theo status"
+      }
+    },
+    {
+      "name": "10. Get All Payout Batches",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/home/api/v1/payouts/batches",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8080",
+          "path": ["home", "api", "v1", "payouts", "batches"]
+        },
+        "description": "Lấy tất cả payout batch (không filter)"
+      }
+    }
+  ]
+}
+
