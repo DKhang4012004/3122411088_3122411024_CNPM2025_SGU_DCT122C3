@@ -26,7 +26,7 @@ public class Drone {
     @Column(name = "code", nullable = false, unique = true, length = 50)
     String code;
 
-    @Column(name = "model", length = 100)
+    @Column(name = "model", length = 200)
     String model;
 
     @Column(name = "max_payload_gram")

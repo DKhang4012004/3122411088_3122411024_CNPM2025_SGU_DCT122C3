@@ -1,0 +1,921 @@
+{
+	"info": {
+		"_postman_id": "order-flow-test-2025",
+		"name": "Complete Order Flow Test",
+		"description": "Test toàn bộ luồng đặt hàng từ đầu đến cuối:\n1. Authentication (đăng nhập)\n2. Browse stores (xem cửa hàng)\n3. View products (xem sản phẩm)\n4. Add to cart (thêm vào giỏ)\n5. View cart (xem giỏ hàng)\n6. Checkout (đặt hàng - simulated)\n7. Drone delivery (giao hàng)\n8. Complete (hoàn thành)\n\nBase URL: http://localhost:8080/home",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "1.1 Login - Get Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save token to environment",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.token) {",
+									"        pm.environment.set(\"auth_token\", jsonData.result.token);",
+									"        pm.environment.set(\"user_id\", jsonData.result.user.id);",
+									"        console.log(\"Token saved:\", jsonData.result.token);",
+									"    }",
+									"}",
+									"",
+									"pm.test(\"Login successful\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"customer1\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login với user: customer1 / password123"
+					},
+					"response": []
+				},
+				{
+					"name": "1.2 Validate Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{auth_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/validate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"validate"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Các API liên quan đến authentication"
+		},
+		{
+			"name": "2. Drone Setup",
+			"item": [
+				{
+					"name": "2.1 Register Drone",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save drone code",
+									"if (pm.response.code === 200 || pm.response.code === 400) {",
+									"    pm.environment.set(\"drone_code\", \"DRONE001\");",
+									"}",
+									"",
+									"pm.test(\"Drone registered or already exists\", function () {",
+									"    pm.expect([200, 400]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"DRONE001\",\n    \"model\": \"Postman Test Drone\",\n    \"maxPayloadGram\": 3000,\n    \"latitude\": 10.762622,\n    \"longitude\": 106.660172\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"register"
+							]
+						},
+						"description": "Đăng ký drone tại điểm xuất phát (cửa hàng)"
+					},
+					"response": []
+				},
+				{
+					"name": "2.2 Get Drone Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}"
+							]
+						},
+						"description": "Lấy thông tin drone"
+					},
+					"response": []
+				},
+				{
+					"name": "2.3 Get All Drones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/drones",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Setup drone cho việc giao hàng"
+		},
+		{
+			"name": "3. Browse Stores",
+			"item": [
+				{
+					"name": "3.1 Get All Stores",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save first store ID",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.length > 0) {",
+									"        pm.environment.set(\"store_id\", jsonData.result[0].id);",
+									"        pm.environment.set(\"store_name\", jsonData.result[0].name);",
+									"        console.log(\"Selected store:\", jsonData.result[0].name);",
+									"    }",
+									"}",
+									"",
+									"pm.test(\"Stores found\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.length).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/stores",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stores"
+							]
+						},
+						"description": "Lấy danh sách tất cả cửa hàng"
+					},
+					"response": []
+				},
+				{
+					"name": "3.2 Get Store by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/stores/{{store_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"stores",
+								"{{store_id}}"
+							]
+						},
+						"description": "Xem chi tiết cửa hàng đã chọn"
+					},
+					"response": []
+				}
+			],
+			"description": "Xem danh sách cửa hàng"
+		},
+		{
+			"name": "4. View Products",
+			"item": [
+				{
+					"name": "4.1 Get Products by Store",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save first 2 product IDs for cart",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.result && jsonData.result.length > 0) {",
+									"        pm.environment.set(\"product_id_1\", jsonData.result[0].id);",
+									"        pm.environment.set(\"product_name_1\", jsonData.result[0].name);",
+									"        pm.environment.set(\"product_price_1\", jsonData.result[0].basePrice);",
+									"        pm.environment.set(\"product_weight_1\", jsonData.result[0].weightGram);",
+									"        ",
+									"        if (jsonData.result.length > 1) {",
+									"            pm.environment.set(\"product_id_2\", jsonData.result[1].id);",
+									"            pm.environment.set(\"product_name_2\", jsonData.result[1].name);",
+									"            pm.environment.set(\"product_price_2\", jsonData.result[1].basePrice);",
+									"            pm.environment.set(\"product_weight_2\", jsonData.result[1].weightGram);",
+									"        }",
+									"        ",
+									"        console.log(\"Products found:\", jsonData.result.length);",
+									"    }",
+									"}",
+									"",
+									"pm.test(\"Products found\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.length).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products?storeId={{store_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "storeId",
+									"value": "{{store_id}}"
+								}
+							]
+						},
+						"description": "Xem menu của cửa hàng đã chọn"
+					},
+					"response": []
+				},
+				{
+					"name": "4.2 Get Product Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/products/{{product_id_1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"{{product_id_1}}"
+							]
+						},
+						"description": "Xem chi tiết sản phẩm"
+					},
+					"response": []
+				}
+			],
+			"description": "Xem sản phẩm của cửa hàng"
+		},
+		{
+			"name": "5. Shopping Cart (with Auth)",
+			"item": [
+				{
+					"name": "5.1 Add Product 1 to Cart",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": {{product_id_1}},\n    \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart/add",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"add"
+							]
+						},
+						"description": "Thêm sản phẩm đầu tiên vào giỏ (quantity: 2)"
+					},
+					"response": []
+				},
+				{
+					"name": "5.2 Add Product 2 to Cart",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"productId\": {{product_id_2}},\n    \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart/add",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"add"
+							]
+						},
+						"description": "Thêm sản phẩm thứ 2 vào giỏ (quantity: 1)"
+					},
+					"response": []
+				},
+				{
+					"name": "5.3 View Cart",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cart",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"description": "Xem giỏ hàng với tổng tiền"
+					},
+					"response": []
+				},
+				{
+					"name": "5.4 Get Cart Item Count",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cart/count",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"count"
+							]
+						},
+						"description": "Đếm số lượng item trong giỏ"
+					},
+					"response": []
+				},
+				{
+					"name": "5.5 Update Cart Item Quantity",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart/products/{{product_id_1}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"products",
+								"{{product_id_1}}"
+							]
+						},
+						"description": "Cập nhật số lượng sản phẩm (optional)"
+					},
+					"response": []
+				}
+			],
+			"description": "Quản lý giỏ hàng (cần authentication)"
+		},
+		{
+			"name": "6. Order (Simulated)",
+			"item": [
+				{
+					"name": "6.1 Create Order (Mock)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Save order info",
+									"pm.environment.set(\"order_id\", \"ORD-\" + Date.now());",
+									"pm.environment.set(\"order_status\", \"PAID\");",
+									"",
+									"console.log(\"Order created (simulated):\", pm.environment.get(\"order_id\"));",
+									"",
+									"pm.test(\"Order data prepared\", function () {",
+									"    pm.expect(pm.environment.get(\"order_id\")).to.include(\"ORD-\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cart",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"description": "Lấy cart data để simulate order creation\n\nNote: OrderController chưa có, nên đây là simulated step.\nKhi có OrderController, thay bằng:\nPOST /orders/checkout"
+					},
+					"response": []
+				}
+			],
+			"description": "Tạo đơn hàng (hiện đang simulated, chờ OrderController)"
+		},
+		{
+			"name": "7. Drone Delivery",
+			"item": [
+				{
+					"name": "7.1 Update Drone Status - IN_FLIGHT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Drone status updated to IN_FLIGHT\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.status).to.eql(\"IN_FLIGHT\");",
+									"});",
+									"",
+									"console.log(\"Drone started delivery\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"IN_FLIGHT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"status"
+							]
+						},
+						"description": "Drone bắt đầu giao hàng"
+					},
+					"response": []
+				},
+				{
+					"name": "7.2 Update Location - Step 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": 10.763222,\n    \"longitude\": 106.660672,\n    \"batteryPercent\": 95\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"location"
+							]
+						},
+						"description": "GPS update - bước 1/5"
+					},
+					"response": []
+				},
+				{
+					"name": "7.3 Update Location - Step 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": 10.765822,\n    \"longitude\": 106.663172,\n    \"batteryPercent\": 90\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"location"
+							]
+						},
+						"description": "GPS update - bước 2/5"
+					},
+					"response": []
+				},
+				{
+					"name": "7.4 Update Location - Step 3",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": 10.768422,\n    \"longitude\": 106.665672,\n    \"batteryPercent\": 85\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"location"
+							]
+						},
+						"description": "GPS update - bước 3/5"
+					},
+					"response": []
+				},
+				{
+					"name": "7.5 Update Location - Step 4",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": 10.771022,\n    \"longitude\": 106.668172,\n    \"batteryPercent\": 82\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"location"
+							]
+						},
+						"description": "GPS update - bước 4/5"
+					},
+					"response": []
+				},
+				{
+					"name": "7.6 Update Location - Arrived",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\": 10.773622,\n    \"longitude\": 106.670172,\n    \"batteryPercent\": 80\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/location",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"location"
+							]
+						},
+						"description": "GPS update - đã đến điểm giao hàng!"
+					},
+					"response": []
+				},
+				{
+					"name": "7.7 Check Drone Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"health"
+							]
+						},
+						"description": "Kiểm tra tình trạng drone (battery, connection, etc.)"
+					},
+					"response": []
+				}
+			],
+			"description": "Drone giao hàng từ điểm A đến điểm B"
+		},
+		{
+			"name": "8. Complete Delivery",
+			"item": [
+				{
+					"name": "8.1 Update Drone Status - AVAILABLE",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Delivery completed\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.status).to.eql(\"AVAILABLE\");",
+									"});",
+									"",
+									"console.log(\"✅ Order flow completed successfully!\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"AVAILABLE\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}",
+								"status"
+							]
+						},
+						"description": "Hoàn thành giao hàng, drone về trạng thái sẵn sàng"
+					},
+					"response": []
+				},
+				{
+					"name": "8.2 Verify Drone Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/drones/{{drone_code}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"drones",
+								"{{drone_code}}"
+							]
+						},
+						"description": "Xác nhận drone đã về AVAILABLE"
+					},
+					"response": []
+				}
+			],
+			"description": "Hoàn thành giao hàng"
+		},
+		{
+			"name": "9. Cleanup (Optional)",
+			"item": [
+				{
+					"name": "9.1 Clear Cart",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cart/clear",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"clear"
+							]
+						},
+						"description": "Xóa giỏ hàng (optional, để chuẩn bị test lại)"
+					},
+					"response": []
+				},
+				{
+					"name": "9.2 Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{auth_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Đăng xuất (optional)"
+					},
+					"response": []
+				}
+			],
+			"description": "Dọn dẹp sau khi test (optional)"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/home",
+			"type": "string"
+		}
+	]
+}
+

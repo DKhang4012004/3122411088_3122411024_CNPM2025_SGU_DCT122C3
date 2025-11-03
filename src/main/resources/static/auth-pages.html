@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodFast - Login & Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f3f4f6;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #f3f4f6;
+            border: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .user-info {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .user-info h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .user-info p {
+            color: #6b7280;
+            margin: 8px 0;
+        }
+
+        .user-info strong {
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍔 FoodFast</h1>
+            <p>Welcome! Please login or create an account</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('login')">Login</button>
+            <button class="tab" onclick="showTab('register')">Register</button>
+            <button class="tab" onclick="showTab('profile')">Profile</button>
+        </div>
+
+        <!-- Login Tab -->
+        <div id="login" class="tab-content active">
+            <div id="loginAlert" class="alert"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginPhone">Phone Number</label>
+                    <input type="tel" id="loginPhone" name="phone" placeholder="0123456789" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn">Login</button>
+            </form>
+
+            <a href="home.html" class="back-link">← Back to Home</a>
+        </div>
+
+        <!-- Register Tab -->
+        <div id="register" class="tab-content">
+            <div id="registerAlert" class="alert"></div>
+
+            <form id="registerForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" placeholder="john.doe@example.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" name="phone" placeholder="0123456789" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" placeholder="Min 6 characters" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role">
+                        <option value="USER">Customer</option>
+                        <option value="STORE_OWNER">Store Owner</option>
+                        <option value="DRONE_OPERATOR">Drone Operator</option>
+                    </select>
+                </div>
+
+                <h3 style="color: #667eea; margin: 25px 0 15px;">Address Information</h3>
+
+                <div class="form-group">
+                    <label for="street">Street Address</label>
+                    <input type="text" id="street" name="street" placeholder="123 Main St">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input type="text" id="city" name="city" placeholder="Ho Chi Minh">
+                    </div>
+                    <div class="form-group">
+                        <label for="district">District</label>
+                        <input type="text" id="district" name="district" placeholder="District 1">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="latitude">Latitude</label>
+                        <input type="number" step="0.0000001" id="latitude" name="latitude" placeholder="10.762622">
+                    </div>
+                    <div class="form-group">
+                        <label for="longitude">Longitude</label>
+                        <input type="number" step="0.0000001" id="longitude" name="longitude" placeholder="106.660172">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn">Create Account</button>
+            </form>
+
+            <a href="home.html" class="back-link">← Back to Home</a>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content">
+            <div id="profileAlert" class="alert"></div>
+
+            <div id="profileContent">
+                <p style="color: #6b7280; text-align: center; padding: 40px;">
+                    Please login to view your profile
+                </p>
+            </div>
+
+            <div id="profileButtons" style="margin-top: 20px; text-align: center;">
+                <button onclick="logout()" class="btn" style="max-width: 300px; margin: 0 auto; display: none;" id="logoutBtn">
+                    Logout
+                </button>
+            </div>
+
+            <a href="home.html" class="back-link">← Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080/home';
+
+        // Tab switching
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            if (tabName === 'profile') {
+                loadProfile();
+            }
+        }
+
+        // Show alert
+        function showAlert(elementId, message, type) {
+            const alert = document.getElementById(elementId);
+            alert.textContent = message;
+            alert.className = `alert ${type} show`;
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                phone: document.getElementById('loginPhone').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch(`${BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.result) {
+                    // Store token
+                    localStorage.setItem('token', data.result.token);
+                    localStorage.setItem('userId', data.result.userId);
+
+                    showAlert('loginAlert', 'Login successful! Redirecting...', 'success');
+
+                    setTimeout(() => {
+                        showTab('profile');
+                        loadProfile();
+                    }, 1000);
+                } else {
+                    showAlert('loginAlert', data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                showAlert('loginAlert', 'Error: ' + error.message, 'error');
+            }
+        });
+
+        // Register
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value,
+                address: {
+                    street: document.getElementById('street').value,
+                    city: document.getElementById('city').value,
+                    district: document.getElementById('district').value,
+                    latitude: parseFloat(document.getElementById('latitude').value) || 0,
+                    longitude: parseFloat(document.getElementById('longitude').value) || 0,
+                    isDefault: true
+                }
+            };
+
+            try {
+                const response = await fetch(`${BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showAlert('registerAlert', 'Registration successful! Please login.', 'success');
+                    setTimeout(() => {
+                        showTab('login');
+                    }, 2000);
+                } else {
+                    showAlert('registerAlert', data.message || 'Registration failed', 'error');
+                }
+            } catch (error) {
+                showAlert('registerAlert', 'Error: ' + error.message, 'error');
+            }
+        });
+
+        // Load profile
+        async function loadProfile() {
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                document.getElementById('profileContent').innerHTML = `
+                    <p style="color: #6b7280; text-align: center; padding: 40px;">
+                        Please login to view your profile
+                    </p>
+                `;
+                document.getElementById('logoutBtn').style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BASE_URL}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.result) {
+                    const user = data.result;
+                    document.getElementById('profileContent').innerHTML = `
+                        <div class="user-info">
+                            <h3>👤 Profile Information</h3>
+                            <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
+                            <p><strong>Email:</strong> ${user.email}</p>
+                            <p><strong>Phone:</strong> ${user.phone}</p>
+                            <p><strong>Role:</strong> ${user.role}</p>
+                            ${user.addresses && user.addresses.length > 0 ? `
+                                <h3 style="margin-top: 20px;">📍 Addresses</h3>
+                                ${user.addresses.map(addr => `
+                                    <p style="margin-left: 15px;">
+                                        ${addr.street}, ${addr.district}, ${addr.city}
+                                        ${addr.isDefault ? '<span style="color: #667eea;">(Default)</span>' : ''}
+                                    </p>
+                                `).join('')}
+                            ` : ''}
+                        </div>
+                    `;
+                    document.getElementById('logoutBtn').style.display = 'block';
+                } else {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    showAlert('profileAlert', 'Session expired. Please login again.', 'error');
+                    document.getElementById('logoutBtn').style.display = 'none';
+                }
+            } catch (error) {
+                showAlert('profileAlert', 'Error loading profile: ' + error.message, 'error');
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            showAlert('profileAlert', 'Logged out successfully', 'success');
+            document.getElementById('profileContent').innerHTML = `
+                <p style="color: #6b7280; text-align: center; padding: 40px;">
+                    You have been logged out. Please login again.
+                </p>
+            `;
+            document.getElementById('logoutBtn').style.display = 'none';
+
+            setTimeout(() => {
+                showTab('login');
+            }, 1500);
+        }
+
+        // Auto-detect location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+            });
+        }
+    </script>
+</body>
+</html>
+

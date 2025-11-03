@@ -24,6 +24,94 @@ mvnw.cmd spring-boot:run
 
 ---
 
+---
+
+## 🧪 **TEST COMPLETE ORDER FLOW** ⭐ NEW!
+
+### 2 CÁCH TEST:
+
+#### 📮 **Cách 1: Test với Postman API** (Fast & Professional)
+```bash
+# Import collection vào Postman
+File: Complete_Order_Flow_Test.postman_collection.json
+
+# Setup & Run
+1. Import collection
+2. Create environment (base_url: http://localhost:8080/home)
+3. Start server: start-server.bat
+4. Click "Run" trong Postman
+5. Done! (~10 seconds)
+
+# Docs:
+- POSTMAN_TEST_GUIDE.md - Full guide
+- POSTMAN_QUICK_REFERENCE.md - Cheatsheet
+```
+
+**Ưu điểm:**
+- ⚡ Nhanh (API trực tiếp)
+- 🔍 Debug chi tiết (console, headers)
+- 🤖 Automation (Newman CLI)
+- 🔄 CI/CD integration
+
+---
+
+#### 🌐 **Cách 2: Test với HTML Page** (Visual & Interactive)
+
+### 🚀 Quick Start (1 click)
+```bash
+# 1. Insert test data (chỉ làm 1 lần)
+insert-test-data.bat
+
+# 2. Start server
+start-server.bat
+
+# 3. Open test page
+test-order-flow.bat
+
+# 4. Click "🚀 CHẠY TOÀN BỘ LUỒNG TỰ ĐỘNG"
+```
+
+### 📋 Test luồng hoàn chỉnh:
+```
+✅ Khách chọn cửa hàng
+✅ Xem menu & thêm vào giỏ
+✅ Đặt hàng & thanh toán
+✅ Drone tự động nhận đơn
+✅ Drone bay đến lấy hàng
+✅ Drone giao hàng cho khách
+✅ Hoàn thành giao hàng
+```
+
+### 📖 Tài liệu:
+- **Quick Start**: [QUICK_START_ORDER_FLOW.md](QUICK_START_ORDER_FLOW.md)
+- **Chi tiết**: [HUONG_DAN_TEST_ORDER_FLOW.md](HUONG_DAN_TEST_ORDER_FLOW.md)
+- **Summary**: [TEST_ORDER_FLOW_SUMMARY.md](TEST_ORDER_FLOW_SUMMARY.md)
+- **Luồng hệ thống**: [LUONG_HOAT_DONG_HE_THONG.md](LUONG_HOAT_DONG_HE_THONG.md)
+
+### 🎯 URL Test Page:
+```
+http://localhost:8080/home/test-complete-order-flow.html
+```
+
+### 📮 Test với Postman API:
+```
+Collection: Complete_Order_Flow_Test.postman_collection.json
+
+Hướng dẫn:
+1. Import collection vào Postman
+2. Tạo environment với base_url: http://localhost:8080/home
+3. Chạy Collection Runner hoặc test từng API
+4. Xem chi tiết: POSTMAN_TEST_GUIDE.md
+```
+
+**Ưu điểm Postman:**
+- ✅ Test API trực tiếp (nhanh hơn)
+- ✅ Debug chi tiết (headers, console)
+- ✅ Automation với Newman CLI
+- ✅ CI/CD integration
+
+---
+
 ## 📱 Drone Simulator
 
 ### 🔥 Test trên Điện Thoại (Khuyến nghị)

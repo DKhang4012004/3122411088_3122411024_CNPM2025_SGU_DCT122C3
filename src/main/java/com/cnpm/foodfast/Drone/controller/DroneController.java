@@ -6,6 +6,7 @@ import com.cnpm.foodfast.dto.request.DroneRegisterRequest;
 import com.cnpm.foodfast.dto.request.DroneStatusUpdateRequest;
 import com.cnpm.foodfast.dto.response.API.APIResponse;
 import com.cnpm.foodfast.dto.response.DroneResponse;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,9 +26,8 @@ public class DroneController {
      * Register a new drone (for phone simulator)
      */
     @PostMapping("/register")
-    public APIResponse<DroneResponse> registerDrone(@RequestBody DroneRegisterRequest request) {
+    public APIResponse<DroneResponse> registerDrone(@Valid @RequestBody DroneRegisterRequest request) {
         return APIResponse.<DroneResponse>builder()
-                .code(1000)
                 .message("Drone registered successfully")
                 .result(droneService.registerDrone(request))
                 .build();
@@ -39,7 +39,6 @@ public class DroneController {
     @GetMapping
     public APIResponse<List<DroneResponse>> getAllDrones() {
         return APIResponse.<List<DroneResponse>>builder()
-                .code(1000)
                 .result(droneService.getAllDrones())
                 .build();
     }
@@ -50,7 +49,6 @@ public class DroneController {
     @GetMapping("/{code}")
     public APIResponse<DroneResponse> getDroneByCode(@PathVariable String code) {
         return APIResponse.<DroneResponse>builder()
-                .code(1000)
                 .result(droneService.getDroneByCode(code))
                 .build();
     }
@@ -63,7 +61,6 @@ public class DroneController {
             @PathVariable String code,
             @RequestBody DroneLocationUpdateRequest request) {
         return APIResponse.<DroneResponse>builder()
-                .code(1000)
                 .message("Location updated")
                 .result(droneService.updateLocation(code, request))
                 .build();
@@ -77,7 +74,6 @@ public class DroneController {
             @PathVariable String code,
             @RequestBody DroneStatusUpdateRequest request) {
         return APIResponse.<DroneResponse>builder()
-                .code(1000)
                 .message("Status updated")
                 .result(droneService.updateStatus(code, request))
                 .build();
@@ -89,7 +85,6 @@ public class DroneController {
     @GetMapping("/{code}/current-delivery")
     public APIResponse<Object> getCurrentDelivery(@PathVariable String code) {
         return APIResponse.builder()
-                .code(1000)
                 .result(droneService.getCurrentDelivery(code))
                 .build();
     }
