@@ -1,0 +1,312 @@
+{
+  "info": {
+    "name": "Drone Delivery - Payment System Demo",
+    "description": "Complete Postman collection for Payment System Demo\nMarketplace Model: User → App → Store\n\nCreated: 2025-10-31\nBase URL: http://localhost:8080/home",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. ORDER MANAGEMENT",
+      "item": [
+        {
+          "name": "1.1 Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"storeId\": 1,\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"productId\": 2,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/orders",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "orders"]
+            },
+            "description": "Tạo đơn hàng mới\n\nFlow:\n1. Validate user & store\n2. Check product availability\n3. Reserve product quantity\n4. Calculate totals\n5. Return order with status CREATED"
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/orders/1",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "orders", "1"]
+            },
+            "description": "Xem chi tiết đơn hàng theo ID"
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Get Orders by User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/orders/user/1",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "orders", "user", "1"]
+            },
+            "description": "Xem tất cả đơn hàng của user"
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Get Orders by Store",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/orders/store/1",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "orders", "store", "1"]
+            },
+            "description": "Xem tất cả đơn hàng của cửa hàng"
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/orders/1/cancel",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "orders", "1", "cancel"]
+            },
+            "description": "Hủy đơn hàng (chỉ nếu chưa thanh toán)\n\nFlow:\n1. Check payment status\n2. Release reserved quantity\n3. Update order status to CANCELLED"
+          },
+          "response": []
+        }
+      ],
+      "description": "APIs quản lý đơn hàng"
+    },
+    {
+      "name": "2. PAYMENT PROCESSING",
+      "item": [
+        {
+          "name": "2.1 Initialize Payment (VNPay)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": 1,\n  \"provider\": \"VNPAY\",\n  \"method\": \"QR\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/payments/init",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "payments", "init"]
+            },
+            "description": "Khởi tạo thanh toán VNPay\n\nFlow:\n1. Create PaymentTransaction (INIT)\n2. Generate VNPay payment URL with HMAC SHA512\n3. Update Order status to PENDING_PAYMENT\n4. Return paymentUrl for user to pay\n\nResult:\n- paymentUrl: Copy và mở trong browser để thanh toán"
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 VNPay Webhook (Success)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vnp_TmnCode\": \"DEMO\",\n  \"vnp_Amount\": \"16500000\",\n  \"vnp_BankCode\": \"NCB\",\n  \"vnp_BankTranNo\": \"VNP123456789\",\n  \"vnp_CardType\": \"ATM\",\n  \"vnp_PayDate\": \"20251031143000\",\n  \"vnp_OrderInfo\": \"Payment for order ORD1730361234567ABC12345\",\n  \"vnp_TransactionNo\": \"14012345\",\n  \"vnp_ResponseCode\": \"00\",\n  \"vnp_TransactionStatus\": \"00\",\n  \"vnp_TxnRef\": \"ORD1730361234567ABC12345\",\n  \"vnp_SecureHash\": \"sample_hash_here\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/payments/vnpay-webhook",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "payments", "vnpay-webhook"]
+            },
+            "description": "VNPay Webhook - Tự động gọi khi thanh toán thành công\n\n⚠️ QUAN TRỌNG NHẤT - Nghiệp vụ tự động:\n\n1. Verify HMAC SHA512 signature\n2. Update PaymentTransaction → SUCCESS\n3. Update Order → PAID\n4. *** CREATE STORE LEDGER ENTRY ***\n   - Total: 165,000đ\n   - Commission (20%): 33,000đ\n   - Gateway fee (1%): 1,650đ\n   - Net owed: 130,350đ\n\nNote: Thay vnp_TxnRef bằng orderCode thực tế"
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Get Payment by Order ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/payments/order/1",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "payments", "order", "1"]
+            },
+            "description": "Xem thông tin thanh toán của đơn hàng"
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 VNPay Return URL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/payments/vnpay-return?vnp_ResponseCode=00&vnp_TxnRef=ORD1730361234567ABC12345",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "payments", "vnpay-return"],
+              "query": [
+                {
+                  "key": "vnp_ResponseCode",
+                  "value": "00",
+                  "description": "00 = Success, other = Failed"
+                },
+                {
+                  "key": "vnp_TxnRef",
+                  "value": "ORD1730361234567ABC12345",
+                  "description": "Order code"
+                }
+              ]
+            },
+            "description": "Return URL sau khi user thanh toán trên VNPay\n\nUser sẽ được redirect về đây với kết quả"
+          },
+          "response": []
+        }
+      ],
+      "description": "APIs xử lý thanh toán VNPay"
+    },
+    {
+      "name": "3. LEDGER & PAYOUT (ADMIN)",
+      "item": [
+        {
+          "name": "3.1 Get Unpaid Amount for Store",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/ledger/store/1/unpaid-amount",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "ledger", "store", "1", "unpaid-amount"]
+            },
+            "description": "Xem tổng số tiền chưa thanh toán cho cửa hàng\n\nQuery:\nSELECT SUM(net_amount_owed) \nFROM store_ledger \nWHERE store_id = 1 AND status = 'UNPAID'"
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Create Payout Batch",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/ledger/store/1/payout",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "ledger", "store", "1", "payout"]
+            },
+            "description": "Tạo lô thanh toán cho cửa hàng\n\nFlow:\n1. Find all UNPAID ledger entries\n2. Calculate total payout amount\n3. Create PayoutBatch (PENDING)\n4. Update all ledgers to PROCESSING\n5. Link ledgers to payout batch\n\nUse case:\n- Admin tạo lô thanh toán hàng tuần/tháng\n- Gộp nhiều đơn để giảm phí chuyển khoản"
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 Mark Payout as Paid",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/ledger/payout/1/mark-paid?transactionCode=BANK20251031001",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "ledger", "payout", "1", "mark-paid"],
+              "query": [
+                {
+                  "key": "transactionCode",
+                  "value": "BANK20251031001",
+                  "description": "Mã giao dịch ngân hàng"
+                }
+              ]
+            },
+            "description": "Đánh dấu lô thanh toán đã hoàn tất\n\nFlow:\n1. Update PayoutBatch to PAID\n2. Save bank transaction code\n3. Set processed_at timestamp\n4. Update all linked ledgers to PAID\n\nUse case:\n- Sau khi kế toán chuyển tiền cho cửa hàng\n- Ghi nhận mã giao dịch để đối soát"
+          },
+          "response": []
+        },
+        {
+          "name": "3.4 Get Payout History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/ledger/store/1/payouts",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "ledger", "store", "1", "payouts"]
+            },
+            "description": "Xem lịch sử thanh toán của cửa hàng\n\nReturn:\n- All payout batches\n- Transaction codes\n- Amounts paid\n- Timestamps"
+          },
+          "response": []
+        }
+      ],
+      "description": "APIs quản lý công nợ và thanh toán cho cửa hàng (Admin only)"
+    },
+    {
+      "name": "DEMO SCENARIOS",
+      "item": [
+        {
+          "name": "SCENARIO 1: Complete Payment Flow",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/orders/1",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "orders", "1"]
+            },
+            "description": "COMPLETE PAYMENT FLOW DEMO\n\nSteps:\n1. POST /orders - Create order\n2. POST /payments/init - Initialize payment\n3. Open paymentUrl in browser\n4. POST /payments/vnpay-webhook - Simulate success\n5. GET /payments/order/1 - Verify payment\n6. Check database: store_ledger table\n\nExpected Result:\n✅ Order: CREATED → PAID\n✅ Payment: INIT → SUCCESS\n✅ StoreLedger: Created with UNPAID\n✅ Product quantity: Reserved\n\nTime: ~5 minutes"
+          },
+          "response": []
+        },
+        {
+          "name": "SCENARIO 2: Store Payout Flow",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/home/api/v1/ledger/store/1/unpaid-amount",
+              "host": ["http://localhost:8080"],
+              "path": ["home", "api", "v1", "ledger", "store", "1", "unpaid-amount"]
+            },
+            "description": "STORE PAYOUT FLOW DEMO\n\nPrerequisite:\n- Have 3-4 paid orders (from Scenario 1)\n\nSteps:\n1. GET /ledger/store/1/unpaid-amount\n   → See total unpaid: ~500,000đ\n\n2. POST /ledger/store/1/payout\n   → Create payout batch\n   → Returns batch ID\n\n3. Database check:\n   SELECT * FROM payout_batch;\n   SELECT * FROM store_ledger;\n   → See status changes: UNPAID → PROCESSING\n\n4. POST /ledger/payout/1/mark-paid?transactionCode=BANK001\n   → Mark as paid\n\n5. GET /ledger/store/1/payouts\n   → See payout history\n\n6. GET /ledger/store/1/unpaid-amount\n   → Should be 0\n\nExpected Result:\n✅ PayoutBatch: PENDING → PAID\n✅ StoreLedger: PROCESSING → PAID\n✅ Unpaid amount: 500,000đ → 0đ\n✅ Transaction code recorded\n\nTime: ~3 minutes"
+          },
+          "response": []
+        }
+      ],
+      "description": "Pre-defined demo scenarios with step-by-step instructions"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/home",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "storeId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}
+

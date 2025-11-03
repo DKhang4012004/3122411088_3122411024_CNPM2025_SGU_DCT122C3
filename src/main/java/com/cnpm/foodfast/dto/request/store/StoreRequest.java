@@ -1,6 +1,5 @@
 package com.cnpm.foodfast.dto.request.store;
 
-import jakarta.persistence.Column;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -18,4 +17,19 @@ public class StoreRequest {
 
 
     String description;
+
+
+    String bankAccountName;
+
+
+    String bankAccountNumber;
+
+
+    String bankName;
+
+
+    String bankBranch;
+
+
+    String payoutEmail;
 }

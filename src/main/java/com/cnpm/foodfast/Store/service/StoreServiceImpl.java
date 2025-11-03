@@ -74,8 +74,14 @@ public class StoreServiceImpl implements StoreService {
                 .ownerUserId(store.getOwnerUserId())
                 .name(store.getName())
                 .description(store.getDescription())
+                .bankAccountName(store.getBankAccountName())
+                .bankAccountNumber(store.getBankAccountNumber())
+                .bankName(store.getBankName())
+                .bankBranch(store.getBankBranch())
+                .payoutEmail(store.getPayoutEmail())
                 .storeStatus(store.getStoreStatus())
                 .createdAt(store.getCreatedAt())
+                .updatedAt(store.getUpdatedAt())
                 .products(productResponses)
                 .totalProducts(products.size())
                 .availableProducts((int) availableCount)
@@ -102,4 +108,3 @@ public class StoreServiceImpl implements StoreService {
                 .build();
     }
 }
-

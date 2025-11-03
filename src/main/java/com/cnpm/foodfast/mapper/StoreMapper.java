@@ -17,6 +17,7 @@ public interface StoreMapper {
     @Mapping(target = "id", ignore = true)           // DB tự sinh
     @Mapping(target = "storeStatus", ignore = true) // set trong service
     @Mapping(target = "createdAt", ignore = true)   // DB tự sinh
+    @Mapping(target = "updatedAt", ignore = true)   // DB tự sinh
     Store toStore(StoreRequest request);
 
 
@@ -24,7 +25,8 @@ public interface StoreMapper {
     List<StoreResponse> toStoreResponseList(List<Store> stores);
     @Mapping(target = "id", ignore = true)           // DB tự sinh
     @Mapping(target = "storeStatus", ignore = true) // set trong service
-    @Mapping(target = "createdAt", ignore = true)   // D
+    @Mapping(target = "createdAt", ignore = true)   // DB tự sinh
+    @Mapping(target = "updatedAt", ignore = true)   // DB tự sinh
     void updateStore(@MappingTarget Store store, StoreRequest request);
 
     @Mapping(target = "id", ignore = true)
