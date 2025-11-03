@@ -60,7 +60,7 @@ public class StoreServiceImpl implements StoreService {
                 .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
 
         // Update fields
-        storeMapper.updateStore(request, store);
+        storeMapper.updateStore(store, request);
         store = storeRepository.save(store);
 
         return storeMapper.toStoreResponse(store);
