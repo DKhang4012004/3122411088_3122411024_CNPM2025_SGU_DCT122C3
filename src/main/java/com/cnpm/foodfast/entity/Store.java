@@ -25,10 +25,10 @@ public class Store {
     @Column(name = "owner_user_id", nullable = false)
     Long ownerUserId;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false, length = 200)
     String name;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TEXT")
     String description;
 
     @Column(name = "bank_account_name")

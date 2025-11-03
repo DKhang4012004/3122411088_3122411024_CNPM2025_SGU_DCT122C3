@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodFast - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 50px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .card-description {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍔 FoodFast</h1>
+            <p class="subtitle">Food Delivery System with Drone Integration</p>
+        </div>
+
+        <div class="card">
+            <div class="icon">🚁</div>
+            <div class="card-title">Drone Simulator (Mock GPS)</div>
+            <div class="card-description">
+                Mô phỏng drone giao hàng với GPS giả lập. Hoạt động trên mọi thiết bị, không cần GPS thật.
+                Khuyến nghị cho testing trên điện thoại!
+            </div>
+            <a href="drone-simulator-mock.html" class="btn btn-primary">🚀 Mở Mock GPS</a>
+            <div class="info-box">
+                ✅ Hoạt động trên IP address<br>
+                ✅ Không cần quyền GPS<br>
+                ✅ Có thể test qua mạng LAN
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="icon">📍</div>
+            <div class="card-title">Drone Simulator (Real GPS)</div>
+            <div class="card-description">
+                Sử dụng GPS thật của thiết bị. Chỉ hoạt động trên localhost hoặc HTTPS.
+            </div>
+            <a href="drone-simulator.html" class="btn">📡 Mở Real GPS</a>
+            <div class="info-box">
+                ⚠️ Chỉ hoạt động trên localhost<br>
+                ⚠️ Cần cấp quyền GPS<br>
+                💡 Tự động redirect sang Mock GPS nếu không phải localhost
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="icon">🔍</div>
+            <div class="card-title">Test Connection</div>
+            <div class="card-description">
+                Kiểm tra kết nối với server API. Hữu ích để debug vấn đề kết nối.
+            </div>
+            <a href="test-connection.html" class="btn">🧪 Test Kết Nối</a>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">📚 API Docs</div>
+                <div class="card-description">Tài liệu API</div>
+                <a href="/home/drones" class="btn">Xem API</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🛍️ Products</div>
+                <div class="card-description">Danh sách sản phẩm</div>
+                <a href="/home/products" class="btn">Xem Products</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🏪 Stores</div>
+                <div class="card-description">Danh sách cửa hàng</div>
+                <a href="/home/stores" class="btn">Xem Stores</a>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 30px; text-align: center;">
+            <div class="card-title">📱 Hướng dẫn test trên điện thoại</div>
+            <div class="card-description">
+                1. Đảm bảo điện thoại và máy tính cùng WiFi<br>
+                2. Truy cập: <strong id="phoneUrl">http://192.168.1.86:8080/home</strong><br>
+                3. Chọn "Drone Simulator (Mock GPS)"<br>
+                4. Điền form và nhấn "Register & Start"
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto detect and display IP
+        const hostname = window.location.hostname;
+        const port = window.location.port || '8080';
+        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+            document.getElementById('phoneUrl').textContent =
+                `http://${hostname}:${port}/home`;
+        }
+    </script>
+</body>
+</html>
+

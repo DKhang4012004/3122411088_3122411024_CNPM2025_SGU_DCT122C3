@@ -3,6 +3,7 @@ package com.cnpm.foodfast.Authentications.controller;
 import com.cnpm.foodfast.dto.request.Auth.LoginRequest;
 import com.cnpm.foodfast.dto.request.Auth.LogoutRequest;
 import com.cnpm.foodfast.dto.request.Auth.SignUpRequest;
+import com.cnpm.foodfast.dto.request.Auth.ValidateTokenRequest;
 import com.cnpm.foodfast.dto.response.API.APIResponse;
 import com.cnpm.foodfast.dto.response.Auth.AuthenticationResponse;
 import com.cnpm.foodfast.dto.response.User.UserResponse;
@@ -63,10 +64,10 @@ public class AuthenticationController {
     }
 
     @PostMapping("/validate")
-    public APIResponse<Boolean> validateToken(@RequestParam String token) {
+    public APIResponse<Boolean> validateToken(@RequestBody ValidateTokenRequest request) {
         APIResponse<Boolean> response = new APIResponse<>();
         try {
-            boolean isValid = authenticationService.validateToken(token);
+            boolean isValid = authenticationService.validateToken(request.getToken());
             response.setResult(isValid);
             response.setMessage(isValid ? "Token is valid" : "Token is invalid");
         } catch (Exception e) {

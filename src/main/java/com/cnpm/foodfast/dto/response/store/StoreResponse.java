@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 public class StoreResponse {
     Long id;
     Long ownerUserId;
-
     String name;
     String description;
 
@@ -25,7 +24,6 @@ public class StoreResponse {
     String payoutEmail;
 
     StoreStatus storeStatus;
-
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

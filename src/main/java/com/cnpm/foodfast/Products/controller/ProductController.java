@@ -5,6 +5,7 @@ import com.cnpm.foodfast.dto.request.product.ProductRequest;
 import com.cnpm.foodfast.dto.response.API.APIResponse;
 import com.cnpm.foodfast.dto.response.product.ProductResponse;
 import com.cnpm.foodfast.Products.service.ProductServiceImpl;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,14 +21,14 @@ public class ProductController {
     ProductServiceImpl productService;
 
     @PostMapping
-    public APIResponse<ProductResponse> createProduct(@RequestBody ProductRequest request){
+    public APIResponse<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request){
         return APIResponse.<ProductResponse>builder()
                 .result(productService.create(request))
                 .build();
     }
 
     @PutMapping("/{id}")
-    public APIResponse<ProductResponse> updateProduct(@RequestBody ProductRequest request, @PathVariable Long id) {
+    public APIResponse<ProductResponse> updateProduct(@Valid @RequestBody ProductRequest request, @PathVariable Long id) {
         return APIResponse.<ProductResponse>builder()
                 .result(productService.update(id, request))
                 .build();
@@ -37,7 +38,7 @@ public class ProductController {
     public APIResponse<Void> deleteProduct(@PathVariable Long id) {
         productService.delete(id);
         return APIResponse.<Void>builder()
-                .message("Product deleted")
+                .message("Product deleted successfully")
                 .build();
     }
 
@@ -62,6 +63,18 @@ public class ProductController {
                 .build();
     }
 
+    @GetMapping("/store/{storeId}")
+    public APIResponse<List<ProductResponse>> getProductsByStore(@PathVariable Long storeId) {
+        return APIResponse.<List<ProductResponse>>builder()
+                .result(productService.getByStore(storeId))
+                .build();
+    }
 
+    @GetMapping("/search")
+    public APIResponse<List<ProductResponse>> searchProducts(@RequestParam String keyword) {
+        return APIResponse.<List<ProductResponse>>builder()
+                .result(productService.searchProducts(keyword))
+                .build();
+    }
 
 }

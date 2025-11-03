@@ -49,9 +49,15 @@ public class GlobalExceptionHandler {
 
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
         try {
-            errorCode=ErrorCode.valueOf(enumKey);
-        }catch (IllegalArgumentException exception){
-
+            errorCode = ErrorCode.valueOf(enumKey);
+        } catch (IllegalArgumentException exception) {
+            // If not a valid enum key, return the validation message directly
+            return ResponseEntity.badRequest().body(
+                    APIResponse.builder()
+                            .code(HttpStatus.BAD_REQUEST.value())
+                            .message(enumKey)  // Return actual validation message
+                            .build()
+            );
         }
         return ResponseEntity.badRequest().body(
                 APIResponse.builder()

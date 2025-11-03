@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Connection - FoodFast API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        .status-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .status-icon {
+            font-size: 80px;
+            margin-bottom: 15px;
+        }
+
+        .status-text {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-detail {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        .info-label {
+            opacity: 0.8;
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .success {
+            color: #4CAF50;
+        }
+
+        .error {
+            color: #f44336;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .test-results {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .test-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔍 Test Connection</h1>
+            <p class="subtitle">FoodFast Server Connection Test</p>
+
+            <div id="testingView" class="status-box">
+                <div class="status-icon">
+                    <div class="loading"></div>
+                </div>
+                <div class="status-text">Testing...</div>
+                <div class="status-detail">Đang kiểm tra kết nối với server</div>
+            </div>
+
+            <div id="successView" class="status-box hidden">
+                <div class="status-icon">✅</div>
+                <div class="status-text success">Kết Nối Thành Công!</div>
+                <div class="status-detail">Server đang hoạt động bình thường</div>
+            </div>
+
+            <div id="errorView" class="status-box hidden">
+                <div class="status-icon">❌</div>
+                <div class="status-text error">Không Kết Nối Được</div>
+                <div class="status-detail" id="errorMessage">Vui lòng kiểm tra lại cấu hình</div>
+            </div>
+
+            <div id="infoView" class="hidden">
+                <div class="info-row">
+                    <span class="info-label">API URL:</span>
+                    <span class="info-value" id="displayUrl">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value" id="displayStatus">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Response Time:</span>
+                    <span class="info-value" id="displayTime">-</span>
+                </div>
+            </div>
+
+            <div id="testResults" class="test-results hidden">
+                <h3 style="margin-bottom: 10px;">📋 Test Results:</h3>
+                <div id="resultsList"></div>
+            </div>
+
+            <button class="btn btn-primary" onclick="runTests()">🔄 Test Lại</button>
+            <button class="btn btn-secondary" onclick="goToDroneSimulator()">🚁 Đến Drone Simulator</button>
+        </div>
+    </div>
+
+    <script>
+        let apiBaseUrl = '';
+
+        // Detect API URL automatically
+        function detectApiUrl() {
+            const hostname = window.location.hostname;
+            const port = window.location.port || '8080';
+            const protocol = window.location.protocol;
+
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                apiBaseUrl = `${protocol}//${hostname}:8080/home`;
+            } else {
+                apiBaseUrl = `${protocol}//${hostname}:${port}/home`;
+            }
+
+            return apiBaseUrl;
+        }
+
+        async function testConnection() {
+            const startTime = Date.now();
+            try {
+                const response = await fetch(`${apiBaseUrl}/drones`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return {
+                        success: true,
+                        status: response.status,
+                        responseTime: responseTime,
+                        data: data
+                    };
+                } else {
+                    return {
+                        success: false,
+                        status: response.status,
+                        responseTime: responseTime,
+                        error: `HTTP ${response.status}`
+                    };
+                }
+            } catch (error) {
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                return {
+                    success: false,
+                    status: 0,
+                    responseTime: responseTime,
+                    error: error.message
+                };
+            }
+        }
+
+        async function testMultipleEndpoints() {
+            const endpoints = [
+                { name: 'Drones API', path: '/drones' },
+                { name: 'Products API', path: '/products' },
+                { name: 'Stores API', path: '/stores' },
+                { name: 'Categories API', path: '/categories' }
+            ];
+
+            const results = [];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(`${apiBaseUrl}${endpoint.path}`);
+                    const endTime = Date.now();
+
+                    results.push({
+                        name: endpoint.name,
+                        success: response.ok,
+                        status: response.status,
+                        time: endTime - startTime
+                    });
+                } catch (error) {
+                    results.push({
+                        name: endpoint.name,
+                        success: false,
+                        status: 0,
+                        error: error.message
+                    });
+                }
+            }
+
+            return results;
+        }
+
+        async function runTests() {
+            // Reset views
+            document.getElementById('testingView').classList.remove('hidden');
+            document.getElementById('successView').classList.add('hidden');
+            document.getElementById('errorView').classList.add('hidden');
+            document.getElementById('infoView').classList.add('hidden');
+            document.getElementById('testResults').classList.add('hidden');
+
+            // Detect API URL
+            detectApiUrl();
+
+            // Wait a bit for visual effect
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Test connection
+            const result = await testConnection();
+
+            if (result.success) {
+                // Show success
+                document.getElementById('testingView').classList.add('hidden');
+                document.getElementById('successView').classList.remove('hidden');
+                document.getElementById('infoView').classList.remove('hidden');
+
+                // Update info
+                document.getElementById('displayUrl').textContent = apiBaseUrl;
+                document.getElementById('displayStatus').textContent = result.status + ' OK';
+                document.getElementById('displayTime').textContent = result.responseTime + ' ms';
+
+                // Test other endpoints
+                const multiResults = await testMultipleEndpoints();
+                displayTestResults(multiResults);
+            } else {
+                // Show error
+                document.getElementById('testingView').classList.add('hidden');
+                document.getElementById('errorView').classList.remove('hidden');
+
+                let errorMsg = '❌ ' + result.error;
+                if (result.error.includes('Failed to fetch')) {
+                    errorMsg += '\n\n📝 Kiểm tra:\n';
+                    errorMsg += '1. Server có đang chạy?\n';
+                    errorMsg += '2. Firewall đã mở chưa?\n';
+                    errorMsg += '3. Cùng WiFi với PC?\n';
+                    errorMsg += '4. URL có đúng không?';
+                }
+
+                document.getElementById('errorMessage').textContent = errorMsg;
+                document.getElementById('errorMessage').style.whiteSpace = 'pre-line';
+            }
+        }
+
+        function displayTestResults(results) {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+
+            results.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'test-item';
+
+                const icon = result.success ? '✅' : '❌';
+                const status = result.success ? `${result.status} (${result.time}ms)` : '❌ Failed';
+
+                item.innerHTML = `${icon} <strong>${result.name}</strong>: ${status}`;
+                resultsList.appendChild(item);
+            });
+
+            document.getElementById('testResults').classList.remove('hidden');
+        }
+
+        function goToDroneSimulator() {
+            window.location.href = 'drone-simulator.html';
+        }
+
+        // Auto run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>
+

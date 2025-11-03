@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Drone Delivery Flow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 30px; font-size: 32px; }
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .step-info { flex: 1; }
+        .step-number {
+            background: #4CAF50;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn-primary { background: #4CAF50; }
+        .btn-action { background: #2196F3; }
+        .btn-complete { background: #ff9800; }
+        .btn-full {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .log-entry { margin-bottom: 8px; }
+        .log-success { color: #4CAF50; }
+        .log-error { color: #f44336; }
+        .log-info { color: #2196F3; }
+        .log-warning { color: #ff9800; }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status-available { background: #4CAF50; }
+        .status-in-flight { background: #2196F3; }
+        .status-completed { background: #ff9800; }
+        .coordinates {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+        .route-map {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 24px;
+            line-height: 1.8;
+        }
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚁 Test Drone Delivery: A → B</h1>
+
+        <!-- Configuration -->
+        <div class="card">
+            <div class="section-title">⚙️ Cấu hình</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <label style="font-size: 14px; margin-bottom: 5px; display: block;">API URL:</label>
+                    <input type="text" id="apiUrl" value="http://localhost:8080/home"
+                           style="width: 100%; padding: 10px; border-radius: 8px; border: none;">
+                </div>
+                <div>
+                    <label style="font-size: 14px; margin-bottom: 5px; display: block;">Drone Code:</label>
+                    <input type="text" id="droneCode" value="DRONE001"
+                           style="width: 100%; padding: 10px; border-radius: 8px; border: none;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Route Info -->
+        <div class="card">
+            <div class="section-title">📍 Tuyến đường giao hàng</div>
+            <div class="route-map">
+                🏪 Điểm A<br>
+                (10.762622, 106.660172)<br>
+                ⬇️<br>
+                ✈️ Bay 11 bước về Bắc + 10 bước về Đông<br>
+                ⬇️<br>
+                🏠 Điểm B<br>
+                (10.773622, 106.670172)
+            </div>
+            <div class="coordinates">
+                <strong>📏 Khoảng cách:</strong> ~1.5km<br>
+                <strong>⏱️ Thời gian dự kiến:</strong> 2-3 phút (test mode)
+            </div>
+        </div>
+
+        <!-- Test Steps -->
+        <div class="card">
+            <div class="section-title">🎯 Các bước test</div>
+
+            <div class="step">
+                <div class="step-info">
+                    <span class="step-number">1</span>
+                    <strong>Đăng ký Drone tại điểm A</strong>
+                </div>
+                <button class="btn btn-primary" onclick="step1()">Thực hiện</button>
+            </div>
+
+            <div class="step">
+                <div class="step-info">
+                    <span class="step-number">2</span>
+                    <strong>Bắt đầu giao hàng (IN_FLIGHT)</strong>
+                </div>
+                <button class="btn btn-action" onclick="step2()" id="btn2" disabled>Thực hiện</button>
+            </div>
+
+            <div class="step">
+                <div class="step-info">
+                    <span class="step-number">3</span>
+                    <strong>Di chuyển đến điểm B (Auto)</strong>
+                </div>
+                <button class="btn btn-action" onclick="step3()" id="btn3" disabled>Bắt đầu bay</button>
+            </div>
+
+            <div class="step">
+                <div class="step-info">
+                    <span class="step-number">4</span>
+                    <strong>Hoàn thành giao hàng (AVAILABLE)</strong>
+                </div>
+                <button class="btn btn-complete" onclick="step4()" id="btn4" disabled>Hoàn thành</button>
+            </div>
+
+            <button class="btn btn-primary btn-full" onclick="runFullTest()">
+                🚀 CHẠY TỰ ĐỘNG TOÀN BỘ
+            </button>
+        </div>
+
+        <!-- Log -->
+        <div class="card">
+            <div class="section-title">📋 Log</div>
+            <div class="log" id="logContainer">
+                <div class="log-entry log-info">⏳ Sẵn sàng để test...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLat = 10.762622;
+        let currentLng = 106.660172;
+        const targetLat = 10.773622;
+        const targetLng = 106.670172;
+        let batteryLevel = 100;
+        let apiBaseUrl = '';
+        let droneCode = '';
+
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        async function step1() {
+            apiBaseUrl = document.getElementById('apiUrl').value.trim();
+            droneCode = document.getElementById('droneCode').value.trim();
+
+            log('🚁 Bước 1: Đăng ký drone...', 'info');
+
+            const data = {
+                code: droneCode,
+                model: 'Test Drone',
+                maxPayloadGram: 2000,
+                latitude: currentLat,
+                longitude: currentLng
+            };
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/drones/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.code === 1000) {
+                    log(`✅ Drone ${droneCode} đã đăng ký thành công!`, 'success');
+                    log(`📍 Vị trí: (${currentLat}, ${currentLng})`, 'info');
+                    log(`🔋 Pin: ${batteryLevel}%`, 'info');
+                    document.getElementById('btn2').disabled = false;
+                } else {
+                    log(`❌ Lỗi: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Lỗi kết nối: ${error.message}`, 'error');
+            }
+        }
+
+        async function step2() {
+            log('✈️ Bước 2: Chuyển trạng thái sang IN_FLIGHT...', 'info');
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/drones/${droneCode}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'IN_FLIGHT' })
+                });
+
+                const result = await response.json();
+                if (result.code === 1000) {
+                    log('✅ Drone đã sẵn sàng bay!', 'success');
+                    log('🚀 Trạng thái: IN_FLIGHT', 'info');
+                    document.getElementById('btn3').disabled = false;
+                } else {
+                    log(`❌ Lỗi: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Lỗi: ${error.message}`, 'error');
+            }
+        }
+
+        async function step3() {
+            log('🗺️ Bước 3: Bắt đầu di chuyển đến điểm B...', 'info');
+            document.getElementById('btn3').disabled = true;
+
+            const latStep = (targetLat - currentLat) / 11;
+            const lngStep = (targetLng - currentLng) / 10;
+
+            let step = 0;
+            const maxSteps = 21; // 11 North + 10 East
+
+            const interval = setInterval(async () => {
+                step++;
+
+                // Di chuyển
+                if (step <= 11) {
+                    currentLat += latStep;
+                    log(`⬆️ Di chuyển về Bắc... (${step}/11)`, 'info');
+                } else if (step <= 21) {
+                    currentLng += lngStep;
+                    log(`➡️ Di chuyển về Đông... (${step-11}/10)`, 'info');
+                }
+
+                // Giảm pin
+                batteryLevel = Math.max(20, batteryLevel - 2);
+
+                // Cập nhật vị trí
+                try {
+                    const response = await fetch(`${apiBaseUrl}/drones/${droneCode}/location`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            latitude: currentLat,
+                            longitude: currentLng,
+                            batteryPercent: batteryLevel
+                        })
+                    });
+
+                    const result = await response.json();
+                    if (result.code === 1000) {
+                        log(`📍 Vị trí cập nhật: (${currentLat.toFixed(6)}, ${currentLng.toFixed(6)}) | 🔋 ${batteryLevel}%`, 'success');
+                    }
+                } catch (error) {
+                    log(`⚠️ Lỗi cập nhật vị trí: ${error.message}`, 'warning');
+                }
+
+                // Hoàn thành
+                if (step >= maxSteps) {
+                    clearInterval(interval);
+                    log('🎯 Đã đến điểm B!', 'success');
+                    log(`📍 Vị trí cuối: (${currentLat.toFixed(6)}, ${currentLng.toFixed(6)})`, 'info');
+                    document.getElementById('btn4').disabled = false;
+                }
+            }, 2000); // Mỗi 2 giây di chuyển 1 bước
+        }
+
+        async function step4() {
+            log('✅ Bước 4: Hoàn thành giao hàng...', 'info');
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/drones/${droneCode}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'AVAILABLE' })
+                });
+
+                const result = await response.json();
+                if (result.code === 1000) {
+                    log('🎉 HOÀN THÀNH GIAO HÀNG!', 'success');
+                    log('✅ Drone đã trở về trạng thái AVAILABLE', 'success');
+                    log(`🔋 Pin còn lại: ${batteryLevel}%`, 'info');
+                    log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+                    log('✨ Test thành công! Drone đã giao hàng từ A đến B', 'success');
+                } else {
+                    log(`❌ Lỗi: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Lỗi: ${error.message}`, 'error');
+            }
+        }
+
+        async function runFullTest() {
+            log('🚀 BẮT ĐẦU TEST TỰ ĐỘNG TOÀN BỘ...', 'info');
+            log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+
+            await step1();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            await step2();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            await step3();
+            // step3 sẽ tự động enable btn4 khi xong
+        }
+    </script>
+</body>
+</html>
+
