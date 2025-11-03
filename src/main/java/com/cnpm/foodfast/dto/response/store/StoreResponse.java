@@ -1,9 +1,6 @@
 package com.cnpm.foodfast.dto.response.store;
 
 import com.cnpm.foodfast.enums.StoreStatus;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,7 +18,14 @@ public class StoreResponse {
     String name;
     String description;
 
+    String bankAccountName;
+    String bankAccountNumber;
+    String bankName;
+    String bankBranch;
+    String payoutEmail;
+
     StoreStatus storeStatus;
 
     LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

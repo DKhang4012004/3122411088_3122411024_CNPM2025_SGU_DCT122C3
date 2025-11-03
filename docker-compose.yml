@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # MySQL Database (COMMENTED OUT - Dùng localhost MySQL)
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: foodfast-mysql
+  #   restart: unless-stopped
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: khang141204
+  #     MYSQL_DATABASE: drone_delivery
+  #     MYSQL_CHARACTER_SET_SERVER: utf8mb4
+  #     MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #     - ./demo_database_setup.sql:/docker-entrypoint-initdb.d/init.sql
+  #   networks:
+  #     - food-fast-network
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pkhang141204"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # Spring Boot Application
+  food-fast-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: food-fast-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Database Configuration - Connect to host MySQL (Windows)
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:3306/drone_delivery?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: khang141204
+
+      # JPA Configuration
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+
+      # Server Configuration
+      SERVER_PORT: 8080
+      SERVER_SERVLET_CONTEXT_PATH: /home
+
+      # JWT Configuration
+      JWT_SIGNER_KEY: wXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezwXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+      # VNPay Configuration
+      VNPAY_TMN_CODE: DEMO
+      VNPAY_HASH_SECRET: DEMO_SECRET
+      VNPAY_URL: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+      VNPAY_RETURN_URL: http://localhost:8080/home/api/v1/payments/vnpay-return
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - food-fast-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/home/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ngrok - Expose local app to internet with HTTPS
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok-service
+    restart: unless-stopped
+    ports:
+      - "4040:4040" # Cổng web interface của ngrok
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-YOUR_AUTH_TOKEN_HERE}
+    command: http food-fast-app:8080 --log stdout
+    networks:
+      - food-fast-network
+    depends_on:
+      food-fast-app:
+        condition: service_healthy
+
+  # phpMyAdmin (Optional - for database management)
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: foodfast-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: host.docker.internal
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: khang141204
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - food-fast-network
+
+networks:
+  food-fast-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
