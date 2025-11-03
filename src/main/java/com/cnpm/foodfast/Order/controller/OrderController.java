@@ -213,4 +213,67 @@ public class OrderController {
                 .result(response)
                 .build());
     }
+
+    // ========== ORDER ITEM MANAGEMENT APIs ==========
+
+    /**
+     * Cập nhật số lượng món ăn trong đơn hàng
+     * PUT /api/v1/orders/{orderId}/items/{productId}
+     */
+    @PutMapping("/{orderId}/items/{productId}")
+    public ResponseEntity<APIResponse<OrderResponse>> updateOrderItemQuantity(
+            @PathVariable Long orderId,
+            @PathVariable Long productId,
+            @RequestParam Integer quantity) {
+        log.info("Updating order item quantity - orderId: {}, productId: {}, quantity: {}",
+                 orderId, productId, quantity);
+
+        OrderResponse response = orderService.updateOrderItemQuantity(orderId, productId, quantity);
+
+        return ResponseEntity.ok(APIResponse.<OrderResponse>builder()
+                .code(200)
+                .message("Order item quantity updated successfully")
+                .result(response)
+                .build());
+    }
+
+    /**
+     * Xóa món ăn khỏi đơn hàng
+     * DELETE /api/v1/orders/{orderId}/items/{productId}
+     */
+    @DeleteMapping("/{orderId}/items/{productId}")
+    public ResponseEntity<APIResponse<OrderResponse>> removeOrderItem(
+            @PathVariable Long orderId,
+            @PathVariable Long productId) {
+        log.info("Removing order item - orderId: {}, productId: {}", orderId, productId);
+
+        OrderResponse response = orderService.removeOrderItem(orderId, productId);
+
+        return ResponseEntity.ok(APIResponse.<OrderResponse>builder()
+                .code(200)
+                .message("Order item removed successfully")
+                .result(response)
+                .build());
+    }
+
+    /**
+     * Thêm món ăn mới vào đơn hàng
+     * POST /api/v1/orders/{orderId}/items
+     */
+    @PostMapping("/{orderId}/items")
+    public ResponseEntity<APIResponse<OrderResponse>> addOrderItem(
+            @PathVariable Long orderId,
+            @RequestParam Long productId,
+            @RequestParam Integer quantity) {
+        log.info("Adding order item - orderId: {}, productId: {}, quantity: {}",
+                 orderId, productId, quantity);
+
+        OrderResponse response = orderService.addOrderItem(orderId, productId, quantity);
+
+        return ResponseEntity.ok(APIResponse.<OrderResponse>builder()
+                .code(200)
+                .message("Order item added successfully")
+                .result(response)
+                .build());
+    }
 }

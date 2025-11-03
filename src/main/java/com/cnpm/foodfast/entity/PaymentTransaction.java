@@ -51,6 +51,9 @@ public class PaymentTransaction {
     @Column(name = "provider_transaction_id", length = 100)
     String providerTransactionId;
 
+    @Column(name = "vnp_txn_ref", length = 100)
+    String vnpTxnRef;  // Mã tham chiếu unique cho VNPay
+
     @Column(name = "request_payload", columnDefinition = "json")
     String requestPayload;
 
