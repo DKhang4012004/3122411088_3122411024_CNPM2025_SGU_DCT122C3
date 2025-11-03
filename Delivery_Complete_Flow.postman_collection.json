@@ -1,0 +1,351 @@
+{
+  "info": {
+    "name": "FoodFast Delivery & Drone Complete Flow",
+    "description": "Complete delivery flow from order to delivery completion",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"customer01\",\n  \"email\": \"customer01@test.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"Nguyen Van A\",\n  \"phone\": \"0901234567\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"customerToken\", jsonData.result.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"customer01\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Order & Payment",
+      "item": [
+        {
+          "name": "View Stores",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": "{{baseUrl}}/api/v1/stores"
+          }
+        },
+        {
+          "name": "View Products",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": "{{baseUrl}}/api/v1/products/store/1"
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/cart/add",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Order from Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.result && jsonData.result.length > 0) {",
+                  "  pm.environment.set(\"orderId\", jsonData.result[0].orderId);",
+                  "  pm.environment.set(\"orderCode\", jsonData.result[0].orderCode);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": "{{baseUrl}}/api/v1/orders"
+          }
+        },
+        {
+          "name": "Initialize Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"paymentUrl\", jsonData.result.paymentUrl);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/v1/payments/init",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": {{orderId}},\n  \"paymentMethod\": \"VNPAY\",\n  \"returnUrl\": \"http://localhost:8080/payment-result.html\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Delivery Management",
+      "item": [
+        {
+          "name": "Create Delivery",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"deliveryId\", jsonData.result.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{storeOwnerToken}}"}
+            ],
+            "url": "{{baseUrl}}/api/v1/deliveries",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": {{orderId}},\n  \"pickupStoreId\": 1,\n  \"dropoffAddressSnapshot\": \"{\\\"address\\\":\\\"123 Main St\\\",\\\"lat\\\":10.772622,\\\"lng\\\":106.670172}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Queued Deliveries",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/queued"
+          }
+        },
+        {
+          "name": "Auto Assign Drone",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/auto-assign-drone"
+          }
+        },
+        {
+          "name": "OR Manual Assign Drone",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/assign-drone?droneId=1"
+          }
+        },
+        {
+          "name": "Launch Delivery",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{storeOwnerToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/launch"
+          }
+        },
+        {
+          "name": "Mark as Arriving",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{systemToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/arriving"
+          }
+        },
+        {
+          "name": "Complete Delivery",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{systemToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}/complete"
+          }
+        },
+        {
+          "name": "Get Delivery by Order",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/order/{{orderId}}"
+          }
+        },
+        {
+          "name": "Get Delivery by ID",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/{{deliveryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Drone Operations",
+      "item": [
+        {
+          "name": "Get All Drones",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/drones"
+          }
+        },
+        {
+          "name": "Find Available Drone",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/drones/find-available?weightGram=500&fromLat=10.762622&fromLng=106.660172&toLat=10.772622&toLng=106.670172"
+          }
+        },
+        {
+          "name": "Get Drone by Code",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/drones/DRONE001"
+          }
+        },
+        {
+          "name": "Update Drone Location",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/drones/DRONE001/location",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 10.765622,\n  \"longitude\": 106.665172,\n  \"altitude\": 50,\n  \"speed\": 15,\n  \"batteryPercent\": 75\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Drone Status",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{baseUrl}}/drones/DRONE001/status",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_FLIGHT\",\n  \"batteryPercent\": 70\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Current Delivery",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/drones/DRONE001/current-delivery"
+          }
+        },
+        {
+          "name": "Monitor Battery",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/drones/DRONE001/monitor-battery"
+          }
+        },
+        {
+          "name": "Get Nearby Drones",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/drones/nearby?lat=10.762622&lng=106.660172&radiusKm=5.0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Monitoring & Tracking",
+      "item": [
+        {
+          "name": "Get Order Status",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": "{{baseUrl}}/api/v1/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Get Deliveries by Drone",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": "{{baseUrl}}/api/v1/deliveries/drone/1"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "customerToken",
+      "value": ""
+    },
+    {
+      "key": "storeOwnerToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "systemToken",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "deliveryId",
+      "value": ""
+    }
+  ]
+}
+

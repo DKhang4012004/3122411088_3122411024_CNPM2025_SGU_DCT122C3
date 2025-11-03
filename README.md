@@ -29,6 +29,7 @@ Server sẽ chạy tại: `http://localhost:8080/home`
 
 - [System Architecture](docs/SYSTEM_ARCHITECTURE.md) - **Kiến trúc hệ thống và luồng hoạt động**
 - [API Testing Guide](docs/API_TESTING.md) - **Hướng dẫn test API từ đặt hàng đến nhận hàng**
+- [Delivery & Drone Guide](docs/DELIVERY_DRONE_GUIDE.md) - **🚁 Hướng dẫn giao hàng bằng drone**
 - [Payment System](docs/PAYMENT_SYSTEM_GUIDE.md) - Hướng dẫn thanh toán VNPay
 - [Payout System](docs/PAYOUT_SYSTEM_GUIDE.md) - Hướng dẫn hệ thống chi trả
 - [VNPay Integration](docs/VNPAY_INTEGRATION_GUIDE.md) - Chi tiết tích hợp VNPay
@@ -36,6 +37,7 @@ Server sẽ chạy tại: `http://localhost:8080/home`
 ## 🧪 Testing
 
 ### Postman Collections
+- `Delivery_Complete_Flow.postman_collection.json` - **🚁 Test luồng giao hàng drone đầy đủ**
 - `Complete_Order_Flow_Test.postman_collection.json` - Test luồng đặt hàng đầy đủ
 - `Drone_Complete_APIs.postman_collection.json` - Test API drone
 - `Payment_System_Demo.postman_collection.json` - Test thanh toán

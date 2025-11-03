@@ -44,7 +44,14 @@ public enum ErrorCode {
     INVALID_DOB(1010, "Invalid Dob", HttpStatus.BAD_REQUEST),
     DRONE_NOT_FOUND(1031, "Drone not found", HttpStatus.NOT_FOUND),
     DRONE_ALREADY_EXISTS(1032, "Drone already exists", HttpStatus.BAD_REQUEST),
-    NO_AVAILABLE_DRONE(1033, "No available drone found for this delivery", HttpStatus.NOT_FOUND);
+    NO_AVAILABLE_DRONE(1033, "No available drone found for this delivery", HttpStatus.NOT_FOUND),
+    DELIVERY_NOT_FOUND(1034, "Delivery not found", HttpStatus.NOT_FOUND),
+    DELIVERY_ALREADY_EXISTS(1035, "Delivery already exists for this order", HttpStatus.BAD_REQUEST),
+    DELIVERY_ALREADY_ASSIGNED(1036, "Delivery is already assigned to a drone", HttpStatus.BAD_REQUEST),
+    DRONE_NOT_AVAILABLE(1037, "Drone is not available", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_PAID(1038, "Order has not been paid yet", HttpStatus.BAD_REQUEST),
+    INVALID_STATUS_TRANSITION(1039, "Invalid delivery status transition", HttpStatus.BAD_REQUEST),
+    ORDER_NOT_EXISTED(1040, "Order not existed", HttpStatus.NOT_FOUND);
 
 
     int code;

@@ -1,111 +1,207 @@
-// Store page JavaScript
-document.addEventListener('DOMContentLoaded', async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('productId');
-    const storeId = urlParams.get('storeId');
-
-    if (productId) {
-        await loadStoreByProduct(productId);
-    } else if (storeId) {
-        await loadStoreById(storeId);
-    } else {
-        // No params, redirect to home
-        window.location.href = 'index.html';
-    }
-
-    await updateCartBadge();
-});
+// Store.js - Stores & Products Page Logic
 
 let currentStore = null;
+let currentProduct = null;
+let modalQuantity = 1;
 
-// Load store by product ID
-async function loadStoreByProduct(productId) {
-    try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/stores/by-product/${productId}`, {
-            headers: {
-                'Authorization': `Bearer ${auth.getAuthToken()}`
-            }
-        });
-        
-        const data = await response.json();
-        currentStore = data;
-        renderStoreInfo();
-        renderProducts();
-    } catch (error) {
-        console.error('Error loading store:', error);
-        showNotification('Không thể tải thông tin cửa hàng', 'error');
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    initializeStorePage();
+    checkAuthStatus();
+    updateCartBadge();
+
+    // Check URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const storeId = urlParams.get('id');
+    const searchQuery = urlParams.get('search');
+
+    if (storeId) {
+        loadStoreDetails(storeId);
+    } else if (searchQuery) {
+        searchStores(searchQuery);
+    } else {
+        loadAllStores();
+    }
+});
+
+// Initialize page
+function initializeStorePage() {
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('dropdownMenu');
+        const avatar = document.getElementById('userAvatar');
+        if (dropdown && avatar && !avatar.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+}
+
+// Check authentication status
+function checkAuthStatus() {
+    const isLoggedIn = AuthHelper.isLoggedIn();
+    const guestMenu = document.getElementById('guestMenu');
+    const userDropdown = document.getElementById('userDropdown');
+
+    if (isLoggedIn) {
+        const user = AuthHelper.getUser();
+        guestMenu.style.display = 'none';
+        userDropdown.style.display = 'block';
+        document.getElementById('userName').textContent = user.username || user.fullName || 'User';
+    } else {
+        guestMenu.style.display = 'flex';
+        guestMenu.style.gap = '0.5rem';
+        userDropdown.style.display = 'none';
     }
 }
 
-// Load store by ID
-async function loadStoreById(storeId) {
+// Load all stores
+async function loadAllStores() {
     try {
-        const response = await api.getStoreWithProducts(storeId);
-        currentStore = response;
-        renderStoreInfo();
-        renderProducts();
+        Loading.show();
+
+        const response = await APIHelper.get(API_CONFIG.ENDPOINTS.STORES);
+        const stores = response.result || [];
+
+        displayStoresList(stores);
+
+        // Show stores list view
+        document.getElementById('storesListView').style.display = 'block';
+        document.getElementById('storeView').style.display = 'none';
+
     } catch (error) {
-        console.error('Error loading store:', error);
-        showNotification('Không thể tải thông tin cửa hàng', 'error');
+        console.error('Error loading stores:', error);
+        Toast.error('Không thể tải danh sách cửa hàng');
+        displayStoresEmptyState('Không thể tải danh sách cửa hàng');
+    } finally {
+        Loading.hide();
     }
 }
 
-// Render store info
-function renderStoreInfo() {
-    const storeHeader = document.getElementById('storeHeader');
-    if (!storeHeader || !currentStore) return;
+// Display stores list
+function displayStoresList(stores) {
+    const container = document.getElementById('storesGrid');
 
-    storeHeader.innerHTML = `
-        <h1>${currentStore.storeName || 'Cửa hàng'}</h1>
-        <p>${currentStore.storeDescription || ''}</p>
-        <div class="store-info">
-            <span>
-                <i class="fas fa-map-marker-alt"></i>
-                ${currentStore.storeAddress || 'Địa chỉ không có'}
-            </span>
-            <span>
-                <i class="fas fa-box"></i>
-                ${currentStore.products?.length || 0} món
-            </span>
-            <span class="store-status ${currentStore.storeStatus === 'ACTIVE' ? 'active' : 'inactive'}">
-                <i class="fas fa-circle"></i>
-                ${currentStore.storeStatus === 'ACTIVE' ? 'Đang mở' : 'Đã đóng'}
-            </span>
-        </div>
-    `;
-}
-
-// Render products
-function renderProducts() {
-    const productsGrid = document.getElementById('storeProducts');
-    if (!productsGrid || !currentStore?.products) return;
-
-    if (currentStore.products.length === 0) {
-        productsGrid.innerHTML = '<p>Cửa hàng chưa có món nào</p>';
+    if (!stores || stores.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-store-slash"></i>
+                <h3>Không tìm thấy cửa hàng</h3>
+                <p>Hãy thử lại sau nhé!</p>
+            </div>
+        `;
         return;
     }
 
-    productsGrid.innerHTML = currentStore.products.map(product => `
-        <div class="product-card">
-            <div class="product-image">
-                ${product.mediaPrimaryUrl ? 
-                    `<img src="${product.mediaPrimaryUrl}" alt="${product.name}">` : 
-                    '<i class="fas fa-utensils"></i>'}
-            </div>
-            <div class="product-info">
-                <h3>${product.name}</h3>
-                <p>${product.description || 'Món ăn ngon'}</p>
-                <div class="product-price">${formatPrice(product.basePrice)}</div>
-                <div class="product-footer">
-                    <span class="product-stock ${product.quantityAvailable > 0 ? '' : 'out-of-stock'}">
-                        ${product.quantityAvailable > 0 ? 
-                            `Còn ${product.quantityAvailable}` : 
-                            'Hết hàng'}
+    container.innerHTML = stores.map(store => `
+        <div class="card">
+            <img src="https://via.placeholder.com/400x200?text=${encodeURIComponent(store.name)}" 
+                 alt="${store.name}" 
+                 class="card-img"
+                 onerror="this.src='https://via.placeholder.com/400x200?text=Store'">
+            <div class="card-body">
+                <h3 class="card-title">${store.name}</h3>
+                <p class="card-text">
+                    <i class="fas fa-map-marker-alt text-primary"></i>
+                    ${store.description || 'Cửa hàng đồ ăn ngon'}
+                </p>
+                <div class="d-flex align-center justify-between mt-2">
+                    <span class="text-gray">
+                        <i class="fas fa-star text-warning"></i> 4.5
                     </span>
-                    <button class="btn btn-primary" 
-                            onclick="addToCart(${product.id}, ${currentStore.storeId})"
-                            ${product.quantityAvailable === 0 ? 'disabled' : ''}>
-                        <i class="fas fa-cart-plus"></i> Thêm
+                    <span class="text-gray">
+                        <i class="fas fa-clock"></i> 15-30 phút
+                    </span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary btn-sm" onclick="loadStoreDetails(${store.id})">
+                    <i class="fas fa-eye"></i> Xem menu
+                </button>
+                <span class="text-success">
+                    <i class="fas fa-check-circle"></i> Mở cửa
+                </span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load store details and products
+async function loadStoreDetails(storeId) {
+    try {
+        Loading.show();
+
+        // Load store info
+        const storeResponse = await APIHelper.get(API_CONFIG.ENDPOINTS.STORE_BY_ID(storeId));
+        currentStore = storeResponse.result;
+
+        // Load products
+        const productsResponse = await APIHelper.get(API_CONFIG.ENDPOINTS.PRODUCTS_BY_STORE(storeId));
+        const products = productsResponse.result || [];
+
+        // Display store details
+        displayStoreDetails(currentStore, products);
+
+        // Show store view
+        document.getElementById('storesListView').style.display = 'none';
+        document.getElementById('storeView').style.display = 'block';
+
+        // Update breadcrumb
+        document.getElementById('breadcrumb').textContent = currentStore.name;
+
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('id', storeId);
+        window.history.pushState({}, '', url);
+
+    } catch (error) {
+        console.error('Error loading store details:', error);
+        Toast.error('Không thể tải thông tin cửa hàng');
+    } finally {
+        Loading.hide();
+    }
+}
+
+// Display store details
+function displayStoreDetails(store, products) {
+    // Store info
+    document.getElementById('storeName').textContent = store.name;
+    document.getElementById('storeDescription').textContent = store.description || 'Cửa hàng đồ ăn ngon';
+    document.getElementById('storeImage').src = `https://via.placeholder.com/150?text=${encodeURIComponent(store.name)}`;
+    document.getElementById('storeImage').alt = store.name;
+
+    // Products grid
+    displayProducts(products);
+}
+
+// Display products
+function displayProducts(products) {
+    const container = document.getElementById('productsGrid');
+
+    if (!products || products.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-utensils"></i>
+                <h3>Chưa có món ăn</h3>
+                <p>Cửa hàng chưa có sản phẩm</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = products.map(product => `
+        <div class="card product-card">
+            ${product.discount ? `<span class="product-badge">-${product.discount}%</span>` : ''}
+            <img src="${product.imageUrl || 'https://via.placeholder.com/400x200?text=' + encodeURIComponent(product.name)}" 
+                 alt="${product.name}" 
+                 class="card-img"
+                 onerror="this.src='https://via.placeholder.com/400x200?text=Food'">
+            <div class="card-body">
+                <h3 class="card-title">${product.name}</h3>
+                <p class="card-text">${product.description || 'Món ăn ngon'}</p>
+                <div class="d-flex align-center justify-between mt-2">
+                    <span class="product-price">${FormatHelper.currency(product.price)}</span>
+                    <button class="btn btn-primary btn-sm" onclick="showProductDetail(${product.id})">
+                        <i class="fas fa-plus"></i> Thêm
                     </button>
                 </div>
             </div>
@@ -113,65 +209,155 @@ function renderProducts() {
     `).join('');
 }
 
-// Add to cart
-async function addToCart(productId, storeId) {
-    if (!auth.isAuthenticated()) {
-        showNotification('Vui lòng đăng nhập để thêm vào giỏ hàng', 'error');
-        window.location.href = 'index.html';
+// Show product detail modal
+async function showProductDetail(productId) {
+    try {
+        // Find product from current store products
+        const productsResponse = await APIHelper.get(API_CONFIG.ENDPOINTS.PRODUCTS_BY_STORE(currentStore.id));
+        const products = productsResponse.result || [];
+        currentProduct = products.find(p => p.id === productId);
+
+        if (!currentProduct) {
+            Toast.error('Không tìm thấy sản phẩm');
+            return;
+        }
+
+        // Reset quantity
+        modalQuantity = 1;
+
+        // Fill modal
+        document.getElementById('productModalTitle').textContent = currentProduct.name;
+        document.getElementById('productModalDescription').textContent = currentProduct.description || 'Món ăn ngon';
+        document.getElementById('productModalPrice').textContent = FormatHelper.currency(currentProduct.price);
+        document.getElementById('productModalImage').src = currentProduct.imageUrl || 'https://via.placeholder.com/400x200?text=' + encodeURIComponent(currentProduct.name);
+        document.getElementById('modalQuantity').textContent = modalQuantity;
+
+        // Show modal
+        document.getElementById('productModal').classList.add('show');
+
+    } catch (error) {
+        console.error('Error loading product:', error);
+        Toast.error('Không thể tải thông tin sản phẩm');
+    }
+}
+
+// Close product modal
+function closeProductModal() {
+    document.getElementById('productModal').classList.remove('show');
+    currentProduct = null;
+    modalQuantity = 1;
+}
+
+// Increase quantity
+function increaseQuantity() {
+    if (modalQuantity < 99) {
+        modalQuantity++;
+        document.getElementById('modalQuantity').textContent = modalQuantity;
+    }
+}
+
+// Decrease quantity
+function decreaseQuantity() {
+    if (modalQuantity > 1) {
+        modalQuantity--;
+        document.getElementById('modalQuantity').textContent = modalQuantity;
+    }
+}
+
+// Add to cart from modal
+async function addToCartFromModal() {
+    if (!currentProduct) {
+        Toast.error('Vui lòng chọn sản phẩm');
+        return;
+    }
+
+    if (!AuthHelper.isLoggedIn()) {
+        Toast.warning('Vui lòng đăng nhập để thêm vào giỏ hàng');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
         return;
     }
 
     try {
-        await api.addToCart(productId, 1, storeId);
-        await updateCartBadge();
-        showNotification('Đã thêm vào giỏ hàng!', 'success');
+        Loading.show();
+
+        const data = {
+            productId: currentProduct.id,
+            quantity: modalQuantity
+        };
+
+        await APIHelper.post(API_CONFIG.ENDPOINTS.CART_ADD, data);
+
+        Toast.success(`Đã thêm ${modalQuantity} ${currentProduct.name} vào giỏ hàng!`);
+        closeProductModal();
+        updateCartBadge();
+
     } catch (error) {
         console.error('Error adding to cart:', error);
-        showNotification('Không thể thêm vào giỏ hàng: ' + error.message, 'error');
+        Toast.error(error.message || 'Không thể thêm vào giỏ hàng');
+    } finally {
+        Loading.hide();
     }
+}
+
+// Back to stores list
+function backToStores() {
+    window.location.href = 'stores.html';
+}
+
+// Search stores
+function searchStores(query) {
+    // For now, just load all stores and filter client-side
+    // In production, this should be a server-side search
+    loadAllStores();
+    Toast.info(`Tìm kiếm: ${query}`);
 }
 
 // Update cart badge
 async function updateCartBadge() {
-    const cartBadge = document.getElementById('cartBadge');
-    if (!cartBadge || !auth.isAuthenticated()) return;
+    if (!AuthHelper.isLoggedIn()) {
+        document.getElementById('cartBadge').textContent = '0';
+        return;
+    }
 
     try {
-        const response = await api.getCart();
-        const cart = response.items || [];
-        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-        cartBadge.textContent = totalItems;
+        const response = await APIHelper.get(API_CONFIG.ENDPOINTS.CART_COUNT);
+        const count = response || 0;
+        document.getElementById('cartBadge').textContent = count;
     } catch (error) {
-        cartBadge.textContent = '0';
+        console.error('Error updating cart badge:', error);
     }
 }
 
-// Format price
-function formatPrice(price) {
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-    }).format(price);
+// Toggle dropdown
+function toggleDropdown() {
+    const dropdown = document.getElementById('dropdownMenu');
+    dropdown.classList.toggle('show');
 }
 
-// Show notification
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#00b894' : type === 'error' ? '#d63031' : '#0984e3'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-    `;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => notification.remove(), 3000);
+// Logout
+function logout() {
+    if (confirm('Bạn có chắc muốn đăng xuất?')) {
+        AuthHelper.logout();
+    }
 }
+
+// Display empty state
+function displayStoresEmptyState(message) {
+    const container = document.getElementById('storesGrid');
+    container.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-exclamation-circle"></i>
+            <h3>${message}</h3>
+        </div>
+    `;
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.classList.remove('show');
+    }
+});
 
