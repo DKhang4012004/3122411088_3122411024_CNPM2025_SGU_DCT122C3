@@ -64,4 +64,22 @@ public interface OrderService {
      * Update order to DELIVERED status
      */
     OrderResponse markAsDelivered(Long orderId);
+
+    /**
+     * Update quantity of an item in order
+     * Only allowed when order status is CREATED or PENDING_PAYMENT
+     */
+    OrderResponse updateOrderItemQuantity(Long orderId, Long productId, Integer quantity);
+
+    /**
+     * Remove an item from order
+     * Only allowed when order status is CREATED or PENDING_PAYMENT
+     */
+    OrderResponse removeOrderItem(Long orderId, Long productId);
+
+    /**
+     * Add new item to order
+     * Only allowed when order status is CREATED or PENDING_PAYMENT
+     */
+    OrderResponse addOrderItem(Long orderId, Long productId, Integer quantity);
 }

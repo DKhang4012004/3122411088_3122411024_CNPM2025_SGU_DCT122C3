@@ -48,30 +48,79 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + request.getOrderId()));
 
+        // Kiểm tra payment status của order
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            log.error("Cannot init payment for order {} - already paid", order.getId());
+            throw new IllegalStateException("Order already paid");
+        }
+
+        // Cho phép thanh toán lại nếu payment status là FAILED hoặc PENDING
+        if (order.getPaymentStatus() == PaymentStatus.FAILED) {
+            log.info("Order {} payment status is FAILED, allowing retry", order.getId());
+        } else if (order.getPaymentStatus() == PaymentStatus.PENDING) {
+            log.info("Order {} payment status is PENDING, allowing retry", order.getId());
+        }
+
+        // Kiểm tra payment transaction hiện tại
         Optional<PaymentTransaction> existingPayment = paymentTransactionRepository.findByOrderId(order.getId());
+
+        // Double check: Chỉ chặn nếu transaction đã SUCCESS
         if (existingPayment.isPresent() && existingPayment.get().getStatus() == PaymentTransactionStatus.SUCCESS) {
+            log.error("Cannot init payment for order {} - transaction already successful", order.getId());
             throw new IllegalStateException("Order already paid");
         }
 
         try {
-            PaymentTransaction transaction = PaymentTransaction.builder()
-                    .orderId(order.getId())
-                    .provider(request.getProvider())
-                    .method(request.getMethod())
-                    .amount(order.getTotalPayable())
-                    .currency("VND")
-                    .status(PaymentTransactionStatus.INIT)
-                    .build();
+            PaymentTransaction transaction;
+
+            // Tạo vnp_TxnRef unique cho mỗi lần payment (để tránh lỗi "Giao dịch đã tồn tại" từ VNPay)
+            String vnpTxnRef = generateUniqueTxnRef(order.getOrderCode());
+
+            // Nếu đã có transaction, cập nhật lại (cho phép retry)
+            if (existingPayment.isPresent()) {
+                transaction = existingPayment.get();
+                log.info("Reusing existing payment transaction ID: {} with status: {}",
+                         transaction.getId(), transaction.getStatus());
+
+                // Reset transaction về trạng thái INIT với vnp_TxnRef mới
+                transaction.setProvider(request.getProvider());
+                transaction.setMethod(request.getMethod());
+                transaction.setAmount(order.getTotalPayable());
+                transaction.setCurrency("VND");
+                transaction.setStatus(PaymentTransactionStatus.INIT);
+                transaction.setVnpTxnRef(vnpTxnRef);  // Mã mới cho mỗi lần retry
+                transaction.setProviderTransactionId(null);
+                transaction.setCompletedAt(null);
+                transaction.setResponsePayload(null);
+
+                log.info("Generated new vnp_TxnRef for retry: {}", vnpTxnRef);
+            } else {
+                // Tạo mới nếu chưa có
+                transaction = PaymentTransaction.builder()
+                        .orderId(order.getId())
+                        .provider(request.getProvider())
+                        .method(request.getMethod())
+                        .amount(order.getTotalPayable())
+                        .currency("VND")
+                        .status(PaymentTransactionStatus.INIT)
+                        .vnpTxnRef(vnpTxnRef)
+                        .build();
+                log.info("Creating new payment transaction for order: {} with vnp_TxnRef: {}",
+                         order.getId(), vnpTxnRef);
+            }
 
             String paymentUrl = generateVnPayUrl(order, transaction);
 
             transaction.setRequestPayload(objectMapper.writeValueAsString(request));
             transaction = paymentTransactionRepository.save(transaction);
 
+            // Cập nhật trạng thái đơn hàng về PENDING_PAYMENT
             order.setStatus(OrderStatus.PENDING_PAYMENT);
+            order.setPaymentStatus(PaymentStatus.PENDING);
             orderRepository.save(order);
 
-            log.info("Payment initialized successfully with ID: {}", transaction.getId());
+            log.info("Payment initialized successfully with ID: {} for order: {}",
+                     transaction.getId(), order.getOrderCode());
 
             return PaymentResponse.builder()
                     .id(transaction.getId())
@@ -90,6 +139,16 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /**
+     * Tạo vnp_TxnRef unique cho mỗi lần payment
+     * Format: {ORDER_CODE}_{TIMESTAMP_MILLIS}
+     * Ví dụ: ORD1762133045478C3B6F313_1730620537354
+     */
+    private String generateUniqueTxnRef(String orderCode) {
+        long timestamp = System.currentTimeMillis();
+        return orderCode + "_" + timestamp;
+    }
+
     @Override
     @Transactional
     public void processVnPayWebhook(VnPayWebhookPayload payload) {
@@ -101,7 +160,10 @@ public class PaymentServiceImpl implements PaymentService {
                 throw new SecurityException("Invalid signature");
             }
 
-            String orderCode = payload.getVnp_TxnRef();
+            String vnpTxnRef = payload.getVnp_TxnRef();
+            // Extract order code from vnp_TxnRef (format: ORDER_CODE_{TIMESTAMP})
+            String orderCode = extractOrderCode(vnpTxnRef);
+
             Order order = orderRepository.findByOrderCode(orderCode)
                     .orElseThrow(() -> new ResourceNotFoundException("Order not found with code: " + orderCode));
 
@@ -148,11 +210,15 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public String processVnPayIPN(VnPayWebhookPayload payload) {
         log.info("=== Processing VNPay IPN ===");
-        log.info("Order Code: {}", payload.getVnp_TxnRef());
+        log.info("vnp_TxnRef: {}", payload.getVnp_TxnRef());
 
         try {
+            // Extract order code from vnp_TxnRef (format: ORDER_CODE_{TIMESTAMP})
+            String vnpTxnRef = payload.getVnp_TxnRef();
+            String orderCode = extractOrderCode(vnpTxnRef);
+            log.info("Extracted order code: {}", orderCode);
+
             // Step 2: Find transaction (vnp_TxnRef) in database
-            String orderCode = payload.getVnp_TxnRef();
             Optional<Order> orderOpt = orderRepository.findByOrderCode(orderCode);
 
             if (orderOpt.isEmpty()) {
@@ -330,7 +396,7 @@ public class PaymentServiceImpl implements PaymentService {
         vnpParams.put("vnp_TmnCode", vnPayConfig.getTmnCode());
         vnpParams.put("vnp_Amount", String.valueOf(order.getTotalPayable().multiply(new BigDecimal(100)).longValue()));
         vnpParams.put("vnp_CurrCode", "VND");
-        vnpParams.put("vnp_TxnRef", order.getOrderCode());
+        vnpParams.put("vnp_TxnRef", transaction.getVnpTxnRef());  // Dùng vnp_TxnRef unique từ transaction
         vnpParams.put("vnp_OrderInfo", "Thanh toan don hang " + order.getOrderCode());
         vnpParams.put("vnp_OrderType", vnPayConfig.getOrderType());
         vnpParams.put("vnp_Locale", "vn");
@@ -381,5 +447,17 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (Exception e) {
             throw new RuntimeException("Error generating HMAC SHA512", e);
         }
+    }
+
+    /**
+     * Trích xuất order code từ vnp_TxnRef
+     * Format: ORDER_CODE_{TIMESTAMP} -> ORDER_CODE
+     * Ví dụ: ORD1762133045478C3B6F313_1730620537354 -> ORD1762133045478C3B6F313
+     */
+    private String extractOrderCode(String vnpTxnRef) {
+        if (vnpTxnRef == null || !vnpTxnRef.contains("_")) {
+            return vnpTxnRef; // Fallback nếu không có timestamp
+        }
+        return vnpTxnRef.substring(0, vnpTxnRef.lastIndexOf("_"));
     }
 }
