@@ -403,20 +403,17 @@ public class OrderServiceImpl implements OrderService {
                         .id(item.getId())
                         .productId(item.getProductId())
                         .productName(item.getProductNameSnapshot())
-                        .quantity(item.getQuantity())
                         .unitPrice(item.getUnitPriceSnapshot())
+                        .quantity(item.getQuantity())
                         .totalPrice(item.getTotalPrice())
                         .build())
-                .collect(Collectors.toList());
-
-        Store store = storeRepository.findById(order.getStoreId()).orElse(null);
+                .toList();
 
         return OrderResponse.builder()
                 .id(order.getId())
-                .orderCode(order.getOrderCode())
                 .userId(order.getUserId())
                 .storeId(order.getStoreId())
-                .storeName(store != null ? store.getName() : null)
+                .orderCode(order.getOrderCode())
                 .status(order.getStatus())
                 .paymentStatus(order.getPaymentStatus())
                 .totalItemAmount(order.getTotalItemAmount())
@@ -424,11 +421,181 @@ public class OrderServiceImpl implements OrderService {
                 .shippingFee(order.getShippingFee())
                 .taxAmount(order.getTaxAmount())
                 .totalPayable(order.getTotalPayable())
-                .deliveryAddressSnapshot(order.getDeliveryAddressSnapshot())
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse updateOrderItemQuantity(Long orderId, Long productId, Integer quantity) {
+        log.info("Updating order item quantity - orderId: {}, productId: {}, newQuantity: {}",
+                 orderId, productId, quantity);
+
+        // 1. Lấy order và kiểm tra trạng thái
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        // Chỉ cho phép chỉnh sửa khi đơn hàng chưa thanh toán hoặc đang chờ thanh toán
+        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BadRequestException("Cannot modify order in status: " + order.getStatus() +
+                                        ". Only CREATED or PENDING_PAYMENT orders can be modified.");
+        }
+
+        // 2. Tìm order item theo productId
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndProductId(orderId, productId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Product " + productId + " not found in order " + orderId));
+
+        // 3. Kiểm tra tồn kho của sản phẩm
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
+
+        if (product.getQuantityAvailable() < quantity) {
+            throw new BadRequestException("Not enough stock. Available: " + product.getQuantityAvailable() +
+                                        ", Requested: " + quantity);
+        }
+
+        // 4. Cập nhật số lượng và tổng tiền
+        orderItem.setQuantity(quantity);
+        orderItem.setTotalPrice(orderItem.getUnitPriceSnapshot().multiply(BigDecimal.valueOf(quantity)));
+        orderItemRepository.save(orderItem);
+
+        // 5. Tính lại tổng tiền của đơn hàng
+        recalculateOrderTotal(order);
+
+        log.info("Updated order item quantity successfully for order: {}", orderId);
+        return buildOrderResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse removeOrderItem(Long orderId, Long productId) {
+        log.info("Removing order item - orderId: {}, productId: {}", orderId, productId);
+
+        // 1. Lấy order và kiểm tra trạng thái
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BadRequestException("Cannot modify order in status: " + order.getStatus());
+        }
+
+        // 2. Kiểm tra số lượng món trong đơn hàng
+        List<OrderItem> currentItems = orderItemRepository.findByOrderId(orderId);
+        if (currentItems.size() <= 1) {
+            throw new BadRequestException("Cannot remove the last item. Cancel the order instead.");
+        }
+
+        // 3. Tìm và xóa order item
+        OrderItem orderItem = orderItemRepository.findByOrderIdAndProductId(orderId, productId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Product " + productId + " not found in order " + orderId));
+
+        orderItemRepository.delete(orderItem);
+
+        // 4. Tính lại tổng tiền của đơn hàng
+        recalculateOrderTotal(order);
+
+        log.info("Removed order item successfully from order: {}", orderId);
+        return buildOrderResponse(order);
+    }
+
+    @Override
+    @Transactional
+    public OrderResponse addOrderItem(Long orderId, Long productId, Integer quantity) {
+        log.info("Adding order item - orderId: {}, productId: {}, quantity: {}",
+                 orderId, productId, quantity);
+
+        // 1. Lấy order và kiểm tra trạng thái
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        if (order.getStatus() != OrderStatus.CREATED && order.getStatus() != OrderStatus.PENDING_PAYMENT) {
+            throw new BadRequestException("Cannot modify order in status: " + order.getStatus());
+        }
+
+        // 2. Lấy thông tin sản phẩm
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
+
+        // 3. Kiểm tra sản phẩm có thuộc cùng cửa hàng không
+        if (!product.getStoreId().equals(order.getStoreId())) {
+            throw new BadRequestException("Product does not belong to the same store as the order");
+        }
+
+        // 4. Kiểm tra tồn kho
+        if (product.getQuantityAvailable() < quantity) {
+            throw new BadRequestException("Not enough stock. Available: " + product.getQuantityAvailable() +
+                                        ", Requested: " + quantity);
+        }
+
+        // 5. Kiểm tra xem sản phẩm đã có trong đơn hàng chưa
+        Optional<OrderItem> existingItem = orderItemRepository.findByOrderIdAndProductId(orderId, productId);
+
+        if (existingItem.isPresent()) {
+            // Nếu đã có, cập nhật số lượng
+            OrderItem orderItem = existingItem.get();
+            int newQuantity = orderItem.getQuantity() + quantity;
+
+            if (product.getQuantityAvailable() < newQuantity) {
+                throw new BadRequestException("Not enough stock. Available: " + product.getQuantityAvailable() +
+                                            ", Total requested: " + newQuantity);
+            }
+
+            orderItem.setQuantity(newQuantity);
+            orderItem.setTotalPrice(orderItem.getUnitPriceSnapshot().multiply(BigDecimal.valueOf(newQuantity)));
+            orderItemRepository.save(orderItem);
+
+            log.info("Updated existing item quantity in order: {}", orderId);
+        } else {
+            // Nếu chưa có, tạo mới
+            OrderItem newOrderItem = OrderItem.builder()
+                    .orderId(orderId)
+                    .productId(productId)
+                    .productNameSnapshot(product.getName())
+                    .unitPriceSnapshot(product.getBasePrice())
+                    .quantity(quantity)
+                    .totalPrice(product.getBasePrice().multiply(BigDecimal.valueOf(quantity)))
+                    .build();
+
+            orderItemRepository.save(newOrderItem);
+            log.info("Added new item to order: {}", orderId);
+        }
+
+        // 6. Tính lại tổng tiền của đơn hàng
+        recalculateOrderTotal(order);
+
+        log.info("Added order item successfully to order: {}", orderId);
+        return buildOrderResponse(order);
+    }
+
+    /**
+     * Tính lại tổng tiền của đơn hàng sau khi thay đổi món ăn
+     */
+    private void recalculateOrderTotal(Order order) {
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+
+        // Tính tổng tiền các món
+        BigDecimal totalItemAmount = items.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        order.setTotalItemAmount(totalItemAmount);
+
+        // Tính tổng cần thanh toán = tổng món + phí ship + thuế - giảm giá
+        BigDecimal totalPayable = totalItemAmount
+                .add(order.getShippingFee())
+                .add(order.getTaxAmount())
+                .subtract(order.getDiscountAmount());
+
+        order.setTotalPayable(totalPayable);
+        order.setUpdatedAt(LocalDateTime.now());
+
+        orderRepository.save(order);
+
+        log.info("Recalculated order total - orderId: {}, newTotal: {}", order.getId(), totalPayable);
     }
 
     private String generateOrderCode() {
