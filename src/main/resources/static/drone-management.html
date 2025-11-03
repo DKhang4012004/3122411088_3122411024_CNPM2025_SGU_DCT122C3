@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Drone - FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .drone-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .drone-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .drone-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .drone-item {
+            padding: 1rem;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .drone-item:hover {
+            border-color: var(--primary-color);
+            background: var(--light);
+        }
+
+        .drone-item.selected {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .drone-item.available {
+            border-left: 4px solid #28a745;
+        }
+
+        .drone-item.busy {
+            border-left: 4px solid #dc3545;
+        }
+
+        .drone-item.maintenance {
+            border-left: 4px solid #ffc107;
+        }
+
+        .drone-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .drone-code {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .drone-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-available { background: #d4edda; color: #155724; }
+        .status-busy { background: #f8d7da; color: #721c24; }
+        .status-maintenance { background: #fff3cd; color: #856404; }
+
+        .drone-specs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .order-info-card {
+            background: var(--light);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-weight: bold;
+        }
+
+        .delivery-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .delivery-status {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 1rem;
+        }
+
+        .status-timeline {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .status-step {
+            position: relative;
+            padding: 1rem 0;
+        }
+
+        .status-step::before {
+            content: '';
+            position: absolute;
+            left: -1.5rem;
+            top: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--light);
+            border: 2px solid var(--gray);
+        }
+
+        .status-step.completed::before {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .status-step.active::before {
+            background: var(--secondary-color);
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.2);
+        }
+
+        .status-step::after {
+            content: '';
+            position: absolute;
+            left: -1.44rem;
+            top: 1.5rem;
+            width: 2px;
+            height: 100%;
+            background: var(--light);
+        }
+
+        .status-step:last-child::after {
+            display: none;
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-drone"></i>
+                <span>FoodFast Drone</span>
+            </a>
+            <div class="nav-links">
+                <a href="store-management.html">Quản lý đơn hàng</a>
+                <a href="drone-management.html" class="active">Quản lý Drone</a>
+                <button class="btn btn-outline btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="drone-container">
+        <!-- Header -->
+        <div class="drone-header">
+            <h1><i class="fas fa-drone"></i> Quản lý Drone & Giao hàng</h1>
+            <p style="color: var(--gray);">Chọn drone và tạo giao hàng cho đơn hàng</p>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Left Panel: Drone List -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Danh sách Drone</h2>
+                    <button class="btn btn-sm btn-outline" onclick="loadDrones()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="drone-list" id="droneList">
+                    <!-- Drones will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Right Panel: Delivery Form -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Tạo giao hàng</h2>
+                </div>
+
+                <!-- Order Info -->
+                <div id="orderInfoSection" style="display: none;">
+                    <h3 style="margin-bottom: 1rem;">Thông tin đơn hàng</h3>
+                    <div class="order-info-card" id="orderInfo">
+                        <!-- Order info will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Delivery Form -->
+                <div id="deliveryFormSection" style="display: none;">
+                    <form class="delivery-form" onsubmit="createDelivery(event)">
+                        <div class="form-group">
+                            <label>Drone đã chọn</label>
+                            <input type="text" id="selectedDroneCode" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Thời gian giao dự kiến (phút)</label>
+                            <input type="number" id="estimatedTime" value="20" min="5" max="60" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ghi chú</label>
+                            <input type="text" id="deliveryNote" placeholder="Ghi chú cho drone...">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fas fa-paper-plane"></i> Tạo giao hàng
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Delivery Status -->
+                <div id="deliveryStatusSection" style="display: none;">
+                    <div class="delivery-status">
+                        <h3 style="margin-bottom: 1rem;">Trạng thái giao hàng</h3>
+
+                        <div class="map-placeholder">
+                            <i class="fas fa-map-marked-alt fa-3x"></i>
+                        </div>
+
+                        <div class="status-timeline" id="deliveryTimeline">
+                            <!-- Timeline will be rendered here -->
+                        </div>
+
+                        <button class="btn btn-outline btn-block" onclick="refreshDeliveryStatus()" style="margin-top: 1rem;">
+                            <i class="fas fa-sync-alt"></i> Làm mới trạng thái
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Empty state -->
+                <div id="emptyState" class="empty-state">
+                    <i class="fas fa-hand-pointer"></i>
+                    <p>Chọn một drone để bắt đầu</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="globalLoader" class="global-loader" style="display: none;">
+        <div class="loader-spinner">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p>Đang tải...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/drone-management.js"></script>
+</body>
+</html>
+

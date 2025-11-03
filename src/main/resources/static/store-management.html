@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Cửa hàng - FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .store-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .store-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .store-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--light);
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--gray);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .order-id {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        .order-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #d1ecf1; color: #0c5460; }
+        .status-preparing { background: #cce5ff; color: #004085; }
+        .status-ready { background: #d4edda; color: #155724; }
+        .status-in-delivery { background: #d1ecf1; color: #0c5460; }
+        .status-delivered { background: #d4edda; color: #155724; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+
+        .order-items {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: var(--light);
+            border-radius: 8px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .order-total {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-align: right;
+            margin-top: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-utensils"></i>
+                <span>FoodFast Store</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Trang chủ</a>
+                <a href="store-management.html" class="active">Quản lý đơn hàng</a>
+                <button class="btn btn-outline btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="store-container">
+        <!-- Store Header -->
+        <div class="store-header">
+            <div class="store-info">
+                <div class="store-avatar">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div>
+                    <h1 id="storeName">Đang tải...</h1>
+                    <p style="color: var(--gray); margin: 0;" id="storeAddress">-</p>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="refreshOrders()">
+                    <i class="fas fa-sync-alt"></i> Làm mới
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <i class="fas fa-clock" style="font-size: 2rem; color: #ffc107;"></i>
+                <div class="stat-value" id="statPending">0</div>
+                <div class="stat-label">Chờ xác nhận</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-utensils" style="font-size: 2rem; color: #17a2b8;"></i>
+                <div class="stat-value" id="statConfirmed">0</div>
+                <div class="stat-label">Đang chuẩn bị</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-shipping-fast" style="font-size: 2rem; color: #007bff;"></i>
+                <div class="stat-value" id="statDelivering">0</div>
+                <div class="stat-label">Đang giao</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle" style="font-size: 2rem; color: #28a745;"></i>
+                <div class="stat-value" id="statDelivered">0</div>
+                <div class="stat-label">Đã giao</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('pending')">
+                Chờ xác nhận <span id="badgePending" class="badge">0</span>
+            </button>
+            <button class="tab" onclick="switchTab('confirmed')">
+                Đang chuẩn bị
+            </button>
+            <button class="tab" onclick="switchTab('delivering')">
+                Đang giao
+            </button>
+            <button class="tab" onclick="switchTab('completed')">
+                Hoàn thành
+            </button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="tab-pending" class="tab-content active">
+            <div id="ordersPending"></div>
+        </div>
+        <div id="tab-confirmed" class="tab-content">
+            <div id="ordersConfirmed"></div>
+        </div>
+        <div id="tab-preparing" class="tab-content" style="display: none;">
+            <div id="ordersPreparing"></div>
+        </div>
+        <div id="tab-ready" class="tab-content" style="display: none;">
+            <div id="ordersReady"></div>
+        </div>
+        <div id="tab-delivering" class="tab-content">
+            <div id="ordersDelivering"></div>
+        </div>
+        <div id="tab-completed" class="tab-content">
+            <div id="ordersCompleted"></div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="globalLoader" class="global-loader" style="display: none;">
+        <div class="loader-spinner">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+            <p>Đang tải...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/store-management.js"></script>
+</body>
+</html>
+

@@ -11,6 +11,7 @@ import java.util.Set;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthenticationResponse {
+    Long userId;            // Add userId for frontend
     String token;
     String refreshToken;
     String username;

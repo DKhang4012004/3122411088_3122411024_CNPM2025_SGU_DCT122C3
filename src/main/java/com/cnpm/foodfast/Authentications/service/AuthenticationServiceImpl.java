@@ -60,6 +60,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());
 
         return AuthenticationResponse.builder()
+                .userId(user.getId())  // Add userId for frontend
                 .token(token)
                 .refreshToken(refreshToken)
                 .username(user.getUsername())

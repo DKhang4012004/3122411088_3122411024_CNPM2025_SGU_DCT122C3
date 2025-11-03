@@ -1,8 +1,14 @@
+// Storage keys - MUST match with config.js AuthHelper
+const STORAGE_KEYS = {
+    TOKEN: 'foodfast_token',
+    USER: 'foodfast_user'
+};
+
 // Authentication Manager
 class AuthManager {
     constructor() {
-        this.token = localStorage.getItem('authToken');
-        this.user = JSON.parse(localStorage.getItem('user') || 'null');
+        this.token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        this.user = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER) || 'null');
     }
 
     isAuthenticated() {
@@ -19,11 +25,19 @@ class AuthManager {
 
             if (response.result && response.result.token) {
                 this.token = response.result.token;
-                this.user = response.result.user || { username };
+                // Backend returns user info directly in result (userId, username, email, fullName, roles)
+                this.user = {
+                    id: response.result.userId,
+                    username: response.result.username,
+                    email: response.result.email,
+                    fullName: response.result.fullName,
+                    roles: response.result.roles
+                };
 
-                localStorage.setItem('authToken', this.token);
-                localStorage.setItem('user', JSON.stringify(this.user));
+                localStorage.setItem(STORAGE_KEYS.TOKEN, this.token);
+                localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(this.user));
 
+                console.log('User logged in:', this.user);
                 return { success: true, user: this.user };
             } else {
                 throw new Error('Invalid login response');
@@ -52,8 +66,8 @@ class AuthManager {
     logout() {
         this.token = null;
         this.user = null;
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('user');
+        localStorage.removeItem(STORAGE_KEYS.TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.USER);
         window.location.href = 'index.html';
     }
 
@@ -247,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 // API Configuration
 const API_CONFIG = {
-    BASE_URL: 'http://localhost:8080/home',
+    BASE_URL: window.location.origin + '/home',
     ENDPOINTS: {
         // Authentication
         LOGIN: '/auth/login',

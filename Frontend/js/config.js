@@ -1,18 +1,54 @@
+// Auto-migrate old user data without ID - FORCE LOGOUT
+(function autoMigrateOldUser() {
+    try {
+        const userStr = localStorage.getItem('foodfast_user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (!user.id) {
+                console.warn('🚨 Detected old user data without ID. Force clearing...');
+
+                // Clear ALL storage FIRST
+                localStorage.clear();
+                sessionStorage.clear();
+
+                // Show alert
+                alert('Hệ thống đã cập nhật!\n\nVui lòng đăng nhập lại để tiếp tục sử dụng.\n\n(Bấm OK để về trang đăng nhập)');
+
+                // Force redirect using replace (no back button)
+                window.location.replace(window.location.origin + '/home/');
+
+                // Stop further execution
+                return;
+            }
+        }
+    } catch (e) {
+        console.error('Error migrating user data:', e);
+        // If migration fails, still try to clear
+        try {
+            localStorage.clear();
+            sessionStorage.clear();
+        } catch (clearError) {
+            console.error('Could not clear storage:', clearError);
+        }
+    }
+})();
+
 // API Configuration
 const API_CONFIG = {
-    BASE_URL: 'http://localhost:8080/home',
+    // Use current origin to work with both localhost and ngrok
+    BASE_URL: window.location.origin + '/home',
     ENDPOINTS: {
         // Authentication
         LOGIN: '/auth/login',
         REGISTER: '/auth/signup',
 
         // Stores
-        STORES: '/api/v1/stores',
-        STORE_BY_ID: (id) => `/api/v1/stores/${id}`,
+        STORES: '/api/stores',
+        STORE_BY_ID: (id) => `/api/stores/${id}`,
 
         // Products
-        PRODUCTS_BY_STORE: (storeId) => `/api/v1/products/store/${storeId}`,
-        PRODUCTS: '/api/v1/products',
+        PRODUCTS_BY_STORE: (storeId) => `/products/store/${storeId}`,
+        PRODUCTS: '/products',
 
         // Cart
         CART: '/api/cart',
