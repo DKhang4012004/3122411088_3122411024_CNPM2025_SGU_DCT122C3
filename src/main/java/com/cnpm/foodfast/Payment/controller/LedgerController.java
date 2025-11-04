@@ -83,4 +83,20 @@ public class LedgerController {
                 .result(payoutBatches)
                 .build());
     }
+
+    /**
+     * Get all ledger entries for a store
+     */
+    @GetMapping("/store/{storeId}/entries")
+    public ResponseEntity<APIResponse<List<com.cnpm.foodfast.entity.StoreLedger>>> getLedgerEntries(@PathVariable Long storeId) {
+        log.info("Getting ledger entries for store: {}", storeId);
+
+        List<com.cnpm.foodfast.entity.StoreLedger> ledgerEntries = ledgerService.getLedgerEntriesByStore(storeId);
+
+        return ResponseEntity.ok(APIResponse.<List<com.cnpm.foodfast.entity.StoreLedger>>builder()
+                .code(200)
+                .message("Ledger entries retrieved successfully")
+                .result(ledgerEntries)
+                .build());
+    }
 }

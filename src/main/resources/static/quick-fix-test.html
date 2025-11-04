@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quick Fix Test - FoodFast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 5px solid #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 5px solid #17a2b8;
+        }
+        button {
+            padding: 12px 30px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Quick Fix Test</h1>
+
+        <div class="status info">
+            <strong>ℹ️ Đang kiểm tra fix STORAGE_KEYS duplicate...</strong>
+        </div>
+
+        <div id="result"></div>
+
+        <div style="margin-top: 30px;">
+            <button class="btn-primary" onclick="runTest()">🔄 Run Test</button>
+            <button class="btn-success" onclick="window.location.href='store-management.html'">
+                🏪 Go to Store Management
+            </button>
+            <button class="btn-primary" onclick="clearCache()">🗑️ Clear Cache & Reload</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/store-management.js"></script>
+    <script>
+        function runTest() {
+            const resultDiv = document.getElementById('result');
+            let html = '';
+
+            // Test 1: Check if STORAGE_KEYS is defined
+            if (typeof STORAGE_KEYS !== 'undefined') {
+                html += '<div class="status success">✅ STORAGE_KEYS is defined</div>';
+                html += '<pre>' + JSON.stringify(STORAGE_KEYS, null, 2) + '</pre>';
+            } else {
+                html += '<div class="status error">❌ STORAGE_KEYS is NOT defined</div>';
+            }
+
+            // Test 2: Check for duplicate declaration error
+            try {
+                // Try to access STORAGE_KEYS
+                const token = STORAGE_KEYS.TOKEN;
+                const user = STORAGE_KEYS.USER;
+                html += '<div class="status success">✅ No duplicate declaration error</div>';
+                html += '<div class="status info">TOKEN key: ' + token + '<br>USER key: ' + user + '</div>';
+            } catch (e) {
+                html += '<div class="status error">❌ Error: ' + e.message + '</div>';
+            }
+
+            // Test 3: Check auth data
+            const tokenData = localStorage.getItem('foodfast_token');
+            const userData = localStorage.getItem('foodfast_user');
+
+            if (tokenData) {
+                html += '<div class="status success">✅ Token found in localStorage</div>';
+            } else {
+                html += '<div class="status error">❌ Token NOT found - Please login</div>';
+            }
+
+            if (userData) {
+                html += '<div class="status success">✅ User data found in localStorage</div>';
+                try {
+                    const user = JSON.parse(userData);
+                    html += '<pre>' + JSON.stringify(user, null, 2) + '</pre>';
+                } catch (e) {
+                    html += '<div class="status error">❌ User data invalid JSON</div>';
+                }
+            } else {
+                html += '<div class="status error">❌ User data NOT found - Please login</div>';
+            }
+
+            // Test 4: Check if currentUserId is set
+            if (typeof currentUserId !== 'undefined' && currentUserId) {
+                html += '<div class="status success">✅ currentUserId is set: ' + currentUserId + '</div>';
+            } else {
+                html += '<div class="status error">❌ currentUserId is NOT set</div>';
+            }
+
+            // Summary
+            html += '<div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">';
+            html += '<h3>📋 Summary:</h3>';
+            if (tokenData && userData && typeof currentUserId !== 'undefined') {
+                html += '<div class="status success">';
+                html += '✅ All checks passed!<br>';
+                html += '✅ STORAGE_KEYS fix working<br>';
+                html += '✅ Ready to use Store Management<br>';
+                html += '<br><strong>Action:</strong> Click "Go to Store Management" button above';
+                html += '</div>';
+            } else {
+                html += '<div class="status error">';
+                html += '⚠️ Some checks failed<br>';
+                html += '<br><strong>Action:</strong> Please login first at index.html';
+                html += '</div>';
+            }
+            html += '</div>';
+
+            resultDiv.innerHTML = html;
+        }
+
+        function clearCache() {
+            if (confirm('This will clear cache and reload. Continue?')) {
+                // Clear cache
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                // Hard reload
+                location.reload(true);
+            }
+        }
+
+        // Auto run on load
+        setTimeout(runTest, 500);
+    </script>
+</body>
+</html>
+

@@ -3,291 +3,704 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Cửa hàng - FoodFast</title>
+    <title>Quản Lý Cửa Hàng - FoodFast</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .store-container {
+        :root {
+            --primary: var(--primary-color);
+            --shadow: var(--shadow-md);
+        }
+        .management-container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
         }
-
-        .store-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid var(--light);
-        }
-
-        .store-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .store-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .management-header {
+            background: linear-gradient(135deg, var(--primary), #e67e22);
             color: white;
-            font-size: 1.5rem;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
         }
-
         .tabs {
             display: flex;
             gap: 1rem;
+            border-bottom: 2px solid #eee;
             margin-bottom: 2rem;
-            border-bottom: 2px solid var(--light);
         }
-
         .tab {
-            padding: 1rem 1.5rem;
+            padding: 1rem 2rem;
             background: none;
             border: none;
             cursor: pointer;
             font-size: 1rem;
-            font-weight: 500;
             color: var(--gray);
             border-bottom: 3px solid transparent;
             transition: all 0.3s;
         }
-
         .tab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
+            color: var(--primary);
+            border-bottom-color: var(--primary);
         }
-
-        .tab:hover {
-            color: var(--primary-color);
-        }
-
         .tab-content {
             display: none;
         }
-
         .tab-content.active {
             display: block;
         }
-
-        .order-card {
+        .info-card {
             background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--primary-color);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
         }
-
-        .order-header {
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .form-group {
             display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
+            flex-direction: column;
         }
-
-        .order-id {
-            font-size: 1.2rem;
-            font-weight: bold;
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
             color: var(--dark);
         }
-
-        .order-status {
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .status-badge {
+            display: inline-block;
             padding: 0.5rem 1rem;
             border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
+            font-size: 0.875rem;
+            font-weight: 600;
         }
-
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-confirmed { background: #d1ecf1; color: #0c5460; }
-        .status-preparing { background: #cce5ff; color: #004085; }
-        .status-ready { background: #d4edda; color: #155724; }
-        .status-in-delivery { background: #d1ecf1; color: #0c5460; }
-        .status-delivered { background: #d4edda; color: #155724; }
-        .status-cancelled { background: #f8d7da; color: #721c24; }
-
-        .order-items {
-            margin: 1rem 0;
-            padding: 1rem;
-            background: var(--light);
-            border-radius: 8px;
+        .status-active {
+            background: #d4edda;
+            color: #155724;
         }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
         }
-
-        .order-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
         }
-
-        .order-total {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-align: right;
-            margin-top: 1rem;
+        .status-confirmed {
+            background: #d1ecf1;
+            color: #0c5460;
         }
-
+        .status-created {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .status-refunded {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-preparing {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .status-in-delivery {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .status-delivered {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            gap: 1.5rem;
             margin-bottom: 2rem;
         }
-
         .stat-card {
             background: white;
             padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
             text-align: center;
         }
-
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
         .stat-value {
             font-size: 2rem;
             font-weight: bold;
-            color: var(--primary-color);
-            margin: 0.5rem 0;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
         }
-
         .stat-label {
             color: var(--gray);
-            font-size: 0.9rem;
         }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
+        .products-table {
+            width: 100%;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .products-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .products-table th {
+            background: var(--light);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .products-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .products-table tr:hover {
+            background: var(--light);
+        }
+        .product-image {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--border-radius);
+            object-fit: cover;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
             color: var(--gray);
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.3;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <i class="fas fa-utensils"></i>
-                <span>FoodFast Store</span>
-            </a>
-            <div class="nav-links">
-                <a href="index.html">Trang chủ</a>
-                <a href="store-management.html" class="active">Quản lý đơn hàng</a>
-                <button class="btn btn-outline btn-sm" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                </button>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <span>FoodFast</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">Trang chủ</a>
+                    <a href="stores.html" class="nav-link">Cửa hàng</a>
+                    <a href="store-management.html" class="nav-link active">Quản lý</a>
+                    <a href="drone-management.html" class="nav-link">Đơn hàng CH</a>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-dropdown" id="userDropdown">
+                            <button class="user-avatar" onclick="toggleDropdown()">
+                                <i class="fas fa-user-circle"></i>
+                                <span id="userName" style="min-width: 50px;">Loading...</span>
+                            </button>
+                            <div class="dropdown-menu" id="dropdownMenu">
+                                <a href="orders.html"><i class="fas fa-box"></i> Đơn hàng của tôi</a>
+                                <a href="store-management.html"><i class="fas fa-store"></i> Quản lý cửa hàng</a>
+                                <a href="#" onclick="logout(); return false;"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- Main Content -->
-    <div class="store-container">
-        <!-- Store Header -->
-        <div class="store-header">
-            <div class="store-info">
-                <div class="store-avatar">
-                    <i class="fas fa-store"></i>
-                </div>
+    <div class="management-container">
+        <!-- Management Header -->
+        <div class="management-header">
+            <h1><i class="fas fa-store"></i> Quản Lý Cửa Hàng</h1>
+            <p>Quản lý thông tin, sản phẩm và hoạt động kinh doanh của bạn</p>
+        </div>
+
+        <!-- Store Selector (if multiple stores) -->
+        <div class="info-card" id="storeSelectorCard">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h1 id="storeName">Đang tải...</h1>
-                    <p style="color: var(--gray); margin: 0;" id="storeAddress">-</p>
+                    <label for="storeSelect" style="margin-bottom: 0.5rem; display: block; font-weight: 600;">Chọn cửa hàng:</label>
+                    <select id="storeSelect" onchange="loadStoreData()" style="width: 300px; padding: 0.75rem; border: 1px solid #ddd; border-radius: var(--border-radius); font-size: 1rem;">
+                        <option value="">-- Chọn cửa hàng --</option>
+                    </select>
                 </div>
-            </div>
-            <div>
-                <button class="btn btn-primary" onclick="refreshOrders()">
-                    <i class="fas fa-sync-alt"></i> Làm mới
+                <button class="btn btn-primary" onclick="showCreateStoreModal()">
+                    <i class="fas fa-plus"></i> Tạo cửa hàng mới
                 </button>
             </div>
         </div>
 
-        <!-- Statistics -->
-        <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-                <i class="fas fa-clock" style="font-size: 2rem; color: #ffc107;"></i>
-                <div class="stat-value" id="statPending">0</div>
-                <div class="stat-label">Chờ xác nhận</div>
+        <!-- Store Content (hidden until store selected) -->
+        <div id="storeContent" style="display: none;">
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: var(--primary);">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="stat-value" id="totalProducts">0</div>
+                    <div class="stat-label">Sản phẩm</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #28a745;">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-label">Đơn hàng</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #ffc107;">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-value" id="pendingOrders">0</div>
+                    <div class="stat-label">Chờ xác nhận</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #17a2b8;">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-value" id="totalRevenue">0</div>
+                    <div class="stat-label">Doanh thu</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <i class="fas fa-utensils" style="font-size: 2rem; color: #17a2b8;"></i>
-                <div class="stat-value" id="statConfirmed">0</div>
-                <div class="stat-label">Đang chuẩn bị</div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-shipping-fast" style="font-size: 2rem; color: #007bff;"></i>
-                <div class="stat-value" id="statDelivering">0</div>
-                <div class="stat-label">Đang giao</div>
-            </div>
-            <div class="stat-card">
-                <i class="fas fa-check-circle" style="font-size: 2rem; color: #28a745;"></i>
-                <div class="stat-value" id="statDelivered">0</div>
-                <div class="stat-label">Đã giao</div>
-            </div>
-        </div>
 
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('pending')">
-                Chờ xác nhận <span id="badgePending" class="badge">0</span>
-            </button>
-            <button class="tab" onclick="switchTab('confirmed')">
-                Đang chuẩn bị
-            </button>
-            <button class="tab" onclick="switchTab('delivering')">
-                Đang giao
-            </button>
-            <button class="tab" onclick="switchTab('completed')">
-                Hoàn thành
-            </button>
-        </div>
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('info', this)">
+                    <i class="fas fa-info-circle"></i> Thông tin cửa hàng
+                </button>
+                <button class="tab" onclick="switchTab('products', this)">
+                    <i class="fas fa-box"></i> Sản phẩm
+                </button>
+                <button class="tab" onclick="switchTab('orders', this)">
+                    <i class="fas fa-shopping-bag"></i> Đơn hàng
+                </button>
+                <button class="tab" onclick="switchTab('bank', this)">
+                    <i class="fas fa-university"></i> Thông tin thanh toán
+                </button>
+            </div>
 
-        <!-- Tab Contents -->
-        <div id="tab-pending" class="tab-content active">
-            <div id="ordersPending"></div>
-        </div>
-        <div id="tab-confirmed" class="tab-content">
-            <div id="ordersConfirmed"></div>
-        </div>
-        <div id="tab-preparing" class="tab-content" style="display: none;">
-            <div id="ordersPreparing"></div>
-        </div>
-        <div id="tab-ready" class="tab-content" style="display: none;">
-            <div id="ordersReady"></div>
-        </div>
-        <div id="tab-delivering" class="tab-content">
-            <div id="ordersDelivering"></div>
-        </div>
-        <div id="tab-completed" class="tab-content">
-            <div id="ordersCompleted"></div>
+            <!-- Tab Content: Store Info -->
+            <div id="infoTab" class="tab-content active">
+                <div class="info-card">
+                    <h2><i class="fas fa-store"></i> Thông Tin Cửa Hàng</h2>
+                    <form id="storeInfoForm" onsubmit="updateStoreInfo(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tên cửa hàng *</label>
+                                <input type="text" id="storeName" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Trạng thái</label>
+                                <select id="storeStatus" name="status">
+                                    <option value="ACTIVE">Đang hoạt động</option>
+                                    <option value="INACTIVE">Tạm ngừng</option>
+                                    <option value="PENDING">Chờ duyệt</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mô tả</label>
+                            <textarea id="storeDescription" name="description"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email liên hệ</label>
+                                <input type="email" id="storeEmail" name="payoutEmail">
+                            </div>
+                            <div class="form-group">
+                                <label>Ngày tạo</label>
+                                <input type="text" id="storeCreatedAt" readonly style="background: #f5f5f5;">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Lưu thay đổi
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Store Address -->
+                <div class="info-card">
+                    <h2><i class="fas fa-map-marker-alt"></i> Địa Chỉ Cửa Hàng</h2>
+                    <form id="storeAddressForm" onsubmit="updateStoreAddress(event)">
+                        <div class="form-group">
+                            <label>Địa chỉ chi tiết *</label>
+                            <input type="text" id="addressDetail" name="addressDetail" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tỉnh/Thành phố *</label>
+                                <input type="text" id="addressProvince" name="province" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Quận/Huyện *</label>
+                                <input type="text" id="addressDistrict" name="district" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phường/Xã *</label>
+                                <input type="text" id="addressWard" name="ward" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Vĩ độ (Latitude)</label>
+                                <input type="number" step="any" id="addressLat" name="latitude">
+                            </div>
+                            <div class="form-group">
+                                <label>Kinh độ (Longitude)</label>
+                                <input type="number" step="any" id="addressLng" name="longitude">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Cập nhật địa chỉ
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab Content: Products -->
+            <div id="productsTab" class="tab-content">
+                <div class="info-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2><i class="fas fa-box"></i> Danh Sách Sản Phẩm</h2>
+                        <button class="btn btn-primary" onclick="showAddProductModal()">
+                            <i class="fas fa-plus"></i> Thêm sản phẩm
+                        </button>
+                    </div>
+
+                    <div class="products-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Hình ảnh</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th>Giá</th>
+                                    <th>Danh mục</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 2rem;">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Orders -->
+            <div id="ordersTab" class="tab-content">
+                <div class="info-card">
+                    <h2><i class="fas fa-shopping-bag"></i> Quản Lý Đơn Hàng</h2>
+
+                    <!-- Order Filter -->
+                    <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+                        <label style="font-weight: 600;">Trạng thái:</label>
+                        <select id="orderStatusFilter" onchange="filterOrders()" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="">Tất cả</option>
+                            <option value="CREATED">Đã tạo</option>
+                            <option value="PENDING_PAYMENT">Chờ thanh toán</option>
+                            <option value="PAID">Đã thanh toán</option>
+                            <option value="ACCEPT">Đã xác nhận</option>
+                            <option value="IN_DELIVERY">Đang giao</option>
+                            <option value="DELIVERED">Đã giao</option>
+                            <option value="CANCELLED">Đã hủy</option>
+                            <option value="REFUNDED">Đã hoàn tiền</option>
+                        </select>
+                    </div>
+
+                    <div class="products-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Khách hàng</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thời gian</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 2rem;">
+                                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Bank Info -->
+            <div id="bankTab" class="tab-content">
+                <div class="info-card">
+                    <h2><i class="fas fa-university"></i> Thông Tin Thanh Toán</h2>
+                    <p style="color: var(--gray); margin-bottom: 1.5rem;">
+                        Cập nhật thông tin tài khoản ngân hàng để nhận thanh toán từ hệ thống
+                    </p>
+                    <form id="bankInfoForm" onsubmit="updateBankInfo(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tên chủ tài khoản *</label>
+                                <input type="text" id="bankAccountName" name="bankAccountName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Số tài khoản *</label>
+                                <input type="text" id="bankAccountNumber" name="bankAccountNumber" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tên ngân hàng *</label>
+                                <input type="text" id="bankName" name="bankName" required placeholder="VD: Vietcombank, Techcombank...">
+                            </div>
+                            <div class="form-group">
+                                <label>Chi nhánh</label>
+                                <input type="text" id="bankBranch" name="bankBranch" placeholder="VD: Chi nhánh Hà Nội">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Cập nhật thông tin
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Loading Spinner -->
-    <div id="globalLoader" class="global-loader" style="display: none;">
-        <div class="loader-spinner">
-            <i class="fas fa-spinner fa-spin fa-3x"></i>
-            <p>Đang tải...</p>
+    <!-- Modal: Create Store -->
+    <div id="createStoreModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-store"></i> Tạo Cửa Hàng Mới</h2>
+                <button class="modal-close" onclick="closeCreateStoreModal()">&times;</button>
+            </div>
+            <form id="createStoreForm" onsubmit="createStore(event)">
+                <div class="form-group">
+                    <label>Tên cửa hàng *</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Email liên hệ</label>
+                    <input type="email" name="payoutEmail">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-plus"></i> Tạo cửa hàng
+                </button>
+            </form>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Modal: Add/Edit Product -->
+    <div id="productModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 id="productModalTitle"><i class="fas fa-box"></i> Thêm Sản Phẩm</h2>
+                <button class="modal-close" onclick="closeProductModal()">&times;</button>
+            </div>
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <input type="hidden" id="productId" name="productId">
+                <input type="hidden" id="productImageUrlHidden" name="imageUrl">
+                
+                <div class="form-group">
+                    <label>Tên sản phẩm *</label>
+                    <input type="text" id="productName" name="name" required placeholder="Ví dụ: Phở bò đặc biệt">
+                </div>
+                
+                <div class="form-group">
+                    <label>Mô tả</label>
+                    <textarea id="productDescription" name="description" rows="3" placeholder="Mô tả chi tiết về sản phẩm..."></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Giá (VNĐ) *</label>
+                        <input type="number" id="productPrice" name="price" min="1000" step="1000" required placeholder="50000">
+                    </div>
+                    <div class="form-group">
+                        <label>Danh mục *</label>
+                        <select id="productCategory" name="categoryId" required>
+                            <option value="">-- Chọn danh mục --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Số lượng</label>
+                        <input type="number" id="productQuantity" name="quantity" min="0" value="100" placeholder="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Khối lượng (gram)</label>
+                        <input type="number" id="productWeight" name="weight" min="0" step="10" value="500" placeholder="500">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Hình ảnh sản phẩm</label>
+                    
+                    <!-- Tab Selection -->
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid #eee;">
+                        <button type="button" class="image-tab-btn active" onclick="switchImageTab('upload')" id="uploadTab" style="padding: 0.75rem 1.5rem; border: none; background: none; cursor: pointer; border-bottom: 3px solid var(--primary); font-weight: 600; color: var(--primary);">
+                            <i class="fas fa-upload"></i> Upload File
+                        </button>
+                        <button type="button" class="image-tab-btn" onclick="switchImageTab('url')" id="urlTab" style="padding: 0.75rem 1.5rem; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; color: var(--gray);">
+                            <i class="fas fa-link"></i> Nhập URL
+                        </button>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; align-items: start;">
+                        <div style="flex: 1;">
+                            <!-- Upload Tab Content -->
+                            <div id="uploadTabContent">
+                                <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 2rem; text-align: center; background: #f8f9fa; cursor: pointer;" onclick="document.getElementById('productImageFile').click()">
+                                    <input type="file" id="productImageFile" accept="image/*" style="display: none;" onchange="handleImageFileSelect(event)">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                                    <p style="margin: 0; color: var(--dark); font-weight: 600;">Click để chọn ảnh</p>
+                                    <p style="margin: 0.5rem 0 0; color: var(--gray); font-size: 0.875rem;">hoặc kéo thả file vào đây</p>
+                                    <small style="color: var(--gray); display: block; margin-top: 0.5rem;">
+                                        Hỗ trợ: JPG, PNG, GIF (Max 5MB)
+                                    </small>
+                                </div>
+                                <div id="uploadProgress" style="display: none; margin-top: 1rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                        <i class="fas fa-spinner fa-spin" style="color: var(--primary);"></i>
+                                        <span id="uploadProgressText">Đang upload...</span>
+                                    </div>
+                                    <div style="width: 100%; height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
+                                        <div id="uploadProgressBar" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s;"></div>
+                                    </div>
+                                </div>
+                                <div id="uploadSuccess" style="display: none; margin-top: 1rem; padding: 1rem; background: #d4edda; color: #155724; border-radius: 4px;">
+                                    <i class="fas fa-check-circle"></i> Upload thành công!
+                                </div>
+                                <div id="uploadError" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8d7da; color: #721c24; border-radius: 4px;">
+                                    <i class="fas fa-exclamation-circle"></i> <span id="uploadErrorText"></span>
+                                </div>
+                            </div>
+
+                            <!-- URL Tab Content -->
+                            <div id="urlTabContent" style="display: none;">
+                                <input type="text" id="productImageUrl" 
+                                       placeholder="https://example.com/image.jpg"
+                                       onchange="previewProductImage(this.value)"
+                                       style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+                                <small style="color: var(--gray); display: block; margin-top: 0.5rem;">
+                                    <i class="fas fa-info-circle"></i> Nhập URL hình ảnh hoặc sử dụng các nguồn miễn phí:
+                                    <br>• <a href="https://unsplash.com" target="_blank">Unsplash</a>
+                                    • <a href="https://pixabay.com" target="_blank">Pixabay</a>
+                                    • <a href="https://pexels.com" target="_blank">Pexels</a>
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div id="imagePreviewContainer" style="width: 150px; height: 150px; border: 2px dashed #ddd; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; position: relative;">
+                            <img id="imagePreview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                            <span id="imagePreviewPlaceholder" style="color: #999; text-align: center; font-size: 0.875rem; padding: 1rem;">
+                                <i class="fas fa-image" style="display: block; font-size: 2.5rem; margin-bottom: 0.5rem;"></i>
+                                Xem trước
+                            </span>
+                            <button type="button" id="removeImageBtn" onclick="removeProductImage()" style="display: none; position: absolute; top: 5px; right: 5px; background: rgba(220, 53, 69, 0.9); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 1rem;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline" onclick="closeProductModal()" style="flex: 1;">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">
+                        <i class="fas fa-save"></i> Lưu sản phẩm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Order Detail -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-receipt"></i> Chi Tiết Đơn Hàng</h2>
+                <button class="modal-close" onclick="closeOrderModal()">&times;</button>
+            </div>
+            <div id="orderDetailContent">
+                <div style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
     <script src="js/store-management.js"></script>
 </body>

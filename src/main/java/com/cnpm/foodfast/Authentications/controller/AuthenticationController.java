@@ -1,5 +1,6 @@
 package com.cnpm.foodfast.Authentications.controller;
 
+import com.cnpm.foodfast.dto.request.Auth.CreateUserRequest;
 import com.cnpm.foodfast.dto.request.Auth.LoginRequest;
 import com.cnpm.foodfast.dto.request.Auth.LogoutRequest;
 import com.cnpm.foodfast.dto.request.Auth.SignUpRequest;
@@ -11,6 +12,7 @@ import com.cnpm.foodfast.Authentications.service.AuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -85,6 +87,25 @@ public class AuthenticationController {
             String newToken = authenticationService.refreshToken(refreshToken);
             response.setResult(newToken);
             response.setMessage("Token refreshed successfully");
+        } catch (Exception e) {
+            response.setMessage(e.getMessage());
+            response.setCode(400);
+        }
+        return response;
+    }
+
+    /**
+     * Admin API: Create user with specific roles
+     * Only ADMIN can access this endpoint
+     */
+    @PostMapping("/admin/create-user")
+    @PreAuthorize("hasRole('ADMIN')")
+    public APIResponse<UserResponse> createUserWithRoles(@RequestBody CreateUserRequest request) {
+        APIResponse<UserResponse> response = new APIResponse<>();
+        try {
+            UserResponse userResponse = authenticationService.createUserWithRoles(request);
+            response.setResult(userResponse);
+            response.setMessage("User created successfully with roles: " + request.getRoles());
         } catch (Exception e) {
             response.setMessage(e.getMessage());
             response.setCode(400);

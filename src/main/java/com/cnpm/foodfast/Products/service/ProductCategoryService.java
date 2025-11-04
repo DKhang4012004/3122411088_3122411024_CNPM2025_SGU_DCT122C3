@@ -9,6 +9,7 @@ public interface ProductCategoryService {
     ProductCategoryResponse createCategory(ProductCategoryRequest category);
     ProductCategoryResponse updateCategory(Long id, ProductCategoryRequest category);
     void deleteCategory(Long id);
+    ProductCategoryResponse getCategoryById(Long id);
     List<ProductCategoryResponse> getAllCategories();
 //    List<ProductCategory> getRootCategories();
 }

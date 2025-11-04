@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Store Management - FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .debug-section.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .debug-section.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 Debug Store Management</h1>
+
+        <div class="debug-section">
+            <h2>Authentication Status</h2>
+            <div id="authStatus">Loading...</div>
+        </div>
+
+        <div class="debug-section">
+            <h2>User Information</h2>
+            <div id="userInfo">Loading...</div>
+        </div>
+
+        <div class="debug-section">
+            <h2>API Test</h2>
+            <div id="apiTest">
+                <button class="btn-primary" onclick="testStoresAPI()">Test Stores API</button>
+                <button class="btn-primary" onclick="testCategoriesAPI()">Test Categories API</button>
+                <div id="apiResult" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2>Actions</h2>
+            <button class="btn-success" onclick="window.location.href='store-management.html'">Go to Store Management</button>
+            <button class="btn-primary" onclick="window.location.href='index.html'">Go to Login</button>
+            <button class="btn-danger" onclick="clearAllData()">Clear All Data</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        const STORAGE_KEYS = {
+            TOKEN: 'foodfast_token',
+            USER: 'foodfast_user'
+        };
+
+        let currentUserId = null;
+
+        function checkAuthStatus() {
+            const authDiv = document.getElementById('authStatus');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            const userData = localStorage.getItem(STORAGE_KEYS.USER);
+
+            let html = '<h3>Storage Check:</h3>';
+
+            if (token) {
+                html += `<div class="debug-section success">
+                    ✅ <strong>Token:</strong> Present<br>
+                    <small>${token.substring(0, 50)}...</small>
+                </div>`;
+            } else {
+                html += `<div class="debug-section error">
+                    ❌ <strong>Token:</strong> Missing<br>
+                    <small>You need to login</small>
+                </div>`;
+            }
+
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    currentUserId = user.id;
+                    html += `<div class="debug-section success">
+                        ✅ <strong>User Data:</strong> Valid<br>
+                        <pre>${JSON.stringify(user, null, 2)}</pre>
+                    </div>`;
+                } catch (e) {
+                    html += `<div class="debug-section error">
+                        ❌ <strong>User Data:</strong> Invalid JSON<br>
+                        <small>${e.message}</small>
+                    </div>`;
+                }
+            } else {
+                html += `<div class="debug-section error">
+                    ❌ <strong>User Data:</strong> Missing<br>
+                    <small>You need to login</small>
+                </div>`;
+            }
+
+            authDiv.innerHTML = html;
+        }
+
+        function displayUserInfo() {
+            const userDiv = document.getElementById('userInfo');
+            const userData = localStorage.getItem(STORAGE_KEYS.USER);
+
+            if (!userData) {
+                userDiv.innerHTML = '<p style="color: red;">No user data found</p>';
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userData);
+                userDiv.innerHTML = `
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 10px; font-weight: bold;">User ID:</td>
+                            <td style="padding: 10px;">${user.id || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 10px; font-weight: bold;">Username:</td>
+                            <td style="padding: 10px;">${user.username || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 10px; font-weight: bold;">Email:</td>
+                            <td style="padding: 10px;">${user.email || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 10px; font-weight: bold;">Full Name:</td>
+                            <td style="padding: 10px;">${user.fullName || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; font-weight: bold;">Roles:</td>
+                            <td style="padding: 10px;">${user.roles ? user.roles.join(', ') : 'N/A'}</td>
+                        </tr>
+                    </table>
+                `;
+            } catch (e) {
+                userDiv.innerHTML = `<p style="color: red;">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function testStoresAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            if (!token) {
+                resultDiv.innerHTML = '<p style="color: red;">No token found!</p>';
+                return;
+            }
+
+            if (!currentUserId) {
+                resultDiv.innerHTML = '<p style="color: red;">No user ID found!</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stores/owner/${currentUserId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <div class="debug-section ${response.ok ? 'success' : 'error'}">
+                        <strong>Status:</strong> ${response.status}<br>
+                        <strong>Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-section error">
+                    <strong>Error:</strong> ${error.message}
+                </div>`;
+            }
+        }
+
+        async function testCategoriesAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            if (!token) {
+                resultDiv.innerHTML = '<p style="color: red;">No token found!</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/categories`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                resultDiv.innerHTML = `
+                    <div class="debug-section ${response.ok ? 'success' : 'error'}">
+                        <strong>Status:</strong> ${response.status}<br>
+                        <strong>Response:</strong>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="debug-section error">
+                    <strong>Error:</strong> ${error.message}
+                </div>`;
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('Clear all authentication data?')) {
+                localStorage.clear();
+                alert('All data cleared!');
+                location.reload();
+            }
+        }
+
+        // Run on load
+        checkAuthStatus();
+        displayUserInfo();
+    </script>
+</body>
+</html>
+

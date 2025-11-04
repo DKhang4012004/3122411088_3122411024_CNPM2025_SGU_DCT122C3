@@ -35,7 +35,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false,
-            columnDefinition = "enum('CREATED','PENDING_PAYMENT','PAID','IN_DELIVERY','DELIVERED','CANCELLED','REFUNDED') default 'CREATED'")
+            columnDefinition = "enum('CREATED','PENDING_PAYMENT','PAID','ACCEPT','IN_DELIVERY','DELIVERED','CANCELLED','REFUNDED') default 'CREATED'")
     @Builder.Default
     OrderStatus status = OrderStatus.CREATED;
 

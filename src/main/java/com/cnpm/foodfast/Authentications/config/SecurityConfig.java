@@ -32,6 +32,7 @@ public class SecurityConfig {
                         "/products","/products/**",
                         "/categories","/categories/**",
                         "/stores","/stores/**",
+                        "/api/stores","/api/stores/**",
                         "/location","/location/**",
                         "/storesaddresses","/storesaddresses/**",
                         "/drones","/drones/**").permitAll()
@@ -41,6 +42,9 @@ public class SecurityConfig {
                 .requestMatchers("/static/**", "/images/**", "/uploads/**",
                         "/*.html", "/*.css", "/*.js", "/*.png", "/*.jpg",
                         "/test-*.html", "/debug-*.html", "/drone-*.html", "/index.html").permitAll()
+
+                        // File upload endpoints (require authentication)
+                        .requestMatchers("/api/upload/**").authenticated()
 
                         // Admin only endpoints
                         .requestMatchers("/users/getAllUser").hasRole("ADMIN")

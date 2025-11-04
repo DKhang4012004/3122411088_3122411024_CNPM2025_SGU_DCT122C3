@@ -39,4 +39,11 @@ public class ProductCategoryController {
                 .result(productCategoryService.getAllCategories())
                 .build();
     }
+
+    @GetMapping("/{id}")
+    public APIResponse<ProductCategoryResponse> getCategoryById(@PathVariable Long id) {
+        return APIResponse.<ProductCategoryResponse>builder()
+                .result(productCategoryService.getCategoryById(id))
+                .build();
+    }
 }

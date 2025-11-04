@@ -1,6 +1,7 @@
 package com.cnpm.foodfast.Authentications.service;
 
 import com.cnpm.foodfast.Authentications.config.JwtAuthenticationFilter;
+import com.cnpm.foodfast.dto.request.Auth.CreateUserRequest;
 import com.cnpm.foodfast.dto.request.Auth.LoginRequest;
 import com.cnpm.foodfast.dto.request.Auth.SignUpRequest;
 import com.cnpm.foodfast.dto.response.Auth.AuthenticationResponse;
@@ -120,8 +121,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             }
         }
 
-        // Get CUSTOMER role (ID = 2)
-        Roles customerRole = roleRepository.findById(2L)
+        // Get CUSTOMER role (ID = 1) - Fixed from ID = 2
+        Roles customerRole = roleRepository.findByName("CUSTOMER")
                 .orElseThrow(() -> new RuntimeException("Customer role not found"));
 
         // Create new user
@@ -166,6 +167,86 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User savedUser = userRepository.save(user);
 
         log.info("User registered successfully with username: {}", savedUser.getUsername());
+
+        return userMapper.toResponse(savedUser);
+    }
+
+    @Override
+    public UserResponse createUserWithRoles(CreateUserRequest request) {
+        // Check if username already exists
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new RuntimeException("Username already exists");
+        }
+
+        // Check if email already exists
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        // Check if phone already exists (if provided)
+        if (request.getPhone() != null && !request.getPhone().trim().isEmpty()) {
+            if (userRepository.findByPhone(request.getPhone()).isPresent()) {
+                throw new RuntimeException("Phone number already exists");
+            }
+        }
+
+        // Validate required fields
+        if (request.getUsername() == null || request.getPassword() == null || 
+            request.getEmail() == null || request.getFullName() == null) {
+            throw new RuntimeException("Missing required fields: username, password, email, fullName");
+        }
+
+        // Create new user
+        User user = User.builder()
+                .username(request.getUsername())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                .email(request.getEmail())
+                .fullName(request.getFullName())
+                .phone(request.getPhone())
+                .status(UserStatus.ACTIVE)
+                .build();
+
+        // Set date of birth if provided
+        if (request.getDateOfBirth() != null && !request.getDateOfBirth().trim().isEmpty()) {
+            try {
+                user.setDateOfBirth(LocalDate.parse(request.getDateOfBirth()));
+            } catch (Exception e) {
+                throw new RuntimeException("Invalid date format. Please use yyyy-MM-dd format");
+            }
+        }
+
+        // Set gender if provided
+        if (request.getGender() != null && !request.getGender().trim().isEmpty()) {
+            try {
+                user.setGender(Gender.valueOf(request.getGender().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException("Invalid gender. Allowed values: MALE, FEMALE, OTHER");
+            }
+        }
+
+        // Get roles from request, or default to CUSTOMER
+        Set<Roles> roles = new HashSet<>();
+        if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+            for (String roleName : request.getRoles()) {
+                Roles role = roleRepository.findByName(roleName.toUpperCase())
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+                roles.add(role);
+            }
+        } else {
+            // Default to CUSTOMER role
+            Roles customerRole = roleRepository.findByName("CUSTOMER")
+                    .orElseThrow(() -> new RuntimeException("Customer role not found"));
+            roles.add(customerRole);
+        }
+
+        user.setRoles(roles);
+
+        // Save user
+        User savedUser = userRepository.save(user);
+
+        log.info("User created successfully with username: {} and roles: {}", 
+                savedUser.getUsername(), 
+                savedUser.getRoles().stream().map(Roles::getName).collect(Collectors.toSet()));
 
         return userMapper.toResponse(savedUser);
     }

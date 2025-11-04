@@ -16,6 +16,10 @@ public interface UserService {
     String deleteUser(String userId);
     List<UserResponse> getAllUsers();
 
+    // Admin methods
+    UserResponse updateUserStatus(Long userId, String status);
+    UserResponse updateUserRoles(Long userId, List<String> roleNames);
+
     // User Address methods
     UserAddressResponse addAddress(Long userId, UserAddressCreationRequest request);
     List<UserAddressResponse> getUserAddresses(Long userId);

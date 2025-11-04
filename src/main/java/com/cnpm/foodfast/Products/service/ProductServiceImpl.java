@@ -122,4 +122,16 @@ public class ProductServiceImpl  implements ProductService {
         List<Product> products = productRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
         return productMapper.toProductResponse(products);
     }
+
+    @Override
+    @Transactional
+    public ProductResponse updateStatus(Long productId, ProductStatus status) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+        
+        product.setStatus(status);
+        productRepository.save(product);
+        
+        return productMapper.toProductResponse(product);
+    }
 }

@@ -7,6 +7,7 @@ import com.cnpm.foodfast.dto.response.Cart.CartResponse;
 import com.cnpm.foodfast.entity.Cart;
 import com.cnpm.foodfast.entity.CartItem;
 import com.cnpm.foodfast.entity.Product;
+import com.cnpm.foodfast.entity.Store;
 import com.cnpm.foodfast.enums.CartStatus;
 import com.cnpm.foodfast.exception.ResourceNotFoundException;
 import com.cnpm.foodfast.Cart.repository.CartRepository;
@@ -201,12 +202,17 @@ public class CartServiceImpl implements CartService {
     }
 
     private CartItemResponse convertToCartItemResponse(CartItem cartItem) {
+        Product product = cartItem.getProduct();
+        Store store = product != null ? product.getStore() : null;
+        
         return CartItemResponse.builder()
                 .id(cartItem.getId())
                 .productId(cartItem.getProductId())
-                .productName(cartItem.getProduct() != null ? cartItem.getProduct().getName() : "Unknown Product")
-                .productDescription(cartItem.getProduct() != null ? cartItem.getProduct().getDescription() : "")
-                .productImageUrl(cartItem.getProduct() != null ? cartItem.getProduct().getMediaPrimaryUrl() : "")
+                .storeId(product != null ? product.getStoreId() : null)
+                .storeName(store != null ? store.getName() : "Unknown Store")
+                .productName(product != null ? product.getName() : "Unknown Product")
+                .productDescription(product != null ? product.getDescription() : "")
+                .productImageUrl(product != null ? product.getMediaPrimaryUrl() : "")
                 .quantity(cartItem.getQuantity())
                 .unitPrice(cartItem.getUnitPriceSnapshot())
                 .totalPrice(cartItem.getTotalPrice())

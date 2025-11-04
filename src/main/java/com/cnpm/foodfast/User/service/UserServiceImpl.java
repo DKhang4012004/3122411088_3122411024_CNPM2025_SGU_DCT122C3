@@ -242,4 +242,38 @@ public class UserServiceImpl implements UserService {
 
         return mapper.toUserAddressResponse(defaultAddress);
     }
+
+    @Override
+    @Transactional
+    public UserResponse updateUserStatus(Long userId, String status) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        try {
+            UserStatus userStatus = UserStatus.valueOf(status);
+            user.setStatus(userStatus);
+            userRepository.save(user);
+            return mapper.toResponse(user);
+        } catch (IllegalArgumentException e) {
+            throw new AppException(ErrorCode.INVALID_KEY);
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateUserRoles(Long userId, List<String> roleNames) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Set<Roles> roles = new HashSet<>();
+        for (String roleName : roleNames) {
+            Roles role = roleRepository.findByName(roleName)
+                    .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+            roles.add(role);
+        }
+
+        user.setRoles(roles);
+        userRepository.save(user);
+        return mapper.toResponse(user);
+    }
 }

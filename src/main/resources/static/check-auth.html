@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Authentication - FoodFast</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #ff6b6b;
+            padding-bottom: 10px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .info-box.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .info-box.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .info-box.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #c82333;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.success:hover {
+            background: #218838;
+        }
+        .actions {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Check Authentication Status</h1>
+
+        <div id="authStatus"></div>
+
+        <div class="actions">
+            <h3>Actions:</h3>
+            <button onclick="checkAuth()">🔄 Refresh Check</button>
+            <button onclick="goToLogin()" class="success">🔐 Go to Login</button>
+            <button onclick="goToStoreManagement()">🏪 Go to Store Management</button>
+            <button onclick="clearAuth()" class="danger">🗑️ Clear All Auth Data</button>
+        </div>
+
+        <div class="info-box" style="margin-top: 20px;">
+            <strong>💡 Tips:</strong>
+            <ul>
+                <li>Nếu token bị missing → Đăng nhập lại</li>
+                <li>Nếu user data bị missing → Đăng nhập lại</li>
+                <li>Nếu user ID bị missing → Đăng nhập lại</li>
+                <li>Click "Clear All Auth Data" nếu muốn reset hoàn toàn</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function checkAuth() {
+            const statusDiv = document.getElementById('authStatus');
+            let html = '<h2>Authentication Status</h2>';
+
+            // Check token with correct key
+            const token = localStorage.getItem('foodfast_token');
+            if (token) {
+                html += '<div class="info-box success">';
+                html += '<strong>✅ Token (foodfast_token):</strong> Present<br>';
+                html += '<pre>' + token.substring(0, 50) + '...</pre>';
+                html += '</div>';
+            } else {
+                html += '<div class="info-box error">';
+                html += '<strong>❌ Token (foodfast_token):</strong> Missing<br>';
+                html += '<small>Bạn cần đăng nhập để có token</small>';
+                html += '</div>';
+            }
+
+            // Check user data with correct key
+            const userData = localStorage.getItem('foodfast_user');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    html += '<div class="info-box success">';
+                    html += '<strong>✅ User Data (foodfast_user):</strong> Present<br>';
+                    html += '<pre>' + JSON.stringify(user, null, 2) + '</pre>';
+
+                    if (user.id) {
+                        html += '<div style="margin-top: 10px; padding: 10px; background: #d4edda; border-radius: 4px;">';
+                        html += '✅ User ID: <strong>' + user.id + '</strong>';
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                } catch (e) {
+                    html += '<div class="info-box error">';
+                    html += '<strong>❌ User Data:</strong> Invalid JSON<br>';
+                    html += '<pre>' + userData + '</pre>';
+                    html += '</div>';
+                }
+            } else {
+                html += '<div class="info-box error">';
+                html += '<strong>❌ User Data (foodfast_user):</strong> Missing<br>';
+                html += '<small>Bạn cần đăng nhập để có user data</small>';
+                html += '</div>';
+            }
+
+            // Check all localStorage keys
+            html += '<div class="info-box">';
+            html += '<strong>📦 All LocalStorage Keys:</strong><br>';
+            html += '<pre>' + JSON.stringify(Object.keys(localStorage), null, 2) + '</pre>';
+            html += '</div>';
+
+            // Show recommendation
+            if (!token || !userData) {
+                html += '<div class="info-box warning">';
+                html += '<strong>⚠️ Khuyến nghị:</strong><br>';
+                html += 'Bạn chưa đăng nhập hoặc session đã hết hạn. Vui lòng:<br>';
+                html += '1. Click nút "Clear All Auth Data" bên dưới<br>';
+                html += '2. Click "Go to Login" để đăng nhập lại';
+                html += '</div>';
+            } else {
+                html += '<div class="info-box success">';
+                html += '<strong>✅ All Good!</strong> Bạn có thể truy cập Store Management';
+                html += '</div>';
+            }
+
+            statusDiv.innerHTML = html;
+        }
+
+        function goToLogin() {
+            window.location.href = 'index.html';
+        }
+
+        function goToStoreManagement() {
+            window.location.href = 'store-management.html';
+        }
+
+        function clearAuth() {
+            if (confirm('Bạn có chắc chắn muốn xóa tất cả dữ liệu xác thực?')) {
+                localStorage.removeItem('foodfast_token');
+                localStorage.removeItem('foodfast_user');
+                // Also clear old keys if they exist
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('userId');
+                alert('Đã xóa tất cả dữ liệu xác thực!');
+                checkAuth();
+            }
+        }
+
+        // Run check on load
+        checkAuth();
+    </script>
+</body>
+</html>
+

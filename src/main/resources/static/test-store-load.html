@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Store Management Load - FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            padding: 40px;
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .test-section.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .test-section.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+            margin: 10px 0;
+        }
+        .status-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Store Management Loading</h1>
+
+        <div class="test-section">
+            <h2><span class="status-icon">🔐</span>Step 1: Check Authentication</h2>
+            <div id="authTest">Testing...</div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="status-icon">📦</span>Step 2: Check DOM Elements</h2>
+            <div id="domTest">Testing...</div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="status-icon">🔌</span>Step 3: Test API Connection</h2>
+            <div id="apiTest">
+                <button class="btn-primary" onclick="testStoresAPI()">Test Stores API</button>
+                <div id="apiResult"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2><span class="status-icon">🎯</span>Step 4: Simulate Store Management</h2>
+            <div id="simulationTest">
+                <button class="btn-success" onclick="simulatePageLoad()">Simulate Page Load</button>
+                <div id="simulationResult"></div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+            <button class="btn-primary" onclick="window.location.href='store-management.html'">
+                Go to Store Management →
+            </button>
+            <button class="btn-primary" onclick="location.reload()">
+                🔄 Refresh Test
+            </button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        const STORAGE_KEYS = {
+            TOKEN: 'foodfast_token',
+            USER: 'foodfast_user'
+        };
+
+        let currentUserId = null;
+
+        // Test 1: Authentication
+        function testAuth() {
+            const resultDiv = document.getElementById('authTest');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            const userData = localStorage.getItem(STORAGE_KEYS.USER);
+
+            let html = '';
+            let allGood = true;
+
+            if (token) {
+                html += '<div class="test-result" style="color: green;">✅ Token: Found</div>';
+            } else {
+                html += '<div class="test-result" style="color: red;">❌ Token: Not Found</div>';
+                allGood = false;
+            }
+
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    currentUserId = user.id;
+                    html += '<div class="test-result" style="color: green;">✅ User Data: Valid</div>';
+                    html += `<pre>${JSON.stringify(user, null, 2)}</pre>`;
+                } catch (e) {
+                    html += '<div class="test-result" style="color: red;">❌ User Data: Invalid JSON</div>';
+                    allGood = false;
+                }
+            } else {
+                html += '<div class="test-result" style="color: red;">❌ User Data: Not Found</div>';
+                allGood = false;
+            }
+
+            resultDiv.innerHTML = html;
+
+            if (allGood) {
+                resultDiv.parentElement.classList.add('success');
+            } else {
+                resultDiv.parentElement.classList.add('error');
+            }
+
+            return allGood;
+        }
+
+        // Test 2: DOM Elements
+        function testDOM() {
+            const resultDiv = document.getElementById('domTest');
+
+            // Create a temporary iframe to test store-management.html
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = 'store-management.html';
+
+            iframe.onload = function() {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+
+                    const userName = iframeDoc.getElementById('userName');
+                    const storeSelect = iframeDoc.getElementById('storeSelect');
+                    const userDropdown = iframeDoc.getElementById('userDropdown');
+                    const dropdownMenu = iframeDoc.getElementById('dropdownMenu');
+
+                    let html = '';
+                    let allGood = true;
+
+                    if (userName) {
+                        html += '<div class="test-result" style="color: green;">✅ #userName element exists</div>';
+                    } else {
+                        html += '<div class="test-result" style="color: red;">❌ #userName element NOT FOUND</div>';
+                        allGood = false;
+                    }
+
+                    if (storeSelect) {
+                        html += '<div class="test-result" style="color: green;">✅ #storeSelect element exists</div>';
+                    } else {
+                        html += '<div class="test-result" style="color: red;">❌ #storeSelect element NOT FOUND</div>';
+                        allGood = false;
+                    }
+
+                    if (userDropdown) {
+                        html += '<div class="test-result" style="color: green;">✅ #userDropdown element exists</div>';
+                    } else {
+                        html += '<div class="test-result" style="color: red;">❌ #userDropdown element NOT FOUND</div>';
+                        allGood = false;
+                    }
+
+                    if (dropdownMenu) {
+                        html += '<div class="test-result" style="color: green;">✅ #dropdownMenu element exists</div>';
+                    } else {
+                        html += '<div class="test-result" style="color: red;">❌ #dropdownMenu element NOT FOUND</div>';
+                        allGood = false;
+                    }
+
+                    // Check scripts loaded
+                    const scripts = Array.from(iframeDoc.getElementsByTagName('script'));
+                    html += '<div class="test-result"><strong>Scripts loaded:</strong><br>';
+                    scripts.forEach(script => {
+                        if (script.src) {
+                            const srcName = script.src.split('/').pop();
+                            html += `- ${srcName}<br>`;
+                        }
+                    });
+                    html += '</div>';
+
+                    resultDiv.innerHTML = html;
+
+                    if (allGood) {
+                        resultDiv.parentElement.classList.add('success');
+                    } else {
+                        resultDiv.parentElement.classList.add('error');
+                    }
+
+                    document.body.removeChild(iframe);
+                } catch (e) {
+                    resultDiv.innerHTML = `<div class="test-result" style="color: red;">❌ Error accessing iframe: ${e.message}</div>`;
+                    resultDiv.parentElement.classList.add('error');
+                    document.body.removeChild(iframe);
+                }
+            };
+
+            iframe.onerror = function() {
+                resultDiv.innerHTML = '<div class="test-result" style="color: red;">❌ Failed to load store-management.html</div>';
+                resultDiv.parentElement.classList.add('error');
+                document.body.removeChild(iframe);
+            };
+
+            document.body.appendChild(iframe);
+        }
+
+        // Test 3: API
+        async function testStoresAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<p>🔄 Testing API...</p>';
+
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            if (!token) {
+                resultDiv.innerHTML = '<div class="test-result" style="color: red;">❌ No token found. Please login first.</div>';
+                return;
+            }
+
+            if (!currentUserId) {
+                resultDiv.innerHTML = '<div class="test-result" style="color: red;">❌ No user ID found.</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stores/owner/${currentUserId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                let html = '';
+                if (response.ok) {
+                    html += '<div class="test-result" style="color: green;">✅ API Response: Success</div>';
+                    html += `<div class="test-result"><strong>Status:</strong> ${response.status}</div>`;
+                    html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+                    if (data.result && Array.isArray(data.result)) {
+                        html += `<div class="test-result"><strong>Number of stores:</strong> ${data.result.length}</div>`;
+                    }
+                } else {
+                    html += '<div class="test-result" style="color: red;">❌ API Response: Failed</div>';
+                    html += `<div class="test-result"><strong>Status:</strong> ${response.status}</div>`;
+                    html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                }
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="test-result" style="color: red;">❌ API Error: ${error.message}</div>`;
+            }
+        }
+
+        // Test 4: Simulate
+        async function simulatePageLoad() {
+            const resultDiv = document.getElementById('simulationResult');
+            resultDiv.innerHTML = '<p>🔄 Simulating page load...</p>';
+
+            let log = [];
+
+            log.push('1. Checking authentication...');
+            const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+            const userData = localStorage.getItem(STORAGE_KEYS.USER);
+
+            if (!token || !userData) {
+                log.push('❌ Authentication failed');
+                resultDiv.innerHTML = '<pre>' + log.join('\n') + '</pre>';
+                return;
+            }
+
+            log.push('✅ Token and user data found');
+
+            try {
+                const user = JSON.parse(userData);
+                log.push(`✅ User ID: ${user.id}`);
+                log.push(`✅ Username: ${user.username || user.email || 'N/A'}`);
+
+                log.push('\n2. Simulating userName update...');
+                log.push(`   Would set userName to: ${user.username || user.email || user.fullName || 'User #' + user.id}`);
+
+                log.push('\n3. Loading stores...');
+                const response = await fetch(`${API_BASE_URL}/api/stores/owner/${user.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const stores = data.result || [];
+                    log.push(`✅ Loaded ${stores.length} store(s)`);
+
+                    if (stores.length > 0) {
+                        log.push('\nStores:');
+                        stores.forEach((store, i) => {
+                            log.push(`   ${i + 1}. ${store.name} (ID: ${store.id})`);
+                        });
+                    } else {
+                        log.push('ℹ️ No stores found. User should create one.');
+                    }
+                } else {
+                    log.push(`❌ API failed with status: ${response.status}`);
+                }
+
+                log.push('\n✅ Simulation complete!');
+                log.push('\n📝 Expected behavior:');
+                log.push('   - Header should show username');
+                log.push('   - Dropdown should work on click');
+                log.push('   - Store selector should show stores');
+                log.push('   - "Create store" button should be visible');
+
+            } catch (e) {
+                log.push(`❌ Error: ${e.message}`);
+            }
+
+            resultDiv.innerHTML = '<pre>' + log.join('\n') + '</pre>';
+        }
+
+        // Run tests on load
+        window.onload = function() {
+            console.log('Running automatic tests...');
+            testAuth();
+            testDOM();
+        };
+    </script>
+</body>
+</html>
+

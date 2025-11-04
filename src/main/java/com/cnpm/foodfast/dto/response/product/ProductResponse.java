@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
 public class ProductResponse {
     private Long id;
     private Long storeId;
+    private String storeName; // Store name for display
     private Long categoryId;
+    private String categoryName; // Category name for display
     private String sku;
     private String name;
     private String description;

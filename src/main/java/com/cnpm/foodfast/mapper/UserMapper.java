@@ -29,6 +29,7 @@ public interface UserMapper {
     User toUser(UserCreationRequest request);
 
     // Entity -> Response
+    @Mapping(target = "roles", expression = "java(user.getRoles() != null ? user.getRoles().stream().map(r -> r.getName()).collect(java.util.stream.Collectors.toSet()) : java.util.Collections.emptySet())")
     UserResponse toResponse(User user);
 
     // Update entity từ request (patch)

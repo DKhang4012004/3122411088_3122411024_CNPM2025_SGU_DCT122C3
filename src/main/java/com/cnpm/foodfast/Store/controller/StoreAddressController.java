@@ -37,7 +37,7 @@ public class StoreAddressController {
                 .build();
     }
 
-    @GetMapping
+    @GetMapping("/store/{storeId}")
     public APIResponse<List<StoreAddressResponse>> getAddressByStore(@PathVariable Long storeId) {
         return APIResponse.<List<StoreAddressResponse>>builder()
                 .result(storeAddressService.getAddressesByStore(storeId))

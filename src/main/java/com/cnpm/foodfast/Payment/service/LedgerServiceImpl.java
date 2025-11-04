@@ -108,7 +108,7 @@ public class LedgerServiceImpl implements LedgerService {
             PayoutBatch payoutBatch = PayoutBatch.builder()
                     .storeId(storeId)
                     .totalPayoutAmount(totalPayoutAmount)
-                    .status(PayoutBatchStatus.PENDING)
+                    .status(PayoutBatchStatus.PROCESSING)
                     .notes("Payout for " + unpaidLedgers.size() + " orders")
                     .build();
 
@@ -164,5 +164,11 @@ public class LedgerServiceImpl implements LedgerService {
     public List<PayoutBatch> getPayoutBatchesByStore(Long storeId) {
         log.info("Getting payout batches for store: {}", storeId);
         return payoutBatchRepository.findByStoreId(storeId);
+    }
+
+    @Override
+    public List<StoreLedger> getLedgerEntriesByStore(Long storeId) {
+        log.info("Getting ledger entries for store: {}", storeId);
+        return storeLedgerRepository.findByStoreId(storeId);
     }
 }

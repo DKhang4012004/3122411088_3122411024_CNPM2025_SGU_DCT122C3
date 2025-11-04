@@ -32,5 +32,10 @@ public interface LedgerService {
      * Lấy danh sách các lô thanh toán của cửa hàng
      */
     List<PayoutBatch> getPayoutBatchesByStore(Long storeId);
+
+    /**
+     * Lấy danh sách các giao dịch sổ cái của cửa hàng
+     */
+    List<com.cnpm.foodfast.entity.StoreLedger> getLedgerEntriesByStore(Long storeId);
 }
 

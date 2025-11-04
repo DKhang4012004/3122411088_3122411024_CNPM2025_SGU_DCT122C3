@@ -5,6 +5,7 @@ import com.cnpm.foodfast.dto.response.product.ProductResponse;
 import com.cnpm.foodfast.dto.response.store.StoreResponse;
 import com.cnpm.foodfast.dto.response.store.StoreWithProductsResponse;
 import com.cnpm.foodfast.entity.Product;
+import com.cnpm.foodfast.entity.ProductCategory;
 import com.cnpm.foodfast.entity.Store;
 import com.cnpm.foodfast.entity.User;
 import com.cnpm.foodfast.enums.ProductStatus;
@@ -146,8 +147,8 @@ public class StoreServiceImpl implements StoreService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + storeId));
 
-        // Get all products of this store
-        List<Product> products = productRepository.findByStoreId(storeId);
+        // Get all products of this store with category loaded (JOIN FETCH)
+        List<Product> products = productRepository.findByStoreIdWithCategory(storeId);
 
         return buildStoreWithProductsResponse(store, products);
     }
@@ -165,8 +166,8 @@ public class StoreServiceImpl implements StoreService {
         Store store = storeRepository.findById(product.getStore().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Store not found with id: " + product.getStore().getId()));
 
-        // Get all products of this store
-        List<Product> products = productRepository.findByStoreId(store.getId());
+        // Get all products of this store with category loaded (JOIN FETCH)
+        List<Product> products = productRepository.findByStoreIdWithCategory(store.getId());
 
         return buildStoreWithProductsResponse(store, products);
     }
@@ -202,10 +203,14 @@ public class StoreServiceImpl implements StoreService {
     }
 
     private ProductResponse convertToProductResponse(Product product) {
+        // Load category if lazy loaded
+        ProductCategory category = product.getCategory();
+        
         return ProductResponse.builder()
                 .id(product.getId())
                 .storeId(product.getStore().getId())
-                .categoryId(product.getCategory().getId())
+                .categoryId(category != null ? category.getId() : null)
+                .categoryName(category != null ? category.getName() : null)
                 .sku(product.getSku())
                 .name(product.getName())
                 .description(product.getDescription())
@@ -269,7 +274,7 @@ public class StoreServiceImpl implements StoreService {
     @Override
     @Transactional
     public void deleteProductForStore(Long storeId, Long productId) {
-        log.info("Deleting product {} for store: {}", productId, storeId);
+        log.info("Deactivating product {} for store: {}", productId, storeId);
 
         // Validate store exists
         storeRepository.findById(storeId)
@@ -283,7 +288,39 @@ public class StoreServiceImpl implements StoreService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        // Delegate to ProductService for actual deletion
-        productService.delete(productId);
+        // Change status to OUT_OF_STOCK instead of deleting
+        product.setStatus(ProductStatus.OUT_OF_STOCK);
+        productRepository.save(product);
+        
+        log.info("Product {} status changed to OUT_OF_STOCK", productId);
+    }
+    
+    @Override
+    @Transactional
+    public void toggleProductStatus(Long storeId, Long productId) {
+        log.info("Toggling product {} status for store: {}", productId, storeId);
+
+        // Validate store exists
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        // Validate product exists and belongs to this store
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_EXISTED));
+
+        if (!product.getStore().getId().equals(storeId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // Toggle status
+        ProductStatus newStatus = product.getStatus() == ProductStatus.ACTIVE 
+                ? ProductStatus.OUT_OF_STOCK 
+                : ProductStatus.ACTIVE;
+        
+        product.setStatus(newStatus);
+        productRepository.save(product);
+        
+        log.info("Product {} status changed from {} to {}", productId, 
+                product.getStatus() == ProductStatus.ACTIVE ? "OUT_OF_STOCK" : "ACTIVE", newStatus);
     }
 }

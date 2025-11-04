@@ -101,4 +101,21 @@ public class UserController {
         response.setResult(userService.getDefaultAddress(userId));
         return response;
     }
+
+    // Admin endpoints
+    @PutMapping("/{userId}/status")
+    public APIResponse<UserResponse> updateUserStatus(@PathVariable Long userId, 
+                                                      @RequestBody com.cnpm.foodfast.dto.request.User.UpdateUserStatusRequest request) {
+        APIResponse<UserResponse> response = new APIResponse<>();
+        response.setResult(userService.updateUserStatus(userId, request.getStatus().name()));
+        return response;
+    }
+
+    @PutMapping("/{userId}/roles")
+    public APIResponse<UserResponse> updateUserRoles(@PathVariable Long userId,
+                                                     @RequestBody com.cnpm.foodfast.dto.request.User.UpdateUserRolesRequest request) {
+        APIResponse<UserResponse> response = new APIResponse<>();
+        response.setResult(userService.updateUserRoles(userId, request.getRoles()));
+        return response;
+    }
 }

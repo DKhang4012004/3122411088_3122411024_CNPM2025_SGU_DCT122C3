@@ -77,4 +77,12 @@ public class ProductController {
                 .build();
     }
 
+    @PutMapping("/{id}/status")
+    public APIResponse<ProductResponse> updateProductStatus(@PathVariable Long id,
+                                                            @RequestBody com.cnpm.foodfast.dto.request.product.UpdateProductStatusRequest request) {
+        return APIResponse.<ProductResponse>builder()
+                .result(productService.updateStatus(id, request.getStatus()))
+                .build();
+    }
+
 }

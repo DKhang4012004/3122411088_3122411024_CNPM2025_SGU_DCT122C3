@@ -71,8 +71,13 @@ public interface StoreService {
     com.cnpm.foodfast.dto.response.product.ProductResponse updateProductForStore(Long storeId, Long productId, com.cnpm.foodfast.dto.request.product.ProductRequest request);
 
     /**
-     * Delete product for a store
+     * Delete product for a store (soft delete - change status to INACTIVE)
      */
     void deleteProductForStore(Long storeId, Long productId);
+    
+    /**
+     * Toggle product status (ACTIVE <-> INACTIVE)
+     */
+    void toggleProductStatus(Long storeId, Long productId);
 }
 

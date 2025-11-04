@@ -210,19 +210,36 @@ public class StoreController {
     }
 
     /**
-     * Delete product of a specific store
+     * Delete product of a specific store (soft delete - change status to INACTIVE)
      * Endpoint: DELETE /api/stores/{storeId}/products/{productId}
      */
     @DeleteMapping("/{storeId}/products/{productId}")
     public APIResponse<Void> deleteProductForStore(
             @PathVariable Long storeId,
             @PathVariable Long productId) {
-        log.info("REST request to delete product {} for store: {}", productId, storeId);
+        log.info("REST request to deactivate product {} for store: {}", productId, storeId);
 
         storeService.deleteProductForStore(storeId, productId);
 
         return APIResponse.<Void>builder()
-                .message("Product deleted successfully")
+                .message("Product deactivated successfully")
+                .build();
+    }
+    
+    /**
+     * Toggle product status (ACTIVE <-> INACTIVE)
+     * Endpoint: PATCH /api/stores/{storeId}/products/{productId}/toggle-status
+     */
+    @PatchMapping("/{storeId}/products/{productId}/toggle-status")
+    public APIResponse<Void> toggleProductStatus(
+            @PathVariable Long storeId,
+            @PathVariable Long productId) {
+        log.info("REST request to toggle status of product {} for store: {}", productId, storeId);
+
+        storeService.toggleProductStatus(storeId, productId);
+
+        return APIResponse.<Void>builder()
+                .message("Product status toggled successfully")
                 .build();
     }
 }

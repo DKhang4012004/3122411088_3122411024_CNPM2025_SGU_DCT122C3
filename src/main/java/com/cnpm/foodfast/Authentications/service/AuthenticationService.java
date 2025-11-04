@@ -1,5 +1,6 @@
 package com.cnpm.foodfast.Authentications.service;
 
+import com.cnpm.foodfast.dto.request.Auth.CreateUserRequest;
 import com.cnpm.foodfast.dto.request.Auth.LoginRequest;
 import com.cnpm.foodfast.dto.request.Auth.SignUpRequest;
 import com.cnpm.foodfast.dto.response.Auth.AuthenticationResponse;
@@ -11,4 +12,5 @@ public interface AuthenticationService {
     boolean validateToken(String token);
     String refreshToken(String refreshToken);
     UserResponse signUp(SignUpRequest request);
+    UserResponse createUserWithRoles(CreateUserRequest request); // New method for admin
 }
