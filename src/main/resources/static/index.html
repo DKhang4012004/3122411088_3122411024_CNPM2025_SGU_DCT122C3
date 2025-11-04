@@ -19,7 +19,7 @@
                 <nav class="nav">
                     <a href="index.html" class="nav-link active">Trang chủ</a>
                     <a href="stores.html" class="nav-link">Cửa hàng</a>
-                    <a href="store-management.html" class="nav-link">Quản lý</a>
+                    <a href="store-management.html" class="nav-link" id="storeManagementNav" style="display: none;">Quản lý</a>
                     <a href="cart.html" class="nav-link">
                         <i class="fas fa-shopping-cart"></i>
                         Giỏ hàng
@@ -29,22 +29,7 @@
                 </nav>
                 <div class="header-actions">
                     <div class="user-menu" id="userMenu">
-                        <!-- Chưa đăng nhập -->
-                        <div id="guestMenu">
-                            <button class="btn btn-outline btn-sm" onclick="showLoginModal()">Đăng nhập</button>
-                            <button class="btn btn-primary btn-sm" onclick="showRegisterModal()">Đăng ký</button>
-                        </div>
-                        <!-- Đã đăng nhập -->
-                        <div class="user-dropdown" id="userDropdown" style="display: none;">
-                            <button class="user-avatar" onclick="toggleDropdown()">
-                                <i class="fas fa-user-circle"></i>
-                                <span id="userName"></span>
-                            </button>
-                            <div class="dropdown-menu" id="dropdownMenu">
-                                <a href="orders.html"><i class="fas fa-box"></i> Đơn hàng của tôi</a>
-                                <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
-                            </div>
-                        </div>
+                        <!-- Will be populated by auth.js -->
                     </div>
                 </div>
             </div>
@@ -261,6 +246,7 @@
 
     <!-- Scripts -->
     <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

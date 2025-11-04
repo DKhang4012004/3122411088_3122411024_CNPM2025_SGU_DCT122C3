@@ -241,7 +241,7 @@
                 <nav class="nav">
                     <a href="index.html" class="nav-link">Trang chủ</a>
                     <a href="stores.html" class="nav-link">Cửa hàng</a>
-                    <a href="store-management.html" class="nav-link active">Quản lý</a>
+                    <a href="store-management.html" class="nav-link active" id="storeManagementNav">Quản lý</a>
                     <a href="drone-management.html" class="nav-link">Đơn hàng CH</a>
                 </nav>
                 <div class="header-actions">
@@ -702,6 +702,27 @@
     </div>
 
     <script src="js/config.js"></script>
+    <script>
+        // Check role-based access
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('foodfast_token');
+            const user = JSON.parse(localStorage.getItem('foodfast_user') || '{}');
+            
+            if (!token || !user.roles) {
+                alert('Vui lòng đăng nhập để tiếp tục');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Check if user has ADMIN or STORE_OWNER role
+            const hasAccess = user.roles.some(role => ['ADMIN', 'STORE_OWNER'].includes(role));
+            if (!hasAccess) {
+                alert('Bạn không có quyền truy cập trang này. Chỉ Admin và Chủ cửa hàng mới được phép.');
+                window.location.href = 'index.html';
+                return;
+            }
+        });
+    </script>
     <script src="js/store-management.js"></script>
 </body>
 </html>
