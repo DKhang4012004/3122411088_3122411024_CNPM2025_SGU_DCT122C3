@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sổ Cái - FoodFast</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .ledger-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .ledger-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .ledger-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+
+        .ledger-header p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .stat-card .amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .stat-card .subtitle {
+            color: var(--gray);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .payout-batch-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .payout-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .payout-id {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .payout-status {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .payout-status.pending {
+            background: #e7e7e7;
+            color: #666666;
+        }
+
+        .payout-status.processing {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .payout-status.paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .payout-status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .payout-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--light);
+        }
+
+        .payout-detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .payout-detail-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 0.25rem;
+        }
+
+        .payout-detail-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .modal-content h3 {
+            margin: 0 0 1.5rem 0;
+            color: var(--dark);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--light);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        /* Ledger Entries Styles */
+        .ledger-entries-section {
+            margin-bottom: 2rem;
+        }
+
+        .ledger-entries-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 0 1rem 0;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+        .ledger-entries-table {
+            overflow-x: auto;
+        }
+
+        .ledger-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .ledger-table thead {
+            background: #f8f9fa;
+        }
+
+        .ledger-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--light);
+        }
+
+        .ledger-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--light);
+            color: var(--gray);
+        }
+
+        .ledger-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .ledger-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .amount-cell {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.05rem;
+        }
+
+        .ledger-status {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .ledger-status.unpaid {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .ledger-status.processing {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .ledger-status.paid {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .batch-link {
+            color: var(--primary-color);
+            font-weight: 500;
+            text-decoration: none;
+            padding: 0.25rem 0.5rem;
+            background: #e7f3ff;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .ledger-table {
+                font-size: 0.85rem;
+            }
+
+            .ledger-table th,
+            .ledger-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        .form-control {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-utensils"></i>
+                FoodFast
+            </a>
+            <div class="nav-menu">
+                <a href="index.html" class="nav-link">Trang chủ</a>
+                <a href="stores.html" class="nav-link">Cửa hàng</a>
+                <a href="cart.html" class="nav-link">Giỏ hàng <span class="badge" id="cartBadge">0</span></a>
+                <a href="orders.html" class="nav-link">Đơn hàng</a>
+                <a href="ledger-management.html" class="nav-link active">Sổ cái</a>
+            </div>
+            <div class="nav-right">
+                <div id="guestMenu">
+                    <a href="login.html" class="btn btn-outline btn-sm">Đăng nhập</a>
+                </div>
+                <div id="userDropdown" style="display: none;">
+                    <span id="userName">User</span>
+                    <button class="btn btn-outline btn-sm" onclick="logout()">Đăng xuất</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="ledger-container">
+        <div class="ledger-header">
+            <h1><i class="fas fa-book"></i> Quản lý Sổ Cái</h1>
+            <p>Theo dõi và quản lý thanh toán cho cửa hàng</p>
+        </div>
+
+        <!-- Store Filter (Admin Only) -->
+        <div id="storeFilterSection" style="display: none; margin-bottom: 2rem;">
+            <div class="card">
+                <div class="card-body">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <label style="font-weight: 600; color: var(--dark);">
+                                <i class="fas fa-store"></i> Chọn cửa hàng:
+                            </label>
+                            <select id="storeFilter" class="form-control" style="max-width: 400px; padding: 0.75rem; border: 1px solid var(--light); border-radius: 8px; font-size: 1rem;">
+                                <option value="">Đang tải...</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="filterByStore()">
+                                <i class="fas fa-filter"></i> Lọc
+                            </button>
+                        </div>
+                        <button class="btn btn-success" onclick="showCreatePayoutModal()" style="background: #28a745;">
+                            <i class="fas fa-money-bill-wave"></i> Tạo thanh toán cho cửa hàng này
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Số tiền chưa thanh toán</h3>
+                <p class="amount" id="unpaidAmount">0đ</p>
+                <p class="subtitle">Tổng tiền đang chờ thanh toán</p>
+            </div>
+            <div class="stat-card">
+                <h3>Lô thanh toán chờ xử lý</h3>
+                <p class="amount" id="pendingBatches">0</p>
+                <p class="subtitle">Số lô đang chờ thanh toán</p>
+            </div>
+            <div class="stat-card">
+                <h3>Tổng đã thanh toán</h3>
+                <p class="amount" id="totalPaid">0đ</p>
+                <p class="subtitle">Tổng tiền đã thanh toán</p>
+            </div>
+        </div>
+
+        <!-- Admin Actions -->
+        <div id="adminActions" style="display: none; margin-bottom: 2rem;">
+            <button class="btn btn-primary" onclick="showCreatePayoutModal()">
+                <i class="fas fa-plus"></i> Tạo lô thanh toán mới
+            </button>
+        </div>
+
+        <!-- Payout Batches List -->
+        <div class="card">
+            <div class="card-body">
+                <h2 style="margin: 0 0 1.5rem 0;">Lịch sử thanh toán</h2>
+                <div id="payoutBatchesList">
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <h3>Đang tải...</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ledger Entries List -->
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-body">
+                <h2 style="margin: 0 0 1.5rem 0;">Chi tiết giao dịch</h2>
+                <div id="ledgerEntriesList">
+                    <div class="empty-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <h3>Đang tải...</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mark Paid Modal -->
+    <div id="markPaidModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3><i class="fas fa-check-circle"></i> Xác nhận thanh toán</h3>
+            <div class="form-group">
+                <label for="transactionCode">Mã giao dịch <span style="color: red;">*</span></label>
+                <input type="text" id="transactionCode" placeholder="Nhập mã giao dịch ngân hàng" required>
+            </div>
+            <div class="form-group">
+                <p><strong>Số tiền:</strong> <span id="modalAmount"></span></p>
+                <p><strong>Batch ID:</strong> <span id="modalBatchId"></span></p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeMarkPaidModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="confirmMarkPaid()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Payout Modal -->
+    <div id="createPayoutModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3><i class="fas fa-money-bill-wave"></i> Tạo lô thanh toán mới</h3>
+            <div class="form-group">
+                <p style="margin-bottom: 1rem;">Bạn có chắc muốn tạo lô thanh toán mới?</p>
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <p><strong><i class="fas fa-store"></i> Cửa hàng:</strong> <span id="createPayoutStoreName">-</span></p>
+                    <p><strong><i class="fas fa-file-invoice"></i> Số đơn chưa thanh toán:</strong> <span id="createPayoutCount" style="color: #dc3545; font-weight: bold;">0</span> đơn</p>
+                    <p><strong><i class="fas fa-money-bill"></i> Tổng số tiền:</strong> <span id="createPayoutAmount" style="color: var(--primary-color); font-weight: bold;">0đ</span></p>
+                </div>
+                <p style="font-size: 0.9rem; color: var(--gray);">
+                    <i class="fas fa-info-circle"></i> Tất cả các giao dịch chưa thanh toán sẽ được gộp vào lô thanh toán này.
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeCreatePayoutModal()">Hủy</button>
+                <button class="btn btn-success" onclick="confirmCreatePayout()">
+                    <i class="fas fa-check"></i> Xác nhận tạo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/ledger-management.js"></script>
+</body>
+</html>

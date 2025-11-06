@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập - Admin | FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            padding: 2rem;
+        }
+        .login-box {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header .role-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 2rem;
+        }
+        .login-header h2 {
+            color: #2C3E50;
+            margin-bottom: 0.5rem;
+        }
+        .login-header .role-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #434343;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #434343 0%, #000000 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-footer {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .login-footer a {
+            color: #434343;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        .role-switch {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        .role-switch-title {
+            text-align: center;
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .role-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-role {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            color: #666;
+        }
+        .btn-role:hover {
+            border-color: #434343;
+            background: #f5f5f5;
+        }
+        .btn-role i {
+            font-size: 1.5rem;
+        }
+        .btn-role span {
+            font-size: 0.75rem;
+        }
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        .warning-box {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        .warning-box i {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <div class="role-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h2>Đăng Nhập</h2>
+                <span class="role-badge">
+                    <i class="fas fa-shield-alt"></i> Quản Trị Viên
+                </span>
+            </div>
+
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Khu vực hạn chế:</strong> Chỉ dành cho quản trị viên hệ thống
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user-shield"></i> Tên đăng nhập
+                    </label>
+                    <input type="text" id="username" name="username" 
+                           placeholder="Nhập tên đăng nhập admin" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Mật khẩu
+                    </label>
+                    <input type="password" id="password" name="password" 
+                           placeholder="Nhập mật khẩu" required>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Đăng Nhập
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p><a href="index.html">← Quay về trang chủ</a></p>
+            </div>
+
+            <div class="role-switch">
+                <div class="role-switch-title">Đăng nhập với vai trò khác:</div>
+                <div class="role-buttons">
+                    <a href="login-customer.html" class="btn-role">
+                        <i class="fas fa-user"></i>
+                        <span>Khách hàng</span>
+                    </a>
+                    <a href="login-store.html" class="btn-role">
+                        <i class="fas fa-store"></i>
+                        <span>Cửa hàng</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        // Auto-fill test credentials (for development)
+        if (window.location.hostname === 'localhost') {
+            document.getElementById('username').placeholder = "Thử: admin";
+            document.getElementById('password').placeholder = "Thử: admin123";
+        }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showError('Vui lòng nhập đầy đủ thông tin');
+                return;
+            }
+
+            try {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác thực...';
+                hideMessages();
+
+                const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.result) {
+                    const result = data.result;
+                    
+                    // Check if user has ADMIN role
+                    if (!result.roles || !result.roles.includes('ADMIN')) {
+                        showError('Tài khoản này không có quyền quản trị viên');
+                        
+                        // Suggest correct login page
+                        if (result.roles.includes('STORE_OWNER')) {
+                            setTimeout(() => {
+                                showError('Tài khoản này là Chủ cửa hàng. Đang chuyển đến trang Cửa hàng...');
+                                setTimeout(() => {
+                                    window.location.href = 'login-store.html';
+                                }, 1500);
+                            }, 1000);
+                        } else if (result.roles.includes('CUSTOMER') && !result.roles.includes('STORE_OWNER')) {
+                            setTimeout(() => {
+                                showError('Tài khoản này là Khách hàng. Đang chuyển đến trang Khách hàng...');
+                                setTimeout(() => {
+                                    window.location.href = 'login-customer.html';
+                                }, 1500);
+                            }, 1000);
+                        }
+                        return;
+                    }
+
+                    // Save to localStorage
+                    localStorage.setItem('foodfast_token', result.token);
+                    localStorage.setItem('foodfast_user', JSON.stringify({
+                        id: result.userId,
+                        username: result.username,
+                        email: result.email,
+                        fullName: result.fullName,
+                        roles: result.roles
+                    }));
+
+                    showSuccess('Đăng nhập thành công! Chào mừng Admin...');
+
+                    // Redirect to admin dashboard
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1000);
+
+                } else {
+                    showError(data.message || 'Đăng nhập thất bại');
+                }
+
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Có lỗi xảy ra. Vui lòng thử lại');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Đăng Nhập';
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+        }
+
+        function hideMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

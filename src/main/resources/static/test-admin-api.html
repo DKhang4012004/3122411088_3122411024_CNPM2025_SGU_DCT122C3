@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Admin API</title>
+</head>
+<body>
+    <h1>Test Admin API</h1>
+    
+    <div>
+        <h3>1. Login Admin</h3>
+        <button onclick="loginAdmin()">Login</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div>
+        <h3>2. Test APIs</h3>
+        <button onclick="testUsers()">Test Users API</button>
+        <button onclick="testProducts()">Test Products API</button>
+        <button onclick="testStores()">Test Stores API</button>
+        <button onclick="testCategories()">Test Categories API</button>
+        <button onclick="testDrones()">Test Drones API</button>
+        <div id="apiResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        let token = localStorage.getItem('foodfast_token');
+
+        async function loginAdmin() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'password123'
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                
+                if (data.result && data.result.token) {
+                    token = data.result.token;
+                    localStorage.setItem('foodfast_token', token);
+                    localStorage.setItem('foodfast_user', JSON.stringify(data.result.userResponse));
+                    document.getElementById('loginResult').innerHTML = 
+                        '<pre style="color:green">' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    document.getElementById('loginResult').innerHTML = 
+                        '<pre style="color:red">Login failed!</pre>';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('loginResult').innerHTML = 
+                    '<pre style="color:red">' + error.message + '</pre>';
+            }
+        }
+
+        async function testAPI(name, url) {
+            try {
+                console.log(`Testing ${name}: ${url}`);
+                const response = await fetch(`${API_BASE}${url}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                console.log(`${name} response:`, data);
+                
+                document.getElementById('apiResult').innerHTML = 
+                    `<h4>${name} (Status: ${response.status})</h4>` +
+                    '<pre style="color:' + (response.ok ? 'green' : 'red') + '">' + 
+                    JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                console.error(`${name} error:`, error);
+                document.getElementById('apiResult').innerHTML = 
+                    `<h4>${name}</h4><pre style="color:red">${error.message}</pre>`;
+            }
+        }
+
+        function testUsers() { testAPI('Users API', '/users/getAllUser'); }
+        function testProducts() { testAPI('Products API', '/products'); }
+        function testStores() { testAPI('Stores API', '/api/stores'); }
+        function testCategories() { testAPI('Categories API', '/categories'); }
+        function testDrones() { testAPI('Drones API', '/drones'); }
+    </script>
+</body>
+</html>

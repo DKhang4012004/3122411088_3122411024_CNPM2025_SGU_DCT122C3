@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông tin tài khoản - FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 3rem;
+            color: var(--primary-color);
+        }
+
+        .profile-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .profile-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .profile-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .profile-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-menu a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: var(--text-color);
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .profile-menu a:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .profile-menu a.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .profile-menu i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .profile-main {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .profile-section {
+            display: none;
+        }
+
+        .profile-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--light-bg);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-group input:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: var(--light-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .info-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-color);
+        }
+
+        .info-card p {
+            margin: 0.25rem 0;
+            color: #666;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-admin {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .badge-store-owner {
+            background: #4ecdc4;
+            color: white;
+        }
+
+        .badge-customer {
+            background: #95e1d3;
+            color: #333;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .profile-content {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-sidebar {
+                order: 2;
+            }
+
+            .profile-main {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <span>FoodFast</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">Trang chủ</a>
+                    <a href="stores.html" class="nav-link">Cửa hàng</a>
+                    <a href="store-management.html" class="nav-link" id="storeManagementNav" style="display: none;">Quản lý</a>
+                    <a href="cart.html" class="nav-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        Giỏ hàng
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </a>
+                    <a href="orders.html" class="nav-link">Đơn hàng</a>
+                </nav>
+                <div class="header-actions">
+                    <div class="user-menu" id="userMenu"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Profile Content -->
+    <div class="profile-container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h1 id="profileUserName">Đang tải...</h1>
+            <p id="profileUserEmail"></p>
+            <div id="profileUserRoles"></div>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="profile-content">
+            <!-- Sidebar Menu -->
+            <div class="profile-sidebar">
+                <ul class="profile-menu">
+                    <li><a href="#" class="menu-item active" data-section="info">
+                        <i class="fas fa-user"></i> Thông tin cá nhân
+                    </a></li>
+                    <li><a href="#" class="menu-item" data-section="password">
+                        <i class="fas fa-lock"></i> Đổi mật khẩu
+                    </a></li>
+                    <li><a href="#" class="menu-item" data-section="addresses">
+                        <i class="fas fa-map-marker-alt"></i> Địa chỉ giao hàng
+                    </a></li>
+                    <li><a href="#" class="menu-item" data-section="security">
+                        <i class="fas fa-shield-alt"></i> Bảo mật
+                    </a></li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="profile-main">
+                <!-- Thông tin cá nhân -->
+                <div class="profile-section active" id="infoSection">
+                    <h2 class="section-title">Thông tin cá nhân</h2>
+                    
+                    <div id="alertContainer"></div>
+
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label>ID</label>
+                            <input type="text" id="userId" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tên đăng nhập</label>
+                            <input type="text" id="username" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Họ và tên</label>
+                            <input type="text" id="fullName" placeholder="Nhập họ tên đầy đủ">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="email" placeholder="email@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Số điện thoại</label>
+                            <input type="tel" id="phone" placeholder="0123456789">
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu thay đổi
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="loadUserInfo()">
+                                <i class="fas fa-undo"></i> Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Đổi mật khẩu -->
+                <div class="profile-section" id="passwordSection">
+                    <h2 class="section-title">Đổi mật khẩu</h2>
+                    
+                    <div id="passwordAlertContainer"></div>
+
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label>Mật khẩu hiện tại</label>
+                            <input type="password" id="currentPassword" placeholder="Nhập mật khẩu hiện tại" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mật khẩu mới</label>
+                            <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Xác nhận mật khẩu mới</label>
+                            <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu mới" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key"></i> Đổi mật khẩu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Địa chỉ giao hàng -->
+                <div class="profile-section" id="addressesSection">
+                    <h2 class="section-title">Địa chỉ giao hàng</h2>
+                    
+                    <div class="info-card">
+                        <h4><i class="fas fa-info-circle"></i> Thông tin</h4>
+                        <p>Quản lý địa chỉ giao hàng của bạn để đặt hàng nhanh hơn.</p>
+                    </div>
+
+                    <div id="addressesList">
+                        <p style="text-align: center; color: #999; padding: 2rem;">
+                            Tính năng đang được phát triển...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Bảo mật -->
+                <div class="profile-section" id="securitySection">
+                    <h2 class="section-title">Bảo mật tài khoản</h2>
+                    
+                    <div class="info-card">
+                        <h4><i class="fas fa-shield-alt"></i> Thông tin bảo mật</h4>
+                        <p><strong>Vai trò:</strong> <span id="securityRoles"></span></p>
+                        <p><strong>Trạng thái:</strong> <span class="badge" style="background: #28a745; color: white;">Đang hoạt động</span></p>
+                    </div>
+
+                    <div class="info-card">
+                        <h4><i class="fas fa-clock"></i> Phiên đăng nhập</h4>
+                        <p>Bạn đang đăng nhập bằng token JWT</p>
+                        <button class="btn btn-outline" onclick="auth.logout()">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Check authentication
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!auth.isAuthenticated()) {
+                alert('Vui lòng đăng nhập để xem trang này');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            loadUserInfo();
+            setupMenuNavigation();
+            setupForms();
+        });
+
+        // Load user info
+        function loadUserInfo() {
+            const user = auth.getUser();
+            if (!user) return;
+
+            // Header info
+            document.getElementById('profileUserName').textContent = user.fullName || user.username;
+            document.getElementById('profileUserEmail').textContent = user.email || '';
+            
+            // Roles badges
+            const rolesHtml = user.roles.map(role => {
+                const badgeClass = role === 'ADMIN' ? 'badge-admin' : 
+                                 role === 'STORE_OWNER' ? 'badge-store-owner' : 'badge-customer';
+                return `<span class="badge ${badgeClass}">${getRoleName(role)}</span>`;
+            }).join(' ');
+            document.getElementById('profileUserRoles').innerHTML = rolesHtml;
+            document.getElementById('securityRoles').innerHTML = rolesHtml;
+
+            // Form fields
+            document.getElementById('userId').value = user.id || '';
+            document.getElementById('username').value = user.username || '';
+            document.getElementById('fullName').value = user.fullName || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('phone').value = user.phone || '';
+        }
+
+        function getRoleName(role) {
+            const names = {
+                'ADMIN': 'Quản trị viên',
+                'STORE_OWNER': 'Chủ cửa hàng',
+                'CUSTOMER': 'Khách hàng'
+            };
+            return names[role] || role;
+        }
+
+        // Setup menu navigation
+        function setupMenuNavigation() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const sections = document.querySelectorAll('.profile-section');
+
+            menuItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Remove active class from all
+                    menuItems.forEach(m => m.classList.remove('active'));
+                    sections.forEach(s => s.classList.remove('active'));
+                    
+                    // Add active to clicked item
+                    item.classList.add('active');
+                    const sectionId = item.dataset.section + 'Section';
+                    document.getElementById(sectionId).classList.add('active');
+                });
+            });
+        }
+
+        // Setup forms
+        function setupForms() {
+            // Profile update form
+            document.getElementById('profileForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await updateProfile();
+            });
+
+            // Password change form
+            document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await changePassword();
+            });
+        }
+
+        // Update profile
+        async function updateProfile() {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = '';
+
+            const data = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value
+            };
+
+            try {
+                // Giả lập API call (thay bằng API thực tế sau)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Update localStorage
+                const user = auth.getUser();
+                Object.assign(user, data);
+                localStorage.setItem('foodfast_user', JSON.stringify(user));
+                auth.user = user;
+
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> Cập nhật thông tin thành công!
+                    </div>
+                `;
+
+                // Update header
+                loadUserInfo();
+                auth.updateUI();
+
+                // Hide alert after 3s
+                setTimeout(() => {
+                    alertContainer.innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i> ${error.message || 'Có lỗi xảy ra'}
+                    </div>
+                `;
+            }
+        }
+
+        // Change password
+        async function changePassword() {
+            const alertContainer = document.getElementById('passwordAlertContainer');
+            alertContainer.innerHTML = '';
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validation
+            if (newPassword !== confirmPassword) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i> Mật khẩu mới không khớp!
+                    </div>
+                `;
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i> Mật khẩu phải có ít nhất 6 ký tự!
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                // TODO: Call API to change password
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                alertContainer.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> Đổi mật khẩu thành công!
+                    </div>
+                `;
+
+                // Clear form
+                document.getElementById('passwordForm').reset();
+
+                // Hide alert after 3s
+                setTimeout(() => {
+                    alertContainer.innerHTML = '';
+                }, 3000);
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i> ${error.message || 'Có lỗi xảy ra'}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

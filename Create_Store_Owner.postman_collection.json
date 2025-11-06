@@ -1,0 +1,270 @@
+{
+	"info": {
+		"_postman_id": "create-store-owner-test",
+		"name": "Create Store Owner Account",
+		"description": "Test tạo tài khoản STORE_OWNER bằng backend API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Login as Admin",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.result && jsonData.result.token) {",
+							"    pm.environment.set(\"admin_token\", jsonData.result.token);",
+							"    pm.test(\"Admin login successful\", function () {",
+							"        pm.response.to.have.status(200);",
+							"    });",
+							"} else {",
+							"    pm.test(\"Login failed\", function () {",
+							"        pm.expect.fail(\"Token not found in response\");",
+							"    });",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"login"
+					]
+				},
+				"description": "Login với admin account để lấy JWT token"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Create STORE_OWNER Account",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Store owner created successfully\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.include(\"created successfully\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"newstore2\",\n    \"password\": \"password123\",\n    \"email\": \"newstore2@example.com\",\n    \"fullName\": \"New Store Owner 2\",\n    \"phone\": \"0988888888\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"gender\": \"FEMALE\",\n    \"roles\": [\"CUSTOMER\", \"STORE_OWNER\"]\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/admin/create-user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"admin",
+						"create-user"
+					]
+				},
+				"description": "Admin tạo tài khoản với role STORE_OWNER"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Verify - Login as New Store Owner",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"pm.test(\"Store owner login successful\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    pm.expect(jsonData.result.roles).to.include(\"STORE_OWNER\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"newstore2\",\n    \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"login"
+					]
+				},
+				"description": "Verify account mới có thể login và có role STORE_OWNER"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Create Account with Multiple Roles",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"User with multiple roles created\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"superuser\",\n    \"password\": \"password123\",\n    \"email\": \"superuser@example.com\",\n    \"fullName\": \"Super User\",\n    \"phone\": \"0999999999\",\n    \"dateOfBirth\": \"1985-01-01\",\n    \"gender\": \"MALE\",\n    \"roles\": [\"CUSTOMER\", \"STORE_OWNER\", \"ADMIN\"]\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/admin/create-user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"admin",
+						"create-user"
+					]
+				},
+				"description": "Tạo account với cả 3 roles"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Create CUSTOMER Only (Default)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Customer created with default role\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{admin_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"customer2\",\n    \"password\": \"password123\",\n    \"email\": \"customer2@example.com\",\n    \"fullName\": \"Regular Customer\",\n    \"phone\": \"0977777777\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/auth/admin/create-user",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"auth",
+						"admin",
+						"create-user"
+					]
+				},
+				"description": "Không truyền roles → mặc định là CUSTOMER"
+			},
+			"response": []
+		}
+	]
+}
