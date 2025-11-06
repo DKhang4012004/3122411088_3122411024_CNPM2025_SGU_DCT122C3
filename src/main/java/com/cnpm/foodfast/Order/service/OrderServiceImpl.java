@@ -1,7 +1,5 @@
 package com.cnpm.foodfast.Order.service;
 
-import com.cnpm.foodfast.dto.request.order.CreateOrderRequest;
-import com.cnpm.foodfast.dto.request.order.OrderItemRequest;
 import com.cnpm.foodfast.dto.request.order.UpdateOrderStatusRequest;
 import com.cnpm.foodfast.dto.response.order.OrderItemResponse;
 import com.cnpm.foodfast.dto.response.order.OrderResponse;
@@ -19,6 +17,7 @@ import com.cnpm.foodfast.Cart.repository.CartRepository;
 import com.cnpm.foodfast.Cart.repository.CartItemRepository;
 import com.cnpm.foodfast.User.repository.UserRepository;
 import com.cnpm.foodfast.Payment.service.LedgerService;
+import com.cnpm.foodfast.Payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final LedgerService ledgerService;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional
@@ -311,8 +311,23 @@ public class OrderServiceImpl implements OrderService {
         order.setUpdatedAt(LocalDateTime.now());
         order = orderRepository.save(order);
 
-        // TODO: Có thể cần xử lý hoàn tiền ở đây
-        log.info("Order {} rejected by store. Reason: {}", orderId, reason);
+        // Xử lý hoàn tiền
+        try {
+            log.info("Processing refund for rejected order: {}", orderId);
+            boolean refundSuccess = paymentService.refundPayment(orderId, reason);
+
+            if (refundSuccess) {
+                log.info("✓ Refund successful for rejected order: {}", orderId);
+            } else {
+                log.error("✗ Refund failed for rejected order: {}", orderId);
+                throw new RuntimeException("Refund processing failed");
+            }
+        } catch (Exception e) {
+            log.error("Error processing refund for rejected order {}: {}", orderId, e.getMessage(), e);
+            throw new RuntimeException("Failed to process refund for rejected order", e);
+        }
+
+        log.info("Order {} rejected by store and refund processed. Reason: {}", orderId, reason);
 
         return buildOrderResponse(order);
     }

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Hoàn Tiền - FoodFast</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .result-content {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .result-content pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h3 {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #856404;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .step-guide {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .step-guide h3 {
+            color: #004085;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .step-guide ol {
+            margin-left: 20px;
+            color: #004085;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Demo Hoàn Tiền</h1>
+        <p class="subtitle">Kiểm tra chức năng hoàn tiền khi đơn hàng bị từ chối</p>
+
+        <div class="info-box">
+            <h3>ℹ️ Lưu ý:</h3>
+            <ul>
+                <li>Chỉ hoàn tiền cho đơn hàng đã thanh toán thành công (PaymentStatus = PAID)</li>
+                <li>Hệ thống sẽ tự động hoàn lại tồn kho sản phẩm</li>
+                <li>Ledger entry sẽ được xóa nếu chưa thanh toán cho cửa hàng</li>
+                <li>VNPay Sandbox có thể không hỗ trợ API hoàn tiền (chạy ở chế độ giả lập)</li>
+            </ul>
+        </div>
+
+        <div class="step-guide">
+            <h3>📋 Hướng dẫn test:</h3>
+            <ol>
+                <li>Tạo đơn hàng và thanh toán thành công qua VNPay</li>
+                <li>Lấy Order ID từ database hoặc response API</li>
+                <li>Nhập Order ID và lý do hoàn tiền vào form bên dưới</li>
+                <li>Nhấn "Xử lý hoàn tiền" và xem kết quả</li>
+                <li>Kiểm tra database: payment_transaction.status = 'REFUNDED'</li>
+            </ol>
+        </div>
+
+        <!-- Form hoàn tiền -->
+        <div class="section">
+            <div class="section-title">🎯 Thông tin hoàn tiền</div>
+
+            <div class="form-group">
+                <label for="orderId">Order ID <span style="color: red;">*</span></label>
+                <input type="number" id="orderId" placeholder="Ví dụ: 123" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reason">Lý do hoàn tiền <span style="color: red;">*</span></label>
+                <textarea id="reason" placeholder="Ví dụ: Cửa hàng từ chối đơn hàng do hết nguyên liệu" required>Cửa hàng từ chối đơn hàng</textarea>
+            </div>
+
+            <button id="refundBtn" onclick="processRefund()">
+                🔄 Xử lý hoàn tiền
+            </button>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Đang xử lý hoàn tiền...</p>
+        </div>
+
+        <!-- Kết quả -->
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+
+        async function processRefund() {
+            const orderId = document.getElementById('orderId').value;
+            const reason = document.getElementById('reason').value;
+            const resultDiv = document.getElementById('result');
+            const loadingDiv = document.getElementById('loading');
+            const refundBtn = document.getElementById('refundBtn');
+
+            // Validate
+            if (!orderId || !reason) {
+                showResult('error', 'Lỗi', 'Vui lòng nhập đầy đủ thông tin!');
+                return;
+            }
+
+            // Show loading
+            resultDiv.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            refundBtn.disabled = true;
+
+            try {
+                console.log('=== REFUND REQUEST ===');
+                console.log('Order ID:', orderId);
+                console.log('Reason:', reason);
+
+                const response = await fetch(`${API_BASE_URL}/payments/refund/${orderId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ reason })
+                });
+
+                const data = await response.json();
+                console.log('Response:', data);
+
+                loadingDiv.style.display = 'none';
+                refundBtn.disabled = false;
+
+                if (response.ok && data.code === 200) {
+                    const result = data.result;
+                    showResult('success', '✅ Hoàn tiền thành công!',
+                        `<strong>Order ID:</strong> ${result.orderId}<br>
+                         <strong>Trạng thái:</strong> ${result.refunded ? 'Đã hoàn tiền' : 'Thất bại'}<br>
+                         <strong>Lý do:</strong> ${result.reason}<br>
+                         <strong>Thời gian:</strong> ${new Date(result.timestamp).toLocaleString('vi-VN')}<br><br>
+                         <strong>Các thay đổi trong hệ thống:</strong><br>
+                         • Payment Transaction: REFUNDED<br>
+                         • Order Status: CANCELLED<br>
+                         • Tồn kho: Đã hoàn lại<br>
+                         • Ledger: Đã xóa (nếu chưa thanh toán)
+                         <pre>${JSON.stringify(data, null, 2)}</pre>`
+                    );
+                } else {
+                    showResult('error', '❌ Hoàn tiền thất bại!',
+                        `<strong>Lỗi:</strong> ${data.message}<br>
+                         <pre>${JSON.stringify(data, null, 2)}</pre>`
+                    );
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                loadingDiv.style.display = 'none';
+                refundBtn.disabled = false;
+                showResult('error', '❌ Lỗi kết nối!',
+                    `Không thể kết nối đến server. Vui lòng kiểm tra:<br>
+                     • Server đang chạy trên port 8080<br>
+                     • CORS được cấu hình đúng<br>
+                     • Order ID có tồn tại và đã thanh toán<br><br>
+                     <strong>Chi tiết lỗi:</strong> ${error.message}`
+                );
+            }
+        }
+
+        function showResult(type, title, content) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `
+                <div class="result-title">${title}</div>
+                <div class="result-content">${content}</div>
+            `;
+            resultDiv.style.display = 'block';
+        }
+
+        // Test connection on load
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/payments/order/1`);
+                console.log('API Connection Test:', response.ok ? 'OK' : 'Failed');
+            } catch (error) {
+                console.warn('API not reachable. Make sure server is running on port 8080');
+            }
+        });
+    </script>
+</body>
+</html>
+

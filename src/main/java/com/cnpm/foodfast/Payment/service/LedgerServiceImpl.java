@@ -165,4 +165,26 @@ public class LedgerServiceImpl implements LedgerService {
         log.info("Getting payout batches for store: {}", storeId);
         return payoutBatchRepository.findByStoreId(storeId);
     }
+
+    @Override
+    @Transactional
+    public void deleteLedgerEntryForOrder(Long orderId) {
+        log.info("Deleting ledger entry for refunded order: {}", orderId);
+
+        try {
+            storeLedgerRepository.findByOrderId(orderId).ifPresent(ledger -> {
+                // Chỉ xóa nếu chưa được thanh toán
+                if (ledger.getStatus() == StoreLedgerStatus.UNPAID) {
+                    storeLedgerRepository.delete(ledger);
+                    log.info("Deleted unpaid ledger entry for order: {}", orderId);
+                } else {
+                    log.warn("Cannot delete ledger entry for order {} - status is: {}",
+                        orderId, ledger.getStatus());
+                }
+            });
+        } catch (Exception e) {
+            log.error("Error deleting ledger entry for order {}: {}", orderId, e.getMessage(), e);
+            throw new RuntimeException("Failed to delete ledger entry", e);
+        }
+    }
 }

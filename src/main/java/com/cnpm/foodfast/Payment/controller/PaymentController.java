@@ -159,12 +159,63 @@ public class PaymentController {
 
     @GetMapping("/order/{orderId}")
     public ResponseEntity<APIResponse<PaymentResponse>> getPaymentByOrderId(@PathVariable Long orderId) {
+        log.info("Getting payment for order: {}", orderId);
         PaymentResponse response = paymentService.getPaymentByOrderId(orderId);
         return ResponseEntity.ok(APIResponse.<PaymentResponse>builder()
                 .code(200)
                 .message("Payment retrieved successfully")
                 .result(response)
                 .build());
+    }
+
+    /**
+     * API Demo: Hoàn tiền cho đơn hàng
+     * POST /api/v1/payments/refund/{orderId}
+     * Body: { "reason": "Store rejected order" }
+     */
+    @PostMapping("/refund/{orderId}")
+    public ResponseEntity<APIResponse<Map<String, Object>>> refundPayment(
+            @PathVariable Long orderId,
+            @RequestBody Map<String, String> request) {
+        log.info("=== REFUND REQUEST ===");
+        log.info("Order ID: {}", orderId);
+        log.info("Reason: {}", request.get("reason"));
+
+        try {
+            String reason = request.getOrDefault("reason", "Customer requested refund");
+            boolean success = paymentService.refundPayment(orderId, reason);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("orderId", orderId);
+            result.put("refunded", success);
+            result.put("reason", reason);
+            result.put("timestamp", java.time.LocalDateTime.now());
+
+            if (success) {
+                return ResponseEntity.ok(APIResponse.<Map<String, Object>>builder()
+                        .code(200)
+                        .message("Refund processed successfully")
+                        .result(result)
+                        .build());
+            } else {
+                return ResponseEntity.status(500).body(APIResponse.<Map<String, Object>>builder()
+                        .code(500)
+                        .message("Refund processing failed")
+                        .result(result)
+                        .build());
+            }
+        } catch (Exception e) {
+            log.error("Error processing refund: {}", e.getMessage(), e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("orderId", orderId);
+            errorResult.put("error", e.getMessage());
+
+            return ResponseEntity.status(500).body(APIResponse.<Map<String, Object>>builder()
+                    .code(500)
+                    .message("Refund failed: " + e.getMessage())
+                    .result(errorResult)
+                    .build());
+        }
     }
 
     private String buildInvalidSignatureHtml(String orderCode) {

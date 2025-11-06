@@ -32,5 +32,9 @@ public interface LedgerService {
      * Lấy danh sách các lô thanh toán của cửa hàng
      */
     List<PayoutBatch> getPayoutBatchesByStore(Long storeId);
-}
 
+    /**
+     * Xóa ledger entry khi đơn hàng bị refund
+     */
+    void deleteLedgerEntryForOrder(Long orderId);
+}

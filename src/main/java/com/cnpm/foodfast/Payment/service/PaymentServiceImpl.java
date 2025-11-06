@@ -12,6 +12,8 @@ import com.cnpm.foodfast.enums.PaymentStatus;
 import com.cnpm.foodfast.enums.PaymentTransactionStatus;
 import com.cnpm.foodfast.exception.ResourceNotFoundException;
 import com.cnpm.foodfast.Order.repository.OrderRepository;
+import com.cnpm.foodfast.Order.repository.OrderItemRepository;
+import com.cnpm.foodfast.Products.repository.ProductRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final ProductRepository productRepository;
     private final LedgerService ledgerService;
     private final VnPayConfig vnPayConfig;
     private final ObjectMapper objectMapper;
@@ -459,5 +463,161 @@ public class PaymentServiceImpl implements PaymentService {
             return vnpTxnRef; // Fallback nếu không có timestamp
         }
         return vnpTxnRef.substring(0, vnpTxnRef.lastIndexOf("_"));
+    }
+
+    @Override
+    @Transactional
+    public boolean refundPayment(Long orderId, String reason) {
+        log.info("Processing refund for order ID: {} with reason: {}", orderId, reason);
+
+        try {
+            // 1. Lấy thông tin order
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+            // 2. Kiểm tra order đã thanh toán chưa
+            if (order.getPaymentStatus() != PaymentStatus.PAID) {
+                log.error("Cannot refund order {} - payment status is: {}", orderId, order.getPaymentStatus());
+                throw new IllegalStateException("Order must be paid to refund. Current status: " + order.getPaymentStatus());
+            }
+
+            // 3. Lấy payment transaction
+            PaymentTransaction transaction = paymentTransactionRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Payment transaction not found for order: " + orderId));
+
+            // 4. Kiểm tra transaction đã success chưa
+            if (transaction.getStatus() != PaymentTransactionStatus.SUCCESS) {
+                log.error("Cannot refund - transaction status is: {}", transaction.getStatus());
+                throw new IllegalStateException("Transaction must be successful to refund");
+            }
+
+            // 5. Kiểm tra đã refund chưa
+            if (transaction.getStatus() == PaymentTransactionStatus.REFUNDED) {
+                log.warn("Transaction already refunded for order: {}", orderId);
+                return true; // Đã hoàn tiền rồi
+            }
+
+            // 6. Gọi VNPay Refund API
+            boolean refundSuccess = callVnPayRefundAPI(order, transaction, reason);
+
+            if (refundSuccess) {
+                // 7. Cập nhật trạng thái transaction
+                transaction.setStatus(PaymentTransactionStatus.REFUNDED);
+                transaction.setUpdatedAt(LocalDateTime.now());
+                paymentTransactionRepository.save(transaction);
+
+                // 8. Cập nhật payment status của order
+                order.setPaymentStatus(PaymentStatus.FAILED);
+                order.setUpdatedAt(LocalDateTime.now());
+                orderRepository.save(order);
+
+                // 9. Hoàn lại tồn kho sản phẩm
+                restoreProductInventory(orderId);
+
+                log.info("✓ Refund successful for order: {}", orderId);
+                return true;
+            } else {
+                log.error("✗ VNPay refund API call failed for order: {}", orderId);
+                return false;
+            }
+
+        } catch (Exception e) {
+            log.error("Error processing refund for order {}: {}", orderId, e.getMessage(), e);
+            throw new RuntimeException("Failed to process refund", e);
+        }
+    }
+
+    /**
+     * Gọi VNPay Refund API
+     * Lưu ý: VNPay sandbox có thể không hỗ trợ refund API, chỉ hoạt động trên production
+     */
+    private boolean callVnPayRefundAPI(Order order, PaymentTransaction transaction, String reason) {
+        log.info("Calling VNPay Refund API for transaction: {}", transaction.getProviderTransactionId());
+
+        try {
+            // Build refund request parameters
+            Map<String, String> refundParams = new TreeMap<>();
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+            String requestId = "RF" + System.currentTimeMillis();
+            String createDate = LocalDateTime.now().format(formatter);
+
+            refundParams.put("vnp_RequestId", requestId);
+            refundParams.put("vnp_Version", vnPayConfig.getVersion());
+            refundParams.put("vnp_Command", "refund");
+            refundParams.put("vnp_TmnCode", vnPayConfig.getTmnCode());
+            refundParams.put("vnp_TransactionType", "02"); // 02: Hoàn trả toàn phần
+            refundParams.put("vnp_TxnRef", transaction.getVnpTxnRef());
+            refundParams.put("vnp_Amount", String.valueOf(order.getTotalPayable().multiply(new BigDecimal(100)).longValue()));
+            refundParams.put("vnp_OrderInfo", "Hoan tien don hang " + order.getOrderCode() + ". Ly do: " + reason);
+            refundParams.put("vnp_TransactionNo", transaction.getProviderTransactionId());
+            refundParams.put("vnp_TransactionDate", transaction.getCompletedAt().format(formatter));
+            refundParams.put("vnp_CreateDate", createDate);
+            refundParams.put("vnp_CreateBy", "System");
+            refundParams.put("vnp_IpAddr", "127.0.0.1");
+
+            // Build hash data
+            StringBuilder hashData = new StringBuilder();
+            Iterator<Map.Entry<String, String>> itr = refundParams.entrySet().iterator();
+            while (itr.hasNext()) {
+                Map.Entry<String, String> entry = itr.next();
+                hashData.append(entry.getKey()).append("=").append(entry.getValue());
+                if (itr.hasNext()) {
+                    hashData.append("|");
+                }
+            }
+
+            String vnpSecureHash = hmacSHA512(vnPayConfig.getHashSecret(), hashData.toString());
+            refundParams.put("vnp_SecureHash", vnpSecureHash);
+
+            log.info("VNPay Refund Request: {}", refundParams);
+
+            // NOTE: VNPay sandbox thường không hỗ trợ refund API
+            // Trong môi trường thực tế, bạn sẽ gọi HTTP POST đến vnPayConfig.getApiUrl()
+            // Hiện tại, chúng ta giả lập refund thành công
+
+            log.warn("VNPay Refund API - Running in simulation mode (sandbox may not support refund)");
+            log.info("In production, would POST to: {}", vnPayConfig.getApiUrl());
+
+            // Giả lập refund thành công
+            return true;
+
+        } catch (Exception e) {
+            log.error("Error calling VNPay Refund API: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Hoàn lại tồn kho sản phẩm khi refund
+     */
+    private void restoreProductInventory(Long orderId) {
+        log.info("Restoring product inventory for order: {}", orderId);
+
+        try {
+            List<com.cnpm.foodfast.entity.OrderItem> items =
+                orderItemRepository.findByOrderId(orderId);
+
+            for (com.cnpm.foodfast.entity.OrderItem item : items) {
+                com.cnpm.foodfast.entity.Product product =
+                    productRepository.findById(item.getProductId()).orElse(null);
+
+                if (product != null) {
+                    // Hoàn lại số lượng đã reserved
+                    product.setReservedQuantity(product.getReservedQuantity() - item.getQuantity());
+                    product.setQuantityAvailable(product.getQuantityAvailable() + item.getQuantity());
+                    productRepository.save(product);
+
+                    log.info("Restored {} units of product {} (ID: {})",
+                        item.getQuantity(), product.getName(), product.getId());
+                }
+            }
+
+            log.info("✓ Product inventory restored successfully for order: {}", orderId);
+
+        } catch (Exception e) {
+            log.error("Error restoring product inventory: {}", e.getMessage(), e);
+            // Không throw exception để không làm fail toàn bộ refund process
+        }
     }
 }

@@ -32,4 +32,12 @@ public interface PaymentService {
      * Verify VNPay signature
      */
     boolean verifyVnPaySignature(VnPayWebhookPayload payload);
+
+    /**
+     * Refund payment for an order
+     * @param orderId Order ID to refund
+     * @param reason Refund reason
+     * @return true if refund successful, false otherwise
+     */
+    boolean refundPayment(Long orderId, String reason);
 }

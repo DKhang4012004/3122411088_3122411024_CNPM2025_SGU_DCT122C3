@@ -165,7 +165,7 @@ public class OrderController {
      * Store từ chối đơn hàng
      * POST /api/v1/orders/{orderId}/reject
      */
-    @PostMapping("/{orderId}/reject")
+    @PostMapping("/{orderId}/cancelled")
     public ResponseEntity<APIResponse<OrderResponse>> rejectOrder(
             @PathVariable Long orderId,
             @RequestParam(required = false) String reason) {
@@ -175,7 +175,7 @@ public class OrderController {
 
         return ResponseEntity.ok(APIResponse.<OrderResponse>builder()
                 .code(200)
-                .message("Order rejected successfully")
+                .message("Order cancelled successfully")
                 .result(response)
                 .build());
     }
