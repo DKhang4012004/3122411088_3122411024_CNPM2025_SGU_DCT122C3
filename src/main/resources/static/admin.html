@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - FoodFast</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+        }
+
+        .admin-body {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .logo i {
+            color: #f59e0b;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1.5rem 0;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-link:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border-left-color: #f59e0b;
+        }
+
+        .sidebar-link.active {
+            background: rgba(245,158,11,0.1);
+            color: white;
+            border-left-color: #f59e0b;
+        }
+
+        .sidebar-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Main Content */
+        .admin-main {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-topbar {
+            background: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .admin-user {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+
+        .admin-user i {
+            color: #64748b;
+            font-size: 1.25rem;
+        }
+
+        /* Content Area */
+        .admin-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1e293b;
+        }
+
+        .section-header p {
+            color: #64748b;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-info h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-info p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .admin-table thead {
+            background: #f8fafc;
+        }
+
+        .admin-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .admin-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .admin-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            margin-right: 0.25rem;
+        }
+
+        .status-badge.active, .status-badge.available {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.pending, .status-badge.in_use {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.open {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.closed, .status-badge.inactive, .status-badge.out_of_stock, .status-badge.disabled {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: rgba(255,255,255,0.9);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .btn-block {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-btn.edit {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-btn.edit:hover {
+            background: #bfdbfe;
+        }
+
+        .action-btn.delete {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .action-btn.delete:hover {
+            background: #fecaca;
+        }
+
+        .action-btn.view {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+
+        .action-btn.view:hover {
+            background: #e9d5ff;
+        }
+
+        /* Loading & Empty */
+        .loading, .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+
+        .loading i, .empty-state i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.active {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                margin-left: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-table {
+                font-size: 0.875rem;
+            }
+
+            .admin-table th, .admin-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="admin-body">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <span>FoodFast Admin</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="sidebar-link active" data-section="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="sidebar-link" data-section="users">
+                <i class="fas fa-users"></i>
+                <span>Người dùng</span>
+            </a>
+            <a href="#" class="sidebar-link" data-section="products">
+                <i class="fas fa-box"></i>
+                <span>Sản phẩm</span>
+            </a>
+            <a href="#" class="sidebar-link" data-section="categories">
+                <i class="fas fa-tags"></i>
+                <span>Danh mục</span>
+            </a>
+            <a href="#" class="sidebar-link" data-section="stores">
+                <i class="fas fa-store"></i>
+                <span>Cửa hàng</span>
+            </a>
+            <a href="#" class="sidebar-link" data-section="drones">
+                <i class="fas fa-drone"></i>
+                <span>Drone</span>
+            </a>
+            <a href="#" class="sidebar-link" data-section="orders">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Đơn hàng</span>
+            </a>
+            <a href="#" class="sidebar-link" data-section="ledger">
+                <i class="fas fa-book"></i>
+                <span>Sổ sách</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn btn-outline btn-block" id="adminLogout">
+                <i class="fas fa-sign-out-alt"></i>
+                Đăng xuất
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Top Bar -->
+        <header class="admin-topbar">
+            <button class="btn" id="sidebarToggle" style="background:#f3f4f6">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="topbar-right">
+                <div class="admin-user">
+                    <i class="fas fa-user-shield"></i>
+                    <span id="adminUserName">Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="admin-section active">
+                <div class="section-header">
+                    <h1>Dashboard</h1>
+                    <p>Tổng quan hệ thống</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #3b82f6;">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalUsers">0</h3>
+                            <p>Người dùng</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #10b981;">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalProducts">0</h3>
+                            <p>Sản phẩm</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #f59e0b;">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalStores">0</h3>
+                            <p>Cửa hàng</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #8b5cf6;">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalCategories">0</h3>
+                            <p>Danh mục</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="section-users" class="admin-section">
+                <div class="section-header">
+                    <h1>Quản lý người dùng</h1>
+                    <p>Danh sách tất cả người dùng trong hệ thống</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Họ tên</th>
+                                <th>Số điện thoại</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr><td colspan="8" class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="section-products" class="admin-section">
+                <div class="section-header">
+                    <h1>Quản lý sản phẩm</h1>
+                    <p>Danh sách tất cả sản phẩm</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>SKU</th>
+                                <th>Tên sản phẩm</th>
+                                <th>Danh mục</th>
+                                <th>Giá</th>
+                                <th>Tồn kho</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <tr><td colspan="8" class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Categories Section -->
+            <section id="section-categories" class="admin-section">
+                <div class="section-header">
+                    <h1>Quản lý danh mục</h1>
+                    <p>Danh sách danh mục sản phẩm</p>
+                    <button class="btn btn-primary" onclick="showAddCategoryModal()">
+                        <i class="fas fa-plus"></i> Thêm danh mục
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên danh mục</th>
+                                <th>Mô tả</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            <tr><td colspan="5" class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Stores Section -->
+            <section id="section-stores" class="admin-section">
+                <div class="section-header">
+                    <h1>Quản lý cửa hàng</h1>
+                    <p>Danh sách các cửa hàng</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tên cửa hàng</th>
+                                <th>Chủ sở hữu</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="storesTableBody">
+                            <tr><td colspan="6" class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Drones Section -->
+            <section id="section-drones" class="admin-section">
+                <div class="section-header">
+                    <h1>Quản lý Drone</h1>
+                    <p>Danh sách drone giao hàng</p>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Model</th>
+                                <th>Serial Number</th>
+                                <th>Tải trọng tối đa</th>
+                                <th>Phạm vi bay</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dronesTableBody">
+                            <tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="section-orders" class="admin-section">
+                <div class="section-header">
+                    <h1>Quản lý đơn hàng</h1>
+                    <p>Theo dõi tất cả đơn hàng</p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+                    <label for="storeFilter" style="font-weight: 500;">Lọc theo cửa hàng:</label>
+                    <select id="storeFilter" style="padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; min-width: 250px;">
+                        <option value="">Tất cả cửa hàng</option>
+                    </select>
+                    <button onclick="loadOrdersByStore()" style="padding: 0.5rem 1.5rem; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        <i class="fas fa-filter"></i> Lọc
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Cửa hàng</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> Đang tải...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Ledger Section -->
+            <section id="section-ledger" class="admin-section">
+                <div class="section-header">
+                    <h1>Sổ sách cửa hàng</h1>
+                    <p>Quản lý giao dịch và doanh thu</p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+                    <label for="ledgerStoreFilter" style="font-weight: 500;">Chọn cửa hàng:</label>
+                    <select id="ledgerStoreFilter" style="padding: 0.5rem 1rem; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95rem; min-width: 250px;">
+                        <option value="">-- Chọn cửa hàng --</option>
+                    </select>
+                    <button onclick="loadLedgerByStore()" style="padding: 0.5rem 1.5rem; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                        <i class="fas fa-search"></i> Xem sổ sách
+                    </button>
+                </div>
+
+                <!-- Summary Cards -->
+                <div id="ledgerSummary" style="display: none; margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Tổng doanh thu</div>
+                        <div style="font-size: 1.75rem; font-weight: 700;" id="totalRevenue">0₫</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Phí dịch vụ</div>
+                        <div style="font-size: 1.75rem; font-weight: 700;" id="totalServiceFee">0₫</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Doanh thu thực nhận</div>
+                        <div style="font-size: 1.75rem; font-weight: 700;" id="netRevenue">0₫</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 1.5rem; border-radius: 12px; color: white;">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Chưa thanh toán</div>
+                        <div style="font-size: 1.75rem; font-weight: 700;" id="unpaidAmount">0₫</div>
+                    </div>
+                </div>
+
+                <!-- Payout Management -->
+                <div id="payoutManagement" style="display: none; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2 style="margin: 0; font-size: 1.25rem; color: #1e293b;">
+                            <i class="fas fa-file-invoice-dollar"></i> Quản lý thanh toán
+                        </h2>
+                        <button onclick="showCreatePayoutModal()" class="btn-action btn-success">
+                            <i class="fas fa-plus"></i> Tạo lô thanh toán
+                        </button>
+                    </div>
+                    
+                    <div id="payoutBatchesList" style="display: grid; gap: 1rem;">
+                        <!-- Payout batches will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Mã đơn</th>
+                                <th>Trạng thái</th>
+                                <th>Tổng đơn</th>
+                                <th>Phí (Hoa hồng + Gateway)</th>
+                                <th>Thực nhận</th>
+                                <th>Ngày tạo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ledgerTableBody">
+                            <tr><td colspan="7" class="text-center" style="padding: 3rem; color: #94a3b8;">
+                                <i class="fas fa-book" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                <p>Vui lòng chọn cửa hàng để xem sổ sách</p>
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Create Payout Modal -->
+    <div id="createPayoutModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <h2 style="margin: 0 0 1.5rem 0; color: #1e293b; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-file-invoice-dollar" style="color: #f59e0b;"></i>
+                Xác nhận tạo lô thanh toán
+            </h2>
+            
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">Cửa hàng</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; color: #1e293b;" id="createPayoutStoreName">-</div>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">Số đơn chưa thanh toán</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; color: #1e293b;" id="createPayoutCount">0</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">Tổng số tiền</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;" id="createPayoutAmount">0₫</div>
+                </div>
+            </div>
+            
+            <p style="color: #64748b; margin-bottom: 1.5rem;">
+                <i class="fas fa-info-circle"></i> 
+                Lô thanh toán sẽ được tạo và chuyển sang trạng thái <strong>Đang xử lý</strong>. 
+                Sau khi thanh toán, vui lòng nhập mã giao dịch để hoàn tất.
+            </p>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="closeCreatePayoutModal()" style="padding: 0.75rem 1.5rem; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                    Hủy
+                </button>
+                <button onclick="confirmCreatePayout()" style="padding: 0.75rem 1.5rem; background: #f59e0b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                    <i class="fas fa-check"></i> Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mark Paid Modal -->
+    <div id="markPaidModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 16px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <h2 style="margin: 0 0 1.5rem 0; color: #1e293b; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                Xác nhận thanh toán
+            </h2>
+            
+            <div style="background: #f0fdf4; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid #86efac;">
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.875rem; color: #166534; margin-bottom: 0.25rem;">Batch ID</div>
+                    <div style="font-size: 1.125rem; font-weight: 600; color: #15803d;" id="modalBatchId">-</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.875rem; color: #166534; margin-bottom: 0.25rem;">Số tiền thanh toán</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;" id="modalAmount">0₫</div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 500; color: #1e293b; margin-bottom: 0.5rem;">
+                    Mã giao dịch <span style="color: #dc2626;">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="transactionCode" 
+                    placeholder="Nhập mã giao dịch ngân hàng"
+                    style="width: 100%; padding: 0.75rem; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; box-sizing: border-box;"
+                    onkeypress="if(event.key === 'Enter') confirmMarkPaid()"
+                />
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button onclick="closeMarkPaidModal()" style="padding: 0.75rem 1.5rem; background: #e2e8f0; color: #475569; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                    Hủy
+                </button>
+                <button onclick="confirmMarkPaid()" style="padding: 0.75rem 1.5rem; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                    <i class="fas fa-check"></i> Xác nhận thanh toán
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

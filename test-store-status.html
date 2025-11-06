@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Store Status Update</title>
+</head>
+<body>
+    <h1>Test Store Status Update</h1>
+    <button onclick="testUpdate()">Update Store 1 to INACTIVE</button>
+    <button onclick="testUpdate2()">Update Store 1 to ACTIVE</button>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/home';
+
+        async function testUpdate() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stores/1/status?status=INACTIVE`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                const text = await response.text();
+                console.log('Response text:', text);
+
+                if (!response.ok) {
+                    document.getElementById('result').innerHTML = 
+                        `<p style="color:red">Error ${response.status}: ${text}</p>`;
+                } else {
+                    const data = JSON.parse(text);
+                    document.getElementById('result').innerHTML = 
+                        `<p style="color:green">Success: ${JSON.stringify(data, null, 2)}</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 
+                    `<p style="color:red">Exception: ${error.message}</p>`;
+            }
+        }
+
+        async function testUpdate2() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stores/1/status?status=ACTIVE`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                const text = await response.text();
+                console.log('Response text:', text);
+
+                if (!response.ok) {
+                    document.getElementById('result').innerHTML = 
+                        `<p style="color:red">Error ${response.status}: ${text}</p>`;
+                } else {
+                    const data = JSON.parse(text);
+                    document.getElementById('result').innerHTML = 
+                        `<p style="color:green">Success: ${JSON.stringify(data, null, 2)}</p>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = 
+                    `<p style="color:red">Exception: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
