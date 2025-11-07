@@ -2,7 +2,7 @@
 // API Configuration
 const API_CONFIG = {
     // Use current origin to work with both localhost and ngrok
-    BASE_URL: window.location.origin + '/home',
+    BASE_URL: "http://localhost:8080" + '/home',
     ENDPOINTS: {
         // Authentication
         LOGIN: '/auth/login',

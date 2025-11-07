@@ -202,12 +202,12 @@ function updateSummary(cart) {
         multiStoreInfo.style.display = 'none';
     }
 
-    // Enable checkout button if cart has items
-    const checkoutBtn = document.getElementById('checkoutBtn');
+    // Enable create order button if cart has items
+    const createOrderBtn = document.getElementById('createOrderBtn');
     if (items.length > 0) {
-        checkoutBtn.disabled = false;
+        createOrderBtn.disabled = false;
     } else {
-        checkoutBtn.disabled = true;
+        createOrderBtn.disabled = true;
     }
 }
 
@@ -275,8 +275,8 @@ function updateCartBadge(count) {
     document.getElementById('cartBadge').textContent = count || 0;
 }
 
-// Proceed to checkout
-async function proceedToCheckout() {
+// Create orders from cart (without immediate payment)
+async function createOrders() {
     if (!cartData || !cartData.cartItems || cartData.cartItems.length === 0) {
         Toast.warning('Giỏ hàng trống!');
         return;
@@ -287,8 +287,8 @@ async function proceedToCheckout() {
     const storeCount = new Set(items.map(item => item.storeId)).size;
     
     const message = storeCount > 1 
-        ? `Giỏ hàng có sản phẩm từ ${storeCount} cửa hàng khác nhau.\n\nHệ thống sẽ tạo ${storeCount} đơn hàng riêng biệt vì giao bằng drone không thể giao cùng lúc.\n\nXác nhận tạo đơn hàng?`
-        : 'Xác nhận tạo đơn hàng?';
+        ? `Giỏ hàng có sản phẩm từ ${storeCount} cửa hàng khác nhau.\n\nHệ thống sẽ tạo ${storeCount} đơn hàng riêng biệt.\n\nXác nhận đặt đơn?`
+        : 'Xác nhận đặt đơn hàng?';
     
     if (!confirm(message)) {
         return;
@@ -297,48 +297,19 @@ async function proceedToCheckout() {
     try {
         Loading.show();
 
-        // Create order from cart
+        // Create order from cart (without payment)
         const response = await APIHelper.post(API_CONFIG.ENDPOINTS.ORDERS);
 
         if (response.result && response.result.length > 0) {
             const orders = response.result;
-            Toast.success('Tạo đơn hàng thành công!');
+            const orderCount = orders.length;
+            
+            Toast.success(`Đã tạo ${orderCount} đơn hàng thành công!`);
 
-            // Get first order to proceed to payment
-            const firstOrder = orders[0];
-
-            // Initialize payment
-            setTimeout(async () => {
-                try {
-                    // Use current origin for returnUrl
-                    // If on ngrok, VNPay will redirect back to ngrok
-                    // orders.js will auto-redirect from ngrok to localhost to preserve localStorage
-                    const returnUrl = window.location.origin + '/home/orders.html';
-                    console.log('Payment returnUrl:', returnUrl);
-
-                    const paymentResponse = await APIHelper.post(API_CONFIG.ENDPOINTS.PAYMENT_INIT, {
-                        orderId: firstOrder.id,
-                        provider: 'VNPAY',
-                        method: 'QR',
-                        returnUrl: returnUrl
-                    });
-
-                    if (paymentResponse.result && paymentResponse.result.paymentUrl) {
-                        // Redirect to VNPay
-                        window.location.href = paymentResponse.result.paymentUrl;
-                    } else {
-                        console.error('Payment response:', paymentResponse);
-                        Toast.error('Không thể khởi tạo thanh toán');
-                    }
-                } catch (error) {
-                    console.error('Payment error:', error);
-                    Toast.error('Lỗi thanh toán: ' + (error.message || 'Vui lòng thử lại!'));
-                    // Redirect to orders page anyway
-                    setTimeout(() => {
-                        window.location.href = 'orders.html';
-                    }, 2000);
-                }
-            }, 1000);
+            // Redirect to orders page after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = 'orders.html';
+            }, 1500);
         } else {
             Toast.error('Không thể tạo đơn hàng');
         }
@@ -349,6 +320,13 @@ async function proceedToCheckout() {
     } finally {
         Loading.hide();
     }
+}
+
+// OLD FUNCTION - Keep for backward compatibility but not used
+// Proceed to checkout
+async function proceedToCheckout() {
+    // This function is deprecated - use createOrders() instead
+    await createOrders();
 }
 
 // Clear cart

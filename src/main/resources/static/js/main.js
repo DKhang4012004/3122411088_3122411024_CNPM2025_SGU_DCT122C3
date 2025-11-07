@@ -3,7 +3,7 @@
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializePage();
-    loadFeaturedStores();
+    loadFeaturedProducts(); // Changed from loadFeaturedStores
     updateCartBadge();
     
     // Use auth manager from auth.js
@@ -61,69 +61,113 @@ function checkAuthStatus() {
     console.warn('checkAuthStatus() is deprecated. Use auth.updateUI() instead.');
 }
 
-// Load featured stores
-async function loadFeaturedStores() {
+// Load featured products
+async function loadFeaturedProducts() {
     try {
-        const response = await APIHelper.get(API_CONFIG.ENDPOINTS.STORES);
-        const stores = response.result || [];
+        const response = await APIHelper.get(API_CONFIG.ENDPOINTS.PRODUCTS);
+        const products = response.result || [];
 
-        displayStores(stores.slice(0, 6)); // Show first 6 stores
+        displayProducts(products.slice(0, 8)); // Show first 8 products
     } catch (error) {
-        console.error('Error loading stores:', error);
-        displayEmptyState('Không thể tải danh sách cửa hàng');
+        console.error('Error loading products:', error);
+        displayEmptyState('Không thể tải danh sách món ăn');
     }
 }
 
-// Display stores
-function displayStores(stores) {
-    const container = document.getElementById('featuredStores');
+// Display products
+function displayProducts(products) {
+    const container = document.getElementById('featuredProducts');
 
-    if (!stores || stores.length === 0) {
+    if (!products || products.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <i class="fas fa-store-slash"></i>
-                <h3>Chưa có cửa hàng</h3>
+                <i class="fas fa-utensils"></i>
+                <h3>Chưa có món ăn</h3>
                 <p>Hãy quay lại sau nhé!</p>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = stores.map(store => `
-        <div class="card">
-            <img src="https://via.placeholder.com/400x200?text=${encodeURIComponent(store.name)}" 
-                 alt="${store.name}" 
-                 class="card-img">
-            <div class="card-body">
-                <h3 class="card-title">${store.name}</h3>
-                <p class="card-text">
-                    <i class="fas fa-map-marker-alt text-primary"></i>
-                    ${store.description || 'Cửa hàng đồ ăn ngon'}
-                </p>
-                <div class="d-flex align-center justify-between mt-2">
-                    <span class="text-gray">
-                        <i class="fas fa-star text-warning"></i> 4.5
-                    </span>
-                    <span class="text-gray">
-                        <i class="fas fa-clock"></i> 15-30 phút
-                    </span>
+    container.innerHTML = products.map(product => {
+        const imageUrl = product.mediaPrimaryUrl || `https://via.placeholder.com/300x200?text=${encodeURIComponent(product.name)}`;
+        const price = FormatHelper.currency(product.basePrice || 0);
+        const storeName = product.storeName || 'Cửa hàng';
+        
+        return `
+            <div class="card product-card" onclick="viewProductStore(${product.storeId})">
+                <img src="${imageUrl}" 
+                     alt="${product.name}" 
+                     class="card-img"
+                     onerror="this.src='https://via.placeholder.com/300x200?text=Món+Ăn'">
+                <div class="card-body">
+                    <h3 class="card-title">${product.name}</h3>
+                    <p class="card-text text-gray" style="font-size: 0.9rem;">
+                        <i class="fas fa-store text-primary"></i>
+                        ${storeName}
+                    </p>
+                    <div class="d-flex align-center justify-between mt-2">
+                        <span class="text-primary" style="font-size: 1.2rem; font-weight: bold;">
+                            ${price}
+                        </span>
+                        <span class="text-gray">
+                            <i class="fas fa-star text-warning"></i> 4.5
+                        </span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewProductStore(${product.storeId})">
+                        <i class="fas fa-store"></i> Xem cửa hàng
+                    </button>
+                    <button class="btn btn-success btn-sm" onclick="event.stopPropagation(); addToCart(${product.id})">
+                        <i class="fas fa-cart-plus"></i>
+                    </button>
                 </div>
             </div>
-            <div class="card-footer">
-                <button class="btn btn-primary btn-sm" onclick="viewStore(${store.id})">
-                    <i class="fas fa-eye"></i> Xem menu
-                </button>
-                <span class="text-success">
-                    <i class="fas fa-check-circle"></i> Mở cửa
-                </span>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
+}
+
+// View product's store (navigate to store detail page)
+function viewProductStore(storeId) {
+    if (!storeId) {
+        Toast.error('Không tìm thấy thông tin cửa hàng');
+        return;
+    }
+    window.location.href = `stores.html?id=${storeId}`;
+}
+
+// Add to cart from homepage
+async function addToCart(productId) {
+    if (!AuthHelper.isLoggedIn()) {
+        Toast.warning('Vui lòng đăng nhập để thêm vào giỏ hàng');
+        showLoginModal();
+        return;
+    }
+
+    try {
+        Loading.show();
+        
+        await APIHelper.post(API_CONFIG.ENDPOINTS.CART_ADD, {
+            productId: productId,
+            quantity: 1
+        });
+
+        Toast.success('Đã thêm vào giỏ hàng!');
+        updateCartBadge();
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+        Toast.error(error.message || 'Không thể thêm vào giỏ hàng');
+    } finally {
+        Loading.hide();
+    }
 }
 
 // Display empty state
 function displayEmptyState(message) {
-    const container = document.getElementById('featuredStores');
+    const container = document.getElementById('featuredProducts');
+    if (!container) return;
+    
     container.innerHTML = `
         <div class="empty-state">
             <i class="fas fa-exclamation-circle"></i>
@@ -132,7 +176,7 @@ function displayEmptyState(message) {
     `;
 }
 
-// View store details
+// View store details (kept for backward compatibility)
 function viewStore(storeId) {
     window.location.href = `stores.html?id=${storeId}`;
 }
