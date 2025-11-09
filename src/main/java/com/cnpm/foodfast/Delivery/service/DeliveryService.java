@@ -58,18 +58,44 @@ public class DeliveryService {
             throw new AppException(ErrorCode.DELIVERY_ALREADY_EXISTS);
         }
 
+        // Lấy tọa độ store và customer để tính toán
+        Store store = storeRepository.findById(request.getPickupStoreId())
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+        
+        // Parse customer coordinates from dropoffAddressSnapshot
+        AddressCoordinates customerCoords = parseAddressCoordinates(request.getDropoffAddressSnapshot());
+        AddressCoordinates storeCoords = getStoreCoordinates(store);
+        
+        // Tính khoảng cách và thời gian
+        double distanceKm = droneService.calculateFlightDistance(
+            storeCoords.getLatitude(), storeCoords.getLongitude(),
+            customerCoords.getLatitude(), customerCoords.getLongitude()
+        );
+        int flightTimeMinutes = droneService.estimateFlightTime(distanceKm);
+        
+        // Ước tính thời gian (giả sử cửa hàng chuẩn bị 15 phút)
+        int prepTimeMinutes = 15;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime estimatedDeparture = now.plusMinutes(prepTimeMinutes);
+        LocalDateTime estimatedArrival = estimatedDeparture.plusMinutes(flightTimeMinutes);
+
         // Tạo delivery với status QUEUED (đang chờ xử lý)
         Delivery delivery = Delivery.builder()
                 .orderId(request.getOrderId())
                 .pickupStoreId(request.getPickupStoreId())
                 .dropoffAddressSnapshot(request.getDropoffAddressSnapshot())
                 .currentStatus(DeliveryStatus.QUEUED)
+                .estimatedDepartureTime(estimatedDeparture)
+                .estimatedArrivalTime(estimatedArrival)
+                .estimatedFlightTimeMinutes(flightTimeMinutes)
+                .distanceKm(distanceKm)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
         delivery = deliveryRepository.save(delivery);
-        log.info("Delivery created with ID: {}", delivery.getId());
+        log.info("Delivery created with ID: {} - Distance: {}km, Est. arrival: {}", 
+                 delivery.getId(), distanceKm, estimatedArrival);
 
         return toDeliveryResponse(delivery);
     }
@@ -101,6 +127,18 @@ public class DeliveryService {
         delivery.setDroneId(droneId);
         delivery.setCurrentStatus(DeliveryStatus.ASSIGNED);
         delivery.setUpdatedAt(LocalDateTime.now());
+        
+        // ⭐ TÍNH THỜI GIAN THỰC TẾ KHI GÁN DRONE ⭐
+        // Thời gian khởi hành thực tế = bây giờ + 5 phút (chuẩn bị)
+        LocalDateTime actualDeparture = LocalDateTime.now().plusMinutes(5);
+        // Thời gian đến thực tế = khởi hành + flight time (đã tính trong estimated)
+        LocalDateTime actualArrival = actualDeparture.plusMinutes(delivery.getEstimatedFlightTimeMinutes());
+        
+        delivery.setActualDepartureTime(actualDeparture);
+        delivery.setActualArrivalTime(actualArrival);
+        
+        log.info("✓ Actual times calculated - Departure: {}, Arrival: {}", 
+                 actualDeparture, actualArrival);
 
         // Cập nhật trạng thái drone
         drone.setStatus(DroneStatus.IN_FLIGHT);
@@ -306,6 +344,10 @@ public class DeliveryService {
                 .dropoffAddressSnapshot(delivery.getDropoffAddressSnapshot())
                 .actualDepartureTime(delivery.getActualDepartureTime())
                 .actualArrivalTime(delivery.getActualArrivalTime())
+                .estimatedDepartureTime(delivery.getEstimatedDepartureTime())
+                .estimatedArrivalTime(delivery.getEstimatedArrivalTime())
+                .estimatedFlightTimeMinutes(delivery.getEstimatedFlightTimeMinutes())
+                .distanceKm(delivery.getDistanceKm())
                 .confirmationMethod(delivery.getConfirmationMethod())
                 .createdAt(delivery.getCreatedAt())
                 .updatedAt(delivery.getUpdatedAt());
@@ -325,10 +367,52 @@ public class DeliveryService {
             builder.pickupStoreName(delivery.getPickupStore().getName());
         }
 
-        // Calculate estimated flight time if needed
-        // TODO: Implement proper calculation based on distance
-
         return builder.build();
+    }
+
+    /**
+     * Parse address coordinates from JSON snapshot
+     */
+    private AddressCoordinates parseAddressCoordinates(String addressSnapshot) {
+        try {
+            // Giả sử addressSnapshot có format JSON với latitude/longitude
+            // Ví dụ: {"address":"...","latitude":10.772,"longitude":106.660}
+            if (addressSnapshot != null && addressSnapshot.contains("latitude")) {
+                String latStr = addressSnapshot.split("\"latitude\":")[1].split(",")[0];
+                String lngStr = addressSnapshot.split("\"longitude\":")[1].split("}")[0];
+                return new AddressCoordinates(Double.parseDouble(latStr), Double.parseDouble(lngStr));
+            }
+        } catch (Exception e) {
+            log.warn("Failed to parse coordinates from address snapshot, using default", e);
+        }
+        // Default coordinates (Sài Gòn center) nếu parse fail
+        return new AddressCoordinates(10.772622, 106.660172);
+    }
+
+    /**
+     * Get store coordinates from StoreAddress
+     */
+    private AddressCoordinates getStoreCoordinates(Store store) {
+        // Lấy địa chỉ đầu tiên của store
+        if (store.getAddresses() != null && !store.getAddresses().isEmpty()) {
+            var storeAddress = store.getAddresses().get(0);
+            if (storeAddress.getLatitude() != null && storeAddress.getLongitude() != null) {
+                return new AddressCoordinates(storeAddress.getLatitude(), storeAddress.getLongitude());
+            }
+        }
+        // Default coordinates nếu không có
+        log.warn("Store {} has no coordinates, using default", store.getId());
+        return new AddressCoordinates(10.762622, 106.660172);
+    }
+
+    /**
+     * Inner class for coordinates
+     */
+    @lombok.Data
+    @lombok.AllArgsConstructor
+    private static class AddressCoordinates {
+        private double latitude;
+        private double longitude;
     }
 }
 

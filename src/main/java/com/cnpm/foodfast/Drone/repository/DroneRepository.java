@@ -25,4 +25,9 @@ public interface DroneRepository extends JpaRepository<Drone, Long> {
      */
     @Query("SELECT COUNT(d) FROM Drone d WHERE d.status = 'AVAILABLE'")
     long countAvailableDrones();
+    
+    /**
+     * Tìm drone đầu tiên có status này
+     */
+    Optional<Drone> findFirstByStatus(DroneStatus status);
 }

@@ -250,6 +250,17 @@ function displayOrders(orders) {
     container.style.display = 'block';
     if (emptyOrders) emptyOrders.style.display = 'none';
 
+    // DEBUG: Log delivery time data for each order
+    orders.forEach(order => {
+        console.log(`Order ${order.orderCode}:`, {
+            status: order.status,
+            estimatedArrivalTime: order.estimatedArrivalTime,
+            estimatedDepartureTime: order.estimatedDepartureTime,
+            estimatedFlightTimeMinutes: order.estimatedFlightTimeMinutes,
+            distanceKm: order.distanceKm
+        });
+    });
+
     container.innerHTML = orders.map(order => {
         const paymentStatus = order.paymentStatus || 'PENDING';
         // Check if payment is pending (handle both PENDING and PENDING_PAYMENT)
@@ -305,6 +316,9 @@ function displayOrders(orders) {
                         <span class="${getPaymentStatusClass(paymentStatus)}">${getPaymentStatusText(paymentStatus)}</span>
                     </div>
                 </div>
+                
+                <!-- Delivery Time Estimate -->
+                ${(order.status === 'PAID' || order.status === 'ACCEPT' || order.status === 'IN_DELIVERY' || order.status === 'DELIVERED') && order.estimatedArrivalTime ? renderDeliveryTimeEstimate(order) : ''}
                 
                 <div style="border-top: 1px solid var(--light); padding-top: 1rem; margin-top: 1rem;">
                     ${order.items && order.items.length > 0 ? order.items.map(item => {
@@ -894,6 +908,161 @@ document.addEventListener('click', (e) => {
 });
 
 // Toast and Loading are already defined in config.js
+
+// ===== DELIVERY TIME ESTIMATION =====
+
+/**
+ * Format time to HH:mm Vietnamese format
+ */
+function formatTime(dateTimeStr) {
+    if (!dateTimeStr) return '';
+    
+    const date = new Date(dateTimeStr);
+    return date.toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+/**
+ * Format distance
+ */
+function formatDistance(distanceKm) {
+    if (!distanceKm) return '';
+    
+    if (distanceKm < 1) {
+        return `${Math.round(distanceKm * 1000)} m`;
+    }
+    return `${distanceKm.toFixed(1)} km`;
+}
+
+/**
+ * Calculate remaining time until arrival
+ */
+function calculateRemainingTime(estimatedArrivalTime) {
+    if (!estimatedArrivalTime) return null;
+    
+    const now = new Date();
+    const arrival = new Date(estimatedArrivalTime);
+    const diffMs = arrival - now;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    
+    if (diffMinutes < 0) {
+        return {
+            minutes: Math.abs(diffMinutes),
+            isLate: true,
+            text: `Trễ ${Math.abs(diffMinutes)} phút`
+        };
+    } else if (diffMinutes === 0) {
+        return {
+            minutes: 0,
+            isLate: false,
+            text: 'Sắp đến'
+        };
+    } else {
+        return {
+            minutes: diffMinutes,
+            isLate: false,
+            text: `Còn ${diffMinutes} phút`
+        };
+    }
+}
+
+/**
+ * Render delivery time estimate HTML
+ */
+function renderDeliveryTimeEstimate(order) {
+    if (!order.estimatedArrivalTime) {
+        return `
+            <div class="delivery-estimate pending">
+                <div class="estimate-header">
+                    <i class="fas fa-clock"></i>
+                    <span>Đang xác nhận thời gian giao hàng...</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Ưu tiên hiển thị actual time nếu đã có (sau khi accept), không thì dùng estimated
+    const hasActualTime = order.actualArrivalTime && (order.status === 'ACCEPT' || order.status === 'IN_DELIVERY' || order.status === 'DELIVERED');
+    const arrivalTime = formatTime(hasActualTime ? order.actualArrivalTime : order.estimatedArrivalTime);
+    const departureTime = formatTime(hasActualTime ? order.actualDepartureTime : order.estimatedDepartureTime);
+    const timeToUse = hasActualTime ? order.actualArrivalTime : order.estimatedArrivalTime;
+    const distance = formatDistance(order.distanceKm);
+    const remaining = calculateRemainingTime(timeToUse);
+    
+    let statusClass = 'on-time';
+    let statusIcon = 'fa-clock';
+    let statusText = hasActualTime ? 'Thời gian giao hàng' : 'Dự kiến giao';
+    
+    if (order.status === 'DELIVERED') {
+        statusClass = 'completed';
+        statusIcon = 'fa-check-circle';
+        statusText = 'Đã giao';
+    } else if (remaining && remaining.isLate) {
+        statusClass = 'delayed';
+        statusIcon = 'fa-exclamation-circle';
+        statusText = 'Chậm trễ';
+    } else if (order.status === 'IN_DELIVERY') {
+        statusIcon = 'fa-drone';
+        statusText = 'Đang giao';
+    } else if (order.status === 'ACCEPT') {
+        statusIcon = 'fa-check-square';
+        statusText = 'Đã xác nhận - Chuẩn bị giao';
+    }
+    
+    return `
+        <div class="delivery-estimate ${statusClass}">
+            <div class="estimate-header">
+                <i class="fas ${statusIcon}"></i>
+                <span>${statusText}</span>
+            </div>
+            
+            <div class="time-info">
+                <i class="fas fa-clock"></i>
+                <strong>${arrivalTime}</strong>
+                ${remaining ? `<span class="remaining">(${remaining.text})</span>` : ''}
+            </div>
+            
+            <div class="flight-info">
+                <span><i class="fas fa-plane-departure"></i> ${departureTime || 'Chưa khởi hành'}</span>
+                <span><i class="fas fa-route"></i> ${order.estimatedFlightTimeMinutes || 0} phút</span>
+                <span><i class="fas fa-map-marker-alt"></i> ${distance || 'N/A'}</span>
+            </div>
+            
+            ${renderProgressBar(order)}
+        </div>
+    `;
+}
+
+/**
+ * Render progress bar based on order status
+ */
+function renderProgressBar(order) {
+    const statusSteps = {
+        'CREATED': { step: 1, text: 'Đã đặt hàng', icon: 'fa-file-alt' },
+        'PENDING_PAYMENT': { step: 1, text: 'Chờ thanh toán', icon: 'fa-clock' },
+        'PAID': { step: 2, text: 'Đã thanh toán', icon: 'fa-check' },
+        'ACCEPT': { step: 3, text: 'Cửa hàng xác nhận', icon: 'fa-store' },
+        'IN_DELIVERY': { step: 4, text: 'Đang giao hàng', icon: 'fa-drone' },
+        'DELIVERED': { step: 5, text: 'Đã giao hàng', icon: 'fa-check-circle' }
+    };
+    
+    const current = statusSteps[order.status] || statusSteps['CREATED'];
+    const progress = (current.step / 5) * 100;
+    
+    return `
+        <div class="delivery-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${progress}%"></div>
+            </div>
+            <div class="progress-text">
+                <i class="fas ${current.icon}"></i>
+                <span>${current.text}</span>
+            </div>
+        </div>
+    `;
+}
 
 console.log('Orders.js loaded successfully');
 

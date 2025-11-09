@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/drone_delivery?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
     username: root
-    password: khang141204
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -24,10 +24,12 @@ jwt:
   signerKey: "wXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezwXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 vnpay:
-  tmn-code: "D1GOXCFX"
-  hash-secret: "FMX97DS9752G5SWI40ZPBO3R2EQMQ9H5"
+  tmn-code: "HCVE5UQF"
+  hash-secret: "QQ8FJPL59KYNDMMPJNJOGFJ7FCVNL41J"
   url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-  return-url: "https://shieldless-pamula-adhesively.ngrok-free.dev/home/api/v1/payments/vnpay-return"
+#  return-url: "https://scapulohumeral-unostentatiously-hortensia.ngrok-free.dev/home/api/v1/payments/vnpay-return"
+  return-url: "http://localhost:8080/home/api/v1/payments/vnpay-return"
+
   api-url: "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction"
   version: "2.1.0"
   command: "pay"

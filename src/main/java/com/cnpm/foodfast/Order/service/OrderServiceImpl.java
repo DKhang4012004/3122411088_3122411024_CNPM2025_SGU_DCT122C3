@@ -21,6 +21,7 @@ import com.cnpm.foodfast.Cart.repository.CartItemRepository;
 import com.cnpm.foodfast.User.repository.UserRepository;
 import com.cnpm.foodfast.Payment.service.LedgerService;
 import com.cnpm.foodfast.Drone.repository.DroneRepository;
+import com.cnpm.foodfast.Delivery.repository.DeliveryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,8 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final LedgerService ledgerService;
     private final DroneRepository droneRepository;
+    private final DeliveryRepository deliveryRepository;
+    private final com.cnpm.foodfast.Delivery.service.DeliveryService deliveryService;
 
     @Override
     @Transactional
@@ -302,6 +305,25 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Failed to create ledger entry", e);
         }
 
+        // ⭐ GÁN DRONE VÀ TÍNH THỜI GIAN THỰC TẾ KHI ACCEPT ⭐
+        try {
+            // Tìm delivery của order này
+            Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Delivery not found for order: " + orderId));
+            
+            // Tìm drone available đầu tiên
+            Drone availableDrone = droneRepository.findFirstByStatus(DroneStatus.AVAILABLE)
+                    .orElseThrow(() -> new BadRequestException("No available drone found"));
+            
+            // Gán drone cho delivery → Tự động tính actual time
+            deliveryService.assignDrone(delivery.getId(), availableDrone.getId());
+            log.info("✓ Drone {} assigned to delivery {} for order {}", 
+                     availableDrone.getModel(), delivery.getId(), orderId);
+        } catch (Exception e) {
+            log.error("Failed to assign drone for order {}: {}", orderId, e.getMessage());
+            // Không fail accept order nếu gán drone lỗi
+        }
+
         log.info("Order {} accepted (status = ACCEPT) with {} available drones and ledger created successfully",
                  orderId, availableDroneCount);
         return buildOrderResponse(order);
@@ -443,6 +465,25 @@ public class OrderServiceImpl implements OrderService {
                     .orElse(null);
         }
 
+        // Get delivery time estimation if delivery exists
+        LocalDateTime estimatedDepartureTime = null;
+        LocalDateTime estimatedArrivalTime = null;
+        Integer estimatedFlightTimeMinutes = null;
+        Double distanceKm = null;
+
+        try {
+            Optional<Delivery> deliveryOpt = deliveryRepository.findByOrderId(order.getId());
+            if (deliveryOpt.isPresent()) {
+                Delivery delivery = deliveryOpt.get();
+                estimatedDepartureTime = delivery.getEstimatedDepartureTime();
+                estimatedArrivalTime = delivery.getEstimatedArrivalTime();
+                estimatedFlightTimeMinutes = delivery.getEstimatedFlightTimeMinutes();
+                distanceKm = delivery.getDistanceKm();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get delivery info for order {}: {}", order.getId(), e.getMessage());
+        }
+
         return OrderResponse.builder()
                 .id(order.getId())
                 .userId(order.getUserId())
@@ -456,6 +497,10 @@ public class OrderServiceImpl implements OrderService {
                 .shippingFee(order.getShippingFee())
                 .taxAmount(order.getTaxAmount())
                 .totalPayable(order.getTotalPayable())
+                .estimatedDepartureTime(estimatedDepartureTime)
+                .estimatedArrivalTime(estimatedArrivalTime)
+                .estimatedFlightTimeMinutes(estimatedFlightTimeMinutes)
+                .distanceKm(distanceKm)
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())

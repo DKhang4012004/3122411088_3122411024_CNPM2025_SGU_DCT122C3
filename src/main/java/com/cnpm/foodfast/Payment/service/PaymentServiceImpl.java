@@ -39,6 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final VnPayConfig vnPayConfig;
     private final ObjectMapper objectMapper;
     private final NgrokUrlService ngrokUrlService;
+    private final com.cnpm.foodfast.Delivery.service.DeliveryService deliveryService;
 
     @Override
     @Transactional
@@ -185,6 +186,21 @@ public class PaymentServiceImpl implements PaymentService {
                 order.setUpdatedAt(LocalDateTime.now());
 
                 log.info("Payment successful for order: {}", order.getOrderCode());
+                
+                // Auto-create delivery with time estimation when payment succeeds
+                try {
+                    com.cnpm.foodfast.dto.request.delivery.CreateDeliveryRequest deliveryRequest = 
+                        com.cnpm.foodfast.dto.request.delivery.CreateDeliveryRequest.builder()
+                            .orderId(order.getId())
+                            .pickupStoreId(order.getStore().getId())
+                            .dropoffAddressSnapshot(order.getDeliveryAddressSnapshot())
+                            .build();
+                    deliveryService.createDelivery(deliveryRequest);
+                    log.info("✓ Delivery created automatically for order: {}", order.getOrderCode());
+                } catch (Exception e) {
+                    log.error("Failed to create delivery for order {}: {}", order.getOrderCode(), e.getMessage());
+                    // Don't fail the payment if delivery creation fails
+                }
 
             } else {
                 transaction.setStatus(PaymentTransactionStatus.FAILED);
@@ -273,6 +289,21 @@ public class PaymentServiceImpl implements PaymentService {
                 order.setUpdatedAt(LocalDateTime.now());
 
                 log.info("✓ Payment successful for order: {}", order.getOrderCode());
+                
+                // Auto-create delivery with time estimation when payment succeeds
+                try {
+                    com.cnpm.foodfast.dto.request.delivery.CreateDeliveryRequest deliveryRequest = 
+                        com.cnpm.foodfast.dto.request.delivery.CreateDeliveryRequest.builder()
+                            .orderId(order.getId())
+                            .pickupStoreId(order.getStore().getId())
+                            .dropoffAddressSnapshot(order.getDeliveryAddressSnapshot())
+                            .build();
+                    deliveryService.createDelivery(deliveryRequest);
+                    log.info("✓ Delivery created automatically for order: {}", order.getOrderCode());
+                } catch (Exception e) {
+                    log.error("Failed to create delivery for order {}: {}", order.getOrderCode(), e.getMessage());
+                    // Don't fail the payment if delivery creation fails
+                }
 
             } else {
                 // Payment failed

@@ -33,6 +33,12 @@ public class OrderResponse {
 
     String deliveryAddressSnapshot;
 
+    // Delivery time estimation
+    LocalDateTime estimatedDepartureTime;
+    LocalDateTime estimatedArrivalTime;
+    Integer estimatedFlightTimeMinutes;
+    Double distanceKm;
+
     List<OrderItemResponse> items;
 
     LocalDateTime createdAt;

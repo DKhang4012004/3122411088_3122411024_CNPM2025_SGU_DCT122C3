@@ -983,3 +983,128 @@ img {
     0% { transform: translate(-50%, -50%) rotate(0deg); }
     100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
+/* ===== DELIVERY TIME ESTIMATE ===== */
+.delivery-estimate {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin: 1rem 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.delivery-estimate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.delivery-estimate.completed {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.delivery-estimate.delayed {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+.delivery-estimate.pending {
+    background: linear-gradient(135deg, #a8a8a8 0%, #7f7f7f 100%);
+}
+
+.estimate-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.95;
+}
+
+.estimate-header i {
+    font-size: 1.2rem;
+}
+
+.time-info {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.time-info i {
+    font-size: 1.5rem;
+}
+
+.time-info .remaining {
+    font-size: 1rem;
+    font-weight: normal;
+    opacity: 0.85;
+    margin-left: 0.3rem;
+}
+
+.flight-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    flex-wrap: wrap;
+}
+
+.flight-info span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.flight-info i {
+    font-size: 0.9rem;
+}
+
+.delivery-progress {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: white;
+    transition: width 0.5s ease;
+    border-radius: 3px;
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.progress-text i {
+    font-size: 0.8rem;
+}
+
+/* Responsive delivery estimate */
+@media (max-width: 768px) {
+    .time-info {
+        font-size: 1.5rem;
+    }
+    
+    .flight-info {
+        font-size: 0.8rem;
+        gap: 0.8rem;
+    }
+}
+

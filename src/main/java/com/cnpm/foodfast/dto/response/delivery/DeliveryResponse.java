@@ -25,6 +25,7 @@ public class DeliveryResponse {
     String dropoffAddressSnapshot;
     LocalDateTime actualDepartureTime;
     LocalDateTime actualArrivalTime;
+    LocalDateTime estimatedDepartureTime;
     LocalDateTime estimatedArrivalTime;
     ConfirmationMethod confirmationMethod;
     Integer estimatedFlightTimeMinutes;

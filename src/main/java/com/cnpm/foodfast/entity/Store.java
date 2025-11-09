@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "store")
@@ -55,4 +56,8 @@ public class Store {
 
     @Column(name = "updated_at", insertable = false)
     LocalDateTime updatedAt;
+
+    // Relationships
+    @OneToMany(mappedBy = "store", fetch = FetchType.LAZY)
+    List<StoreAddress> addresses;
 }

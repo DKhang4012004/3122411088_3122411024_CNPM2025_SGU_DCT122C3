@@ -46,6 +46,18 @@ public class Delivery {
     @Column(name = "actual_arrival_time")
     LocalDateTime actualArrivalTime;
 
+    @Column(name = "estimated_departure_time")
+    LocalDateTime estimatedDepartureTime;
+
+    @Column(name = "estimated_arrival_time")
+    LocalDateTime estimatedArrivalTime;
+
+    @Column(name = "estimated_flight_time_minutes")
+    Integer estimatedFlightTimeMinutes;
+
+    @Column(name = "distance_km")
+    Double distanceKm;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "confirmation_method",
             columnDefinition = "enum('GEOFENCE','OTP','QR')")
