@@ -232,5 +232,40 @@ public class DeliveryController {
                 .result(response)
                 .build());
     }
+
+    /**
+     * Get pending deliveries for admin (ASSIGNED, LAUNCHED, ARRIVING)
+     * GET /api/v1/deliveries/pending
+     */
+    @GetMapping("/pending")
+    public ResponseEntity<APIResponse<List<DeliveryResponse>>> getPendingDeliveries() {
+        log.info("Getting pending deliveries for admin");
+
+        List<DeliveryResponse> responses = deliveryService.getPendingDeliveriesForAdmin();
+
+        return ResponseEntity.ok(APIResponse.<List<DeliveryResponse>>builder()
+                .code(200)
+                .message("Pending deliveries retrieved successfully")
+                .result(responses)
+                .build());
+    }
+
+    /**
+     * Get deliveries by store for food preparation
+     * GET /api/v1/deliveries/store/{storeId}
+     */
+    @GetMapping("/store/{storeId}")
+    public ResponseEntity<APIResponse<List<DeliveryResponse>>> getDeliveriesByStore(
+            @PathVariable Long storeId) {
+        log.info("Getting deliveries for store: {}", storeId);
+
+        List<DeliveryResponse> responses = deliveryService.getDeliveriesByStore(storeId);
+
+        return ResponseEntity.ok(APIResponse.<List<DeliveryResponse>>builder()
+                .code(200)
+                .message("Store deliveries retrieved successfully")
+                .result(responses)
+                .build());
+    }
 }
 

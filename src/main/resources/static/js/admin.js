@@ -87,6 +87,11 @@ function initSidebar() {
     sidebarLinks.forEach(link => {
         const section = link.dataset.section;
         
+        // Skip links without data-section (external links)
+        if (!section) {
+            return;
+        }
+        
         // Check permission and hide/disable if no access
         if (!hasPermission(section)) {
             link.style.opacity = '0.4';
@@ -441,22 +446,30 @@ async function loadDrones() {
         const drones = response.result || [];
 
         if (drones.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-drone"></i><br>Không có drone</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fas fa-drone"></i><br>Không có drone nào. Nhấn "Thêm Drone" để bắt đầu.</td></tr>';
             return;
         }
 
         tbody.innerHTML = drones.map(drone => `
             <tr>
                 <td>${drone.id}</td>
-                <td>${drone.model || 'N/A'}</td>
-                <td>${drone.serialNumber || 'N/A'}</td>
-                <td>${drone.maxPayload || 0} kg</td>
-                <td>${drone.maxRange || 0} km</td>
-                <td><span class="status-badge ${drone.status.toLowerCase()}">${drone.status}</span></td>
+                <td><strong>${drone.code}</strong></td>
+                <td><code style="background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">${drone.model || 'N/A'}</code></td>
+                <td>
+                    <span style="color: ${drone.currentBatteryPercent > 50 ? '#10b981' : drone.currentBatteryPercent > 20 ? '#f59e0b' : '#ef4444'};">
+                        <i class="fas fa-battery-${drone.currentBatteryPercent > 75 ? 'full' : drone.currentBatteryPercent > 50 ? 'three-quarters' : drone.currentBatteryPercent > 25 ? 'half' : 'quarter'}"></i>
+                        ${drone.currentBatteryPercent || 0}%
+                    </span>
+                </td>
+                <td>${drone.maxPayloadGram ? (drone.maxPayloadGram / 1000).toFixed(1) + ' kg' : 'N/A'}</td>
+                <td><span class="status-badge ${drone.status.toLowerCase()}">${formatDroneStatus(drone.status)}</span></td>
                 <td>
                     <div class="action-buttons">
                         <button class="action-btn view" onclick="viewDrone(${drone.id})" title="Xem chi tiết">
                             <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn edit" onclick="editDroneById(${drone.id})" title="Chỉnh sửa">
+                            <i class="fas fa-edit"></i>
                         </button>
                     </div>
                 </td>
@@ -464,7 +477,30 @@ async function loadDrones() {
         `).join('');
     } catch (error) {
         console.error('Error loading drones:', error);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:red">Lỗi tải dữ liệu</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="color:red">Lỗi tải dữ liệu: ' + error.message + '</td></tr>';
+    }
+}
+
+async function editDroneById(droneId) {
+    try {
+        const response = await apiRequest(`/drones/id/${droneId}`);
+        const drone = response.result;
+        
+        // Open edit modal with data
+        document.getElementById('droneModalTitle').textContent = 'Chỉnh Sửa Drone';
+        document.getElementById('droneId').value = drone.id;
+        document.getElementById('droneCode').value = drone.code || '';
+        document.getElementById('droneModel').value = drone.model || '';
+        document.getElementById('droneMaxPayload').value = drone.maxPayloadGram ? (drone.maxPayloadGram / 1000).toFixed(1) : '';
+        document.getElementById('droneBatteryLevel').value = drone.currentBatteryPercent || 100;
+        document.getElementById('droneStatus').value = drone.status || 'AVAILABLE';
+        document.getElementById('droneLatitude').value = drone.lastLatitude || '';
+        document.getElementById('droneLongitude').value = drone.lastLongitude || '';
+        
+        document.getElementById('droneModal').style.display = 'flex';
+    } catch (error) {
+        console.error('Error loading drone for edit:', error);
+        alert('Lỗi khi tải thông tin drone');
     }
 }
 
@@ -1825,5 +1861,235 @@ function showCustomDialogWithValue(title, content, getValueCallback) {
                 resolve({ confirmed: false, value: null });
             }
         };
+    });
+}
+
+// ==================== DRONE MANAGEMENT ====================
+
+function openAddDroneModal() {
+    document.getElementById('droneModalTitle').textContent = 'Thêm Drone';
+    document.getElementById('droneForm').reset();
+    document.getElementById('droneId').value = '';
+    document.getElementById('droneModal').style.display = 'flex';
+}
+
+function closeDroneModal() {
+    document.getElementById('droneModal').style.display = 'none';
+}
+
+async function saveDrone() {
+    const id = document.getElementById('droneId').value;
+    const code = document.getElementById('droneCode').value;
+    const model = document.getElementById('droneModel').value;
+    const maxPayload = parseFloat(document.getElementById('droneMaxPayload').value) || null;
+    const batteryLevel = parseInt(document.getElementById('droneBatteryLevel').value) || 100;
+    const status = document.getElementById('droneStatus').value;
+    const latitude = parseFloat(document.getElementById('droneLatitude').value) || null;
+    const longitude = parseFloat(document.getElementById('droneLongitude').value) || null;
+
+    // Validation
+    if (!code || !model) {
+        alert('Vui lòng nhập code và model cho drone!');
+        return;
+    }
+
+    try {
+        if (id) {
+            // Update existing drone
+            const data = {
+                code: code,
+                model: model,
+                maxPayload: maxPayload,
+                batteryLevel: batteryLevel,
+                status: status,
+                currentLatitude: latitude,
+                currentLongitude: longitude
+            };
+            await apiRequest(`/drones/id/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            alert('Cập nhật drone thành công!');
+        } else {
+            // Create new drone
+            const data = {
+                code: code,
+                model: model,
+                maxPayloadGram: maxPayload ? Math.round(maxPayload * 1000) : null,
+                latitude: latitude,
+                longitude: longitude
+            };
+            await apiRequest('/drones/register', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            alert('Thêm drone thành công!');
+        }
+        
+        closeDroneModal();
+        loadDrones();
+    } catch (error) {
+        console.error('Error saving drone:', error);
+        alert('Lỗi khi lưu drone: ' + error.message);
+    }
+}
+
+async function viewDrone(droneId) {
+    document.getElementById('viewDroneModal').style.display = 'flex';
+    const content = document.getElementById('droneDetailsContent');
+    content.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
+
+    try {
+        const response = await apiRequest(`/drones/id/${droneId}`);
+        const drone = response.result;
+
+        content.innerHTML = `
+            <div style="display: grid; gap: 1.5rem;">
+                <!-- Basic Info -->
+                <div class="info-card">
+                    <h3 style="margin: 0 0 1rem 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-info-circle"></i> Thông Tin Cơ Bản
+                    </h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">ID:</span>
+                            <span class="info-value">${drone.id}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Code:</span>
+                            <span class="info-value"><code>${drone.code}</code></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Model:</span>
+                            <span class="info-value">${drone.model || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Trạng thái:</span>
+                            <span class="status-badge ${drone.status.toLowerCase()}">${formatDroneStatus(drone.status)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Specs -->
+                <div class="info-card">
+                    <h3 style="margin: 0 0 1rem 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-cog"></i> Thông Số Kỹ Thuật
+                    </h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Tải trọng tối đa:</span>
+                            <span class="info-value">${drone.maxPayloadGram ? (drone.maxPayloadGram / 1000).toFixed(1) : 0} kg</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mức pin:</span>
+                            <span class="info-value">
+                                <span style="color: ${drone.currentBatteryPercent > 50 ? '#10b981' : drone.currentBatteryPercent > 20 ? '#f59e0b' : '#ef4444'};">
+                                    <i class="fas fa-battery-${drone.currentBatteryPercent > 75 ? 'full' : drone.currentBatteryPercent > 50 ? 'three-quarters' : drone.currentBatteryPercent > 25 ? 'half' : 'quarter'}"></i>
+                                    ${drone.currentBatteryPercent || 0}%
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div class="info-card">
+                    <h3 style="margin: 0 0 1rem 0; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-map-marker-alt"></i> Vị Trí Hiện Tại
+                    </h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Latitude:</span>
+                            <span class="info-value">${drone.lastLatitude || 'N/A'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Longitude:</span>
+                            <span class="info-value">${drone.lastLongitude || 'N/A'}</span>
+                        </div>
+                        ${drone.lastTelemetryAt ? `
+                        <div class="info-item">
+                            <span class="info-label">Cập nhật vị trí:</span>
+                            <span class="info-value">${formatDateTime(drone.lastTelemetryAt)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Store drone data for editing
+        window.currentViewingDrone = drone;
+    } catch (error) {
+        console.error('Error loading drone details:', error);
+        content.innerHTML = '<div style="color: red; text-align: center;">Lỗi tải thông tin drone</div>';
+    }
+}
+
+function closeViewDroneModal() {
+    document.getElementById('viewDroneModal').style.display = 'none';
+    window.currentViewingDrone = null;
+}
+
+function editDroneFromView() {
+    if (!window.currentViewingDrone) return;
+    
+    const drone = window.currentViewingDrone;
+    
+    // Close view modal
+    closeViewDroneModal();
+    
+    // Open edit modal with data
+    document.getElementById('droneModalTitle').textContent = 'Chỉnh Sửa Drone';
+    document.getElementById('droneId').value = drone.id;
+    document.getElementById('droneName').value = drone.name || '';
+    document.getElementById('droneCode').value = drone.code || '';
+    document.getElementById('droneModel').value = drone.model || '';
+    document.getElementById('droneSerialNumber').value = drone.serialNumber || '';
+    document.getElementById('droneMaxPayload').value = drone.maxPayload || '';
+    document.getElementById('droneMaxRange').value = drone.maxRange || '';
+    document.getElementById('droneBatteryLevel').value = drone.batteryLevel || 100;
+    document.getElementById('droneStatus').value = drone.status || 'AVAILABLE';
+    document.getElementById('droneLatitude').value = drone.currentLatitude || '';
+    document.getElementById('droneLongitude').value = drone.currentLongitude || '';
+    
+    document.getElementById('droneModal').style.display = 'flex';
+}
+
+async function deleteDrone(droneId) {
+    if (!confirm('Bạn có chắc muốn xóa drone này?')) {
+        return;
+    }
+
+    try {
+        await apiRequest(`/drones/id/${droneId}`, {
+            method: 'DELETE'
+        });
+        alert('Xóa drone thành công!');
+        loadDrones();
+    } catch (error) {
+        console.error('Error deleting drone:', error);
+        alert('Lỗi khi xóa drone: ' + error.message);
+    }
+}
+
+function formatDroneStatus(status) {
+    const statusMap = {
+        'AVAILABLE': 'Sẵn sàng',
+        'IN_FLIGHT': 'Đang bay',
+        'CHARGING': 'Đang sạc',
+        'MAINTENANCE': 'Bảo trì'
+    };
+    return statusMap[status] || status;
+}
+
+function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
     });
 }

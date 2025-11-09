@@ -377,6 +377,162 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: var(--gray);
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: var(--primary);
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            border-top: 2px solid #f1f5f9;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .admin-sidebar {
@@ -401,6 +557,14 @@
 
             .admin-table th, .admin-table td {
                 padding: 0.75rem 0.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                max-width: 95%;
             }
         }
     </style>
@@ -437,7 +601,11 @@
             </a>
             <a href="#" class="sidebar-link" data-section="drones">
                 <i class="fas fa-drone"></i>
-                <span>Drone</span>
+                <span>Quản lý Drone</span>
+            </a>
+            <a href="admin-drone-control.html" class="sidebar-link">
+                <i class="fas fa-helicopter"></i>
+                <span>Điều khiển Drone</span>
             </a>
             <a href="#" class="sidebar-link" data-section="orders">
                 <i class="fas fa-shopping-bag"></i>
@@ -632,8 +800,13 @@
             <!-- Drones Section -->
             <section id="section-drones" class="admin-section">
                 <div class="section-header">
-                    <h1>Quản lý Drone</h1>
-                    <p>Danh sách drone giao hàng</p>
+                    <div>
+                        <h1>Quản lý Drone</h1>
+                        <p>Danh sách drone giao hàng</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddDroneModal()">
+                        <i class="fas fa-plus"></i> Thêm Drone
+                    </button>
                 </div>
 
                 <div class="table-container">
@@ -641,10 +814,10 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Code</th>
                                 <th>Model</th>
-                                <th>Serial Number</th>
-                                <th>Tải trọng tối đa</th>
-                                <th>Phạm vi bay</th>
+                                <th>Pin</th>
+                                <th>Tải trọng</th>
                                 <th>Trạng thái</th>
                                 <th>Hành động</th>
                             </tr>
@@ -770,6 +943,87 @@
             </section>
         </div>
     </main>
+
+    <!-- Add/Edit Drone Modal -->
+    <div id="droneModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-helicopter"></i> <span id="droneModalTitle">Thêm Drone</span></h2>
+                <button class="close-btn" onclick="closeDroneModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="droneForm">
+                    <input type="hidden" id="droneId">
+                    
+                    <div class="form-group">
+                        <label>Code <span style="color: red;">*</span></label>
+                        <input type="text" id="droneCode" required placeholder="VD: DRONE001">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Model <span style="color: red;">*</span></label>
+                        <input type="text" id="droneModel" required placeholder="VD: DJI Phantom 4">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tải trọng tối đa (kg)</label>
+                            <input type="number" id="droneMaxPayload" step="0.1" placeholder="VD: 5.0">
+                        </div>
+                        <div class="form-group">
+                            <label>Mức pin (%)</label>
+                            <input type="number" id="droneBatteryLevel" min="0" max="100" value="100">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Trạng thái</label>
+                        <select id="droneStatus">
+                            <option value="AVAILABLE">AVAILABLE - Sẵn sàng</option>
+                            <option value="IN_FLIGHT">IN_FLIGHT - Đang bay</option>
+                            <option value="CHARGING">CHARGING - Đang sạc</option>
+                            <option value="MAINTENANCE">MAINTENANCE - Bảo trì</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vị trí hiện tại (Latitude, Longitude)</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                            <input type="number" id="droneLatitude" step="0.000001" placeholder="Latitude (VD: 10.762622)">
+                            <input type="number" id="droneLongitude" step="0.000001" placeholder="Longitude (VD: 106.660172)">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDroneModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="saveDrone()">
+                    <i class="fas fa-save"></i> Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Drone Details Modal -->
+    <div id="viewDroneModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-helicopter"></i> Chi Tiết Drone</h2>
+                <button class="close-btn" onclick="closeViewDroneModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="droneDetailsContent">
+                <div class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeViewDroneModal()">Đóng</button>
+                <button class="btn btn-primary" onclick="editDroneFromView()">
+                    <i class="fas fa-edit"></i> Chỉnh sửa
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Create Payout Modal -->
     <div id="createPayoutModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">

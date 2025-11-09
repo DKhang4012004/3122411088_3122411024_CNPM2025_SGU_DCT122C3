@@ -44,6 +44,24 @@ public class DroneController {
     }
 
     /**
+     * Get all drones (alias for admin UI)
+     */
+    @GetMapping("/all")
+    public APIResponse<List<DroneResponse>> getAllDronesAlias() {
+        return getAllDrones();
+    }
+
+    /**
+     * Get drone by ID (for admin UI)
+     */
+    @GetMapping("/id/{id}")
+    public APIResponse<DroneResponse> getDroneById(@PathVariable Long id) {
+        return APIResponse.<DroneResponse>builder()
+                .result(droneService.getDroneById(id))
+                .build();
+    }
+
+    /**
      * Get drone by code (for phone simulator login)
      */
     @GetMapping("/{code}")
@@ -176,6 +194,30 @@ public class DroneController {
                     put("distanceKm", Math.round(distance * 100.0) / 100.0);
                     put("estimatedTimeMinutes", estimatedTime);
                 }})
+                .build();
+    }
+
+    /**
+     * Update drone by ID (for admin UI)
+     */
+    @PutMapping("/id/{id}")
+    public APIResponse<DroneResponse> updateDrone(
+            @PathVariable Long id,
+            @RequestBody com.cnpm.foodfast.dto.request.DroneUpdateRequest request) {
+        return APIResponse.<DroneResponse>builder()
+                .message("Drone updated successfully")
+                .result(droneService.updateDrone(id, request))
+                .build();
+    }
+
+    /**
+     * Delete drone by ID (for admin UI)
+     */
+    @DeleteMapping("/id/{id}")
+    public APIResponse<Void> deleteDrone(@PathVariable Long id) {
+        droneService.deleteDrone(id);
+        return APIResponse.<Void>builder()
+                .message("Drone deleted successfully")
                 .build();
     }
 }

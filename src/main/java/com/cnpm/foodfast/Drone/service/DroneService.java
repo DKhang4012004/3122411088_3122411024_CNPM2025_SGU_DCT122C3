@@ -63,6 +63,12 @@ public class DroneService {
                 .collect(Collectors.toList());
     }
 
+    public DroneResponse getDroneById(Long id) {
+        Drone drone = droneRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DRONE_NOT_FOUND));
+        return droneMapper.toDroneResponse(drone);
+    }
+
     public DroneResponse getDroneByCode(String code) {
         Drone drone = droneRepository.findByCode(code)
                 .orElseThrow(() -> new AppException(ErrorCode.DRONE_NOT_FOUND));
@@ -326,5 +332,57 @@ public class DroneService {
         public void addIssue(String issue) {
             this.issues.add(issue);
         }
+    }
+
+    /**
+     * Update drone by ID
+     */
+    @Transactional
+    public DroneResponse updateDrone(Long id, com.cnpm.foodfast.dto.request.DroneUpdateRequest request) {
+        Drone drone = droneRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DRONE_NOT_FOUND));
+
+        // Update fields that exist in Drone entity
+        if (request.getCode() != null) {
+            drone.setCode(request.getCode());
+        }
+        if (request.getModel() != null) {
+            drone.setModel(request.getModel());
+        }
+        if (request.getMaxPayload() != null) {
+            // Convert kg to gram
+            drone.setMaxPayloadGram((int)(request.getMaxPayload() * 1000));
+        }
+        if (request.getBatteryLevel() != null) {
+            drone.setCurrentBatteryPercent(request.getBatteryLevel());
+        }
+        if (request.getStatus() != null) {
+            drone.setStatus(request.getStatus());
+        }
+        if (request.getCurrentLatitude() != null) {
+            drone.setLastLatitude(java.math.BigDecimal.valueOf(request.getCurrentLatitude()));
+        }
+        if (request.getCurrentLongitude() != null) {
+            drone.setLastLongitude(java.math.BigDecimal.valueOf(request.getCurrentLongitude()));
+        }
+
+        drone = droneRepository.save(drone);
+        return droneMapper.toDroneResponse(drone);
+    }
+
+    /**
+     * Delete drone by ID
+     */
+    @Transactional
+    public void deleteDrone(Long id) {
+        Drone drone = droneRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DRONE_NOT_FOUND));
+        
+        // Check if drone is currently in use
+        if (drone.getStatus() == DroneStatus.IN_FLIGHT) {
+            throw new AppException(ErrorCode.DRONE_IN_USE);
+        }
+        
+        droneRepository.delete(drone);
     }
 }

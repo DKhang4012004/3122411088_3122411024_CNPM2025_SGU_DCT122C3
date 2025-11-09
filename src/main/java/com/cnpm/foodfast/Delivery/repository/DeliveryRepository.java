@@ -25,6 +25,8 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     @Query("SELECT d FROM Delivery d WHERE d.currentStatus = 'QUEUED' ORDER BY d.createdAt ASC")
     List<Delivery> findQueuedDeliveries();
 
+    List<Delivery> findByPickupStoreId(Long pickupStoreId);
+
     boolean existsByOrderId(Long orderId);
 }
 

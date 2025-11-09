@@ -44,6 +44,7 @@ public enum ErrorCode {
     INVALID_DOB(1010, "Invalid Dob", HttpStatus.BAD_REQUEST),
     DRONE_NOT_FOUND(1031, "Drone not found", HttpStatus.NOT_FOUND),
     DRONE_ALREADY_EXISTS(1032, "Drone already exists", HttpStatus.BAD_REQUEST),
+    DRONE_IN_USE(1037, "Cannot delete drone while in use", HttpStatus.BAD_REQUEST),
     NO_AVAILABLE_DRONE(1033, "No available drone found for this delivery", HttpStatus.NOT_FOUND),
     DELIVERY_NOT_FOUND(1034, "Delivery not found", HttpStatus.NOT_FOUND),
     DELIVERY_ALREADY_EXISTS(1035, "Delivery already exists for this order", HttpStatus.BAD_REQUEST),

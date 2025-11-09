@@ -314,6 +314,32 @@ public class DeliveryService {
     }
 
     /**
+     * Lấy danh sách delivery đang chờ xử lý cho admin (ASSIGNED, LAUNCHED, ARRIVING)
+     */
+    public List<DeliveryResponse> getPendingDeliveriesForAdmin() {
+        List<Delivery> pendingDeliveries = deliveryRepository.findAll().stream()
+                .filter(d -> d.getCurrentStatus() == DeliveryStatus.ASSIGNED 
+                          || d.getCurrentStatus() == DeliveryStatus.LAUNCHED 
+                          || d.getCurrentStatus() == DeliveryStatus.ARRIVING)
+                .collect(Collectors.toList());
+        
+        return pendingDeliveries.stream()
+                .map(this::toDeliveryResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy danh sách delivery theo store (cho nhà hàng chuẩn bị món)
+     */
+    public List<DeliveryResponse> getDeliveriesByStore(Long storeId) {
+        return deliveryRepository.findByPickupStoreId(storeId).stream()
+                .filter(d -> d.getCurrentStatus() != DeliveryStatus.COMPLETED 
+                          && d.getCurrentStatus() != DeliveryStatus.FAILED)
+                .map(this::toDeliveryResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Validate status transition
      */
     private void validateStatusTransition(DeliveryStatus from, DeliveryStatus to) {
