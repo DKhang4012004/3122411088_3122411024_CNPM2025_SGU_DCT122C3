@@ -9,6 +9,7 @@ import com.cnpm.foodfast.entity.*;
 import com.cnpm.foodfast.enums.CartStatus;
 import com.cnpm.foodfast.enums.OrderStatus;
 import com.cnpm.foodfast.enums.PaymentStatus;
+import com.cnpm.foodfast.enums.DroneStatus;
 import com.cnpm.foodfast.exception.ResourceNotFoundException;
 import com.cnpm.foodfast.exception.BadRequestException;
 import com.cnpm.foodfast.Products.repository.ProductRepository;
@@ -19,6 +20,7 @@ import com.cnpm.foodfast.Cart.repository.CartRepository;
 import com.cnpm.foodfast.Cart.repository.CartItemRepository;
 import com.cnpm.foodfast.User.repository.UserRepository;
 import com.cnpm.foodfast.Payment.service.LedgerService;
+import com.cnpm.foodfast.Drone.repository.DroneRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final LedgerService ledgerService;
+    private final DroneRepository droneRepository;
 
     @Override
     @Transactional
@@ -271,6 +274,20 @@ public class OrderServiceImpl implements OrderService {
             throw new BadRequestException("Order must be in PAID status to be accepted. Current status: " + order.getStatus());
         }
 
+        // ⭐ KIỂM TRA CÓ DRONE AVAILABLE KHÔNG - QUAN TRỌNG! ⭐
+        boolean hasAvailableDrone = droneRepository.existsByStatus(DroneStatus.AVAILABLE);
+        if (!hasAvailableDrone) {
+            long totalDrones = droneRepository.count();
+            log.error("Cannot accept order {} - No available drones. Total drones: {}", orderId, totalDrones);
+            throw new BadRequestException(
+                "Không thể chấp nhận đơn hàng! Hiện tại không có drone nào đang rảnh để giao hàng. " +
+                "Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ."
+            );
+        }
+
+        long availableDroneCount = droneRepository.countAvailableDrones();
+        log.info("Order {} can be accepted. Available drones: {}", orderId, availableDroneCount);
+
         // Cập nhật trạng thái đơn hàng sang ACCEPT
         order.setStatus(OrderStatus.ACCEPT);
         order.setUpdatedAt(LocalDateTime.now());
@@ -285,7 +302,8 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Failed to create ledger entry", e);
         }
 
-        log.info("Order {} accepted (status = ACCEPT) and ledger created successfully", orderId);
+        log.info("Order {} accepted (status = ACCEPT) with {} available drones and ledger created successfully",
+                 orderId, availableDroneCount);
         return buildOrderResponse(order);
     }
 
