@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth UI</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h1>Test Authentication UI</h1>
+        
+        <div style="border: 2px solid #333; padding: 20px; margin: 20px 0;">
+            <h2>User Menu Container:</h2>
+            <div class="user-menu" id="userMenu" style="border: 1px dashed red; min-height: 50px; padding: 10px;">
+                <!-- Will be populated by auth.js -->
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h3>Debug Info:</h3>
+            <div id="debugInfo" style="background: #f0f0f0; padding: 10px; font-family: monospace;"></div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button onclick="testAuthUI()" class="btn btn-primary">Test Auth UI</button>
+            <button onclick="clearStorage()" class="btn btn-secondary">Clear Storage</button>
+            <button onclick="location.reload()" class="btn btn-secondary">Reload Page</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        function updateDebugInfo() {
+            const info = {
+                'STORAGE_KEYS available': typeof STORAGE_KEYS !== 'undefined',
+                'AuthHelper available': typeof AuthHelper !== 'undefined',
+                'auth object available': typeof auth !== 'undefined',
+                'Token in storage': localStorage.getItem('foodfast_token') !== null,
+                'User in storage': localStorage.getItem('foodfast_user') !== null,
+                'auth.isAuthenticated()': typeof auth !== 'undefined' ? auth.isAuthenticated() : 'N/A',
+                'auth.user': typeof auth !== 'undefined' ? JSON.stringify(auth.user) : 'N/A'
+            };
+
+            document.getElementById('debugInfo').innerHTML = Object.entries(info)
+                .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
+                .join('');
+        }
+
+        function testAuthUI() {
+            console.log('=== Manual Test Auth UI ===');
+            if (typeof auth !== 'undefined') {
+                auth.updateUI();
+                console.log('auth.updateUI() called');
+            } else {
+                console.error('auth object not available!');
+            }
+            updateDebugInfo();
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            console.log('Storage cleared');
+            updateDebugInfo();
+            alert('Storage cleared! Reload page to see changes.');
+        }
+
+        // Auto-run on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('=== Test Page DOMContentLoaded ===');
+            updateDebugInfo();
+            
+            if (typeof auth !== 'undefined') {
+                console.log('Calling auth.updateUI()...');
+                auth.updateUI();
+            } else {
+                console.error('auth object not available!');
+            }
+        });
+    </script>
+</body>
+</html>

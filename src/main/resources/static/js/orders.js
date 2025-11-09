@@ -135,6 +135,8 @@ async function loadOrders() {
         if (orders.length === 0) {
             showEmptyOrders();
         } else {
+            // Check which stores are within flight corridor
+            await checkStoresInFlightCorridor(orders);
             displayOrders(orders);
         }
 
@@ -144,6 +146,94 @@ async function loadOrders() {
         showEmptyOrders();
     } finally {
         Loading.hide();
+    }
+}
+
+// Check which stores are within flight corridor
+async function checkStoresInFlightCorridor(orders) {
+    const locationStr = localStorage.getItem(STORAGE_KEYS.USER_LOCATION);
+    if (!locationStr) {
+        console.log('No user location found - marking all stores as out of corridor');
+        // If no location, mark all as out of corridor
+        orders.forEach(order => {
+            order.isStoreInCorridor = false;
+        });
+        return;
+    }
+
+    try {
+        const location = JSON.parse(locationStr);
+        console.log('📍 Parsed location object:', location);
+        console.log('📍 location.lat:', location.lat, 'location.lng:', location.lng);
+        console.log('📍 location.latitude:', location.latitude, 'location.longitude:', location.longitude);
+        
+        // Try to get lat/lng from different possible field names
+        const lat = location.lat || location.latitude;
+        const lng = location.lng || location.longitude;
+        
+        console.log('📍 Using lat:', lat, 'lng:', lng);
+        
+        if (!lat || !lng) {
+            console.error('❌ No valid coordinates found in location object');
+            orders.forEach(order => {
+                order.isStoreInCorridor = false;
+            });
+            return;
+        }
+        
+        // Get stores within flight corridor
+        const response = await fetch(
+            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.STORES_WITHIN_FLIGHT_CORRIDOR}?latitude=${lat}&longitude=${lng}&radiusKm=10`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${auth.token}`
+                }
+            }
+        );
+
+        if (response.ok) {
+            const data = await response.json();
+            const storesInCorridor = data.result || [];
+            
+            // Create Set with both string and number versions of IDs for comparison
+            const storeIds = new Set();
+            storesInCorridor.forEach(s => {
+                storeIds.add(s.id);
+                storeIds.add(String(s.id));
+                storeIds.add(Number(s.id));
+            });
+            
+            console.log('Stores in flight corridor (raw):', storesInCorridor.map(s => ({ id: s.id, name: s.name })));
+            console.log('Store IDs Set:', Array.from(storeIds));
+            console.log('Checking orders:', orders.map(o => ({ 
+                id: o.id, 
+                storeId: o.storeId, 
+                storeIdType: typeof o.storeId,
+                storeName: o.storeName 
+            })));
+            
+            // Mark ALL orders - explicitly set true or false
+            orders.forEach(order => {
+                // Check with multiple type conversions
+                const inCorridor = storeIds.has(order.storeId) || 
+                                  storeIds.has(String(order.storeId)) || 
+                                  storeIds.has(Number(order.storeId));
+                order.isStoreInCorridor = inCorridor;
+                console.log(`Order ${order.orderCode}: Store ${order.storeId} (${order.storeName}) - In corridor: ${inCorridor}`);
+            });
+        } else {
+            console.error('Failed to check flight corridor, marking all as out of corridor');
+            console.error('Response status:', response.status, 'Response text:', await response.text());
+            orders.forEach(order => {
+                order.isStoreInCorridor = false;
+            });
+        }
+    } catch (error) {
+        console.error('Error checking flight corridor:', error);
+        // On error, mark all as out of corridor for safety
+        orders.forEach(order => {
+            order.isStoreInCorridor = false;
+        });
     }
 }
 
@@ -175,7 +265,27 @@ function displayOrders(orders) {
                                 order.status === 'COMPLETED';
         const isAlreadyPaid = paymentStatus === 'PAID' || paymentStatus === 'COMPLETED';
         
+        // NEW: Check if store is within flight corridor
+        const isStoreInCorridor = order.isStoreInCorridor === true; // Must be explicitly true
+        
+        console.log(`Order ${order.orderCode}: isStoreInCorridor = ${order.isStoreInCorridor}, canPay check...`);
+        
+        // FIX: Allow payment for orders that were already created (PENDING_PAYMENT status)
+        // Only check corridor for initial order creation, not for retry payment
+        // Rationale: If order was created, it was within corridor at creation time
         const canPay = (isPendingPayment || isFailedPayment) && !isOrderFinalized && !isAlreadyPaid;
+        // Old logic that blocked payment: const canPay = ... && isStoreInCorridor;
+        
+        // Check if order can be cancelled/deleted
+        // UPDATED: Không cho hủy khi:
+        // - Đang giao (IN_DELIVERY) hoặc đã giao (DELIVERED)
+        // - Đã được chấp nhận (ACCEPT)
+        // - Đang chuẩn bị (PREPARING)
+        // Chỉ cho phép hủy: CREATED, PENDING, PENDING_PAYMENT, READY, CANCELLED, FAILED
+        const canCancel = order.status !== 'IN_DELIVERY' && 
+                         order.status !== 'DELIVERED' &&
+                         order.status !== 'ACCEPT' &&
+                         order.status !== 'PREPARING';
         
         return `
         <div class="card" style="margin-bottom: 1.5rem;">
@@ -226,6 +336,11 @@ function displayOrders(orders) {
                                 <i class="fas fa-drone"></i> Theo dõi
                             </button>
                         ` : ''}
+                        ${canCancel ? `
+                            <button class="btn btn-danger btn-sm" onclick="cancelOrder(${order.id})">
+                                <i class="fas fa-times-circle"></i> Hủy đơn
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -270,6 +385,33 @@ async function payOrder(orderId) {
     }
 }
 
+// Cancel/delete an order
+async function cancelOrder(orderId) {
+    if (!confirm('Bạn có chắc muốn hủy đơn hàng này? Đơn hàng sẽ bị xóa vĩnh viễn.')) {
+        return;
+    }
+
+    try {
+        Loading.show();
+        
+        // Call DELETE API
+        const response = await APIHelper.delete(API_CONFIG.ENDPOINTS.ORDER_BY_ID(orderId));
+        
+        Toast.success('Đơn hàng đã được hủy thành công');
+        
+        // Reload orders list
+        setTimeout(() => {
+            loadOrders();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        Toast.error('Không thể hủy đơn hàng: ' + error.message);
+    } finally {
+        Loading.hide();
+    }
+}
+
 // Show empty orders
 function showEmptyOrders() {
     const container = document.getElementById('ordersContainer');
@@ -292,6 +434,9 @@ async function viewOrderDetail(orderId) {
             return;
         }
         
+        // Check if this order's store is in flight corridor
+        await checkStoresInFlightCorridor([order]);
+        
         selectedOrder = order;
         displayOrderDetail(order);
         
@@ -307,8 +452,25 @@ async function viewOrderDetail(orderId) {
 }
 
 // Display order detail in modal
-function displayOrderDetail(order) {
+async function displayOrderDetail(order) {
     const content = document.getElementById('orderDetailContent');
+    
+    // Load user location from localStorage
+    let deliveryAddress = order.deliveryAddressSnapshot || 'N/A';
+    
+    // Get user location that was set at homepage
+    if (!order.deliveryAddressSnapshot || order.deliveryAddressSnapshot === 'N/A') {
+        const locationStr = localStorage.getItem(STORAGE_KEYS.USER_LOCATION);
+        if (locationStr) {
+            try {
+                const location = JSON.parse(locationStr);
+                deliveryAddress = `📍 ${location.address || 'Địa chỉ đã chọn'}\n`;
+                deliveryAddress += `🗺️ Tọa độ: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
+            } catch (error) {
+                console.log('Could not parse user location:', error);
+            }
+        }
+    }
     
     const paymentStatus = order.paymentStatus || 'PENDING';
     // Check if payment is pending (handle both PENDING and PENDING_PAYMENT)
@@ -323,7 +485,26 @@ function displayOrderDetail(order) {
                             order.status === 'COMPLETED';
     const isAlreadyPaid = paymentStatus === 'PAID' || paymentStatus === 'COMPLETED';
     
+    // Check if store is within flight corridor
+    const isStoreInCorridor = order.isStoreInCorridor === true; // Must be explicitly true
+    
+    console.log(`Order detail ${order.orderCode}: isStoreInCorridor = ${order.isStoreInCorridor}`);
+    
+    // FIX: Allow payment retry for orders that were already created
+    // Only check corridor for initial order creation, not for retry payment
     const canRetryPayment = (isPendingPayment || isFailedPayment) && !isOrderFinalized && !isAlreadyPaid;
+    // Old logic that blocked payment: const canRetryPayment = ... && isStoreInCorridor;
+    
+    // Check if order can be cancelled
+    // UPDATED: Không cho hủy khi:
+    // - Đang giao (IN_DELIVERY) hoặc đã giao (DELIVERED)
+    // - Đã được chấp nhận (ACCEPT)
+    // - Đang chuẩn bị (PREPARING)
+    // Chỉ cho phép hủy: CREATED, PENDING, PENDING_PAYMENT, READY, CANCELLED, FAILED
+    const canCancel = order.status !== 'IN_DELIVERY' && 
+                     order.status !== 'DELIVERED' &&
+                     order.status !== 'ACCEPT' &&
+                     order.status !== 'PREPARING';
     
     content.innerHTML = `
         <div style="margin-bottom: 2rem;">
@@ -349,7 +530,7 @@ function displayOrderDetail(order) {
             <div class="card" style="margin-bottom: 1rem;">
                 <div class="card-body">
                     <h4><i class="fas fa-home"></i> Địa chỉ giao hàng</h4>
-                    <p style="margin: 0;">${order.deliveryAddressSnapshot || 'N/A'}</p>
+                    <p style="margin: 0; white-space: pre-line;">${deliveryAddress}</p>
                 </div>
             </div>
             
@@ -417,6 +598,11 @@ function displayOrderDetail(order) {
                             <i class="fas fa-credit-card"></i> Thanh toán lại
                         </button>
                         ` : ''}
+                        ${canCancel ? `
+                        <button class="btn btn-danger btn-block" style="margin-top: 0.5rem;" onclick="cancelOrderFromDetail(${order.id})">
+                            <i class="fas fa-times-circle"></i> Hủy đơn hàng
+                        </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -481,6 +667,15 @@ function closeOrderModal() {
     document.getElementById('orderDetailModal').classList.remove('show');
 }
 
+// Cancel order from detail modal
+async function cancelOrderFromDetail(orderId) {
+    // Close modal first
+    closeOrderModal();
+    
+    // Call the main cancel function
+    await cancelOrder(orderId);
+}
+
 // Track delivery
 async function trackDelivery(orderId) {
     try {
@@ -509,8 +704,24 @@ async function trackDelivery(orderId) {
 }
 
 // Display delivery tracking
-function displayDeliveryTracking(delivery) {
+async function displayDeliveryTracking(delivery) {
     const content = document.getElementById('trackingContent');
+    
+    // Load user location from localStorage for dropoff address
+    let dropoffAddress = delivery.dropoffAddressSnapshot || 'N/A';
+    
+    if (!delivery.dropoffAddressSnapshot || delivery.dropoffAddressSnapshot === 'N/A') {
+        const locationStr = localStorage.getItem(STORAGE_KEYS.USER_LOCATION);
+        if (locationStr) {
+            try {
+                const location = JSON.parse(locationStr);
+                dropoffAddress = `📍 ${location.address || 'Địa chỉ đã chọn'}\n`;
+                dropoffAddress += `🗺️ Tọa độ: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
+            } catch (error) {
+                console.log('Could not parse user location:', error);
+            }
+        }
+    }
     
     const statusInfo = getDeliveryStatusInfo(delivery.currentStatus);
     
@@ -581,7 +792,7 @@ function displayDeliveryTracking(delivery) {
             <div class="card">
                 <div class="card-body">
                     <h5><i class="fas fa-home"></i> Điểm giao</h5>
-                    <p style="margin: 0.5rem 0; font-size: 0.9rem;">${delivery.dropoffAddressSnapshot || 'N/A'}</p>
+                    <p style="margin: 0.5rem 0; font-size: 0.9rem; white-space: pre-line;">${dropoffAddress}</p>
                 </div>
             </div>
         </div>

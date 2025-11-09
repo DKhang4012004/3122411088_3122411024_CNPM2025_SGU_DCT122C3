@@ -1,4 +1,27 @@
 // API Service for making HTTP requests
+
+// Helper function to build URLs with query parameters
+function buildUrl(endpoint, params = {}) {
+    // If endpoint is a function, call it first (for dynamic endpoints)
+    const path = typeof endpoint === 'function' ? endpoint() : endpoint;
+    
+    // If no base URL, use endpoint as-is
+    const baseUrl = API_CONFIG?.BASE_URL || '';
+    let url = path.startsWith('http') ? path : `${baseUrl}${path}`;
+    
+    // Add query parameters if any
+    const queryString = Object.entries(params)
+        .filter(([_, value]) => value !== undefined && value !== null)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+    
+    if (queryString) {
+        url += (url.includes('?') ? '&' : '?') + queryString;
+    }
+    
+    return url;
+}
+
 class APIService {
     constructor() {
         this.baseUrl = API_CONFIG.BASE_URL;
@@ -6,7 +29,7 @@ class APIService {
 
     // Get auth token from localStorage
     getAuthToken() {
-        return localStorage.getItem('authToken');
+        return localStorage.getItem(STORAGE_KEYS.TOKEN);
     }
 
     // Get headers with auth token
@@ -78,11 +101,11 @@ class APIService {
 
     // Authentication APIs
     async login(username, password) {
-        return this.post(API_CONFIG.ENDPOINTS.LOGIN, { username, password }, {}, false);
+        return this.post(API_CONFIG.ENDPOINTS.LOGIN, { username, password });
     }
 
     async signup(userData) {
-        return this.post(API_CONFIG.ENDPOINTS.SIGNUP, userData, {}, false);
+        return this.post(API_CONFIG.ENDPOINTS.REGISTER, userData);
     }
 
     async logout() {

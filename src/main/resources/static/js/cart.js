@@ -51,6 +51,13 @@ async function loadCart() {
         if (items.length === 0) {
             showEmptyCart();
         } else {
+            // Check if user has location
+            const userLocation = getUserLocation();
+            if (userLocation) {
+                // Validate stores are within flight corridor
+                await validateCartStores(items, userLocation);
+            }
+            
             displayCartItems(items);
             updateSummary(cartData);
         }
@@ -59,6 +66,95 @@ async function loadCart() {
         console.error('Error loading cart:', error);
         Toast.error('Không thể tải giỏ hàng');
         showEmptyCart();
+    } finally {
+        Loading.hide();
+    }
+}
+
+// Validate if cart items are from stores within flight corridor
+async function validateCartStores(items, userLocation) {
+    try {
+        const storesResponse = await APIHelper.post(API_CONFIG.ENDPOINTS.STORES_WITHIN_FLIGHT_CORRIDOR, {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude
+        });
+
+        const safeStores = storesResponse || [];
+        const safeStoreIds = new Set(safeStores.map(store => store.storeId));
+
+        const unsafeItems = items.filter(item => !safeStoreIds.has(item.storeId));
+
+        if (unsafeItems.length > 0) {
+            const unsafeStoreNames = [...new Set(unsafeItems.map(item => item.storeName))].join(', ');
+            
+            // Show warning banner
+            const warningBanner = document.createElement('div');
+            warningBanner.style.cssText = 'background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;';
+            warningBanner.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <i class="fas fa-exclamation-triangle" style="color: #ff9800; font-size: 2rem;"></i>
+                    <div style="flex: 1;">
+                        <strong style="color: #856404;">⚠️ Cảnh báo: Cửa hàng ngoài phạm vi bay an toàn</strong>
+                        <p style="margin: 0.5rem 0 0 0; color: #856404;">
+                            Các sản phẩm từ cửa hàng <strong>${unsafeStoreNames}</strong> nằm ngoài hành lang bay an toàn của drone.
+                            Bạn không thể thanh toán đơn hàng này.
+                        </p>
+                        <button onclick="removeUnsafeItems()" class="btn btn-warning btn-sm" style="margin-top: 0.5rem;">
+                            <i class="fas fa-trash"></i> Xóa sản phẩm ngoài phạm vi
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const container = document.getElementById('cartItems');
+            container.insertBefore(warningBanner, container.firstChild);
+            
+            // Disable checkout button
+            const checkoutBtn = document.querySelector('button[onclick="createOrders()"]');
+            if (checkoutBtn) {
+                checkoutBtn.disabled = true;
+                checkoutBtn.style.opacity = '0.5';
+                checkoutBtn.style.cursor = 'not-allowed';
+            }
+        }
+    } catch (error) {
+        console.error('Error validating cart stores:', error);
+    }
+}
+
+// Remove unsafe items from cart
+async function removeUnsafeItems() {
+    const userLocation = getUserLocation();
+    if (!userLocation) return;
+    
+    try {
+        Loading.show();
+        
+        const storesResponse = await APIHelper.post(API_CONFIG.ENDPOINTS.STORES_WITHIN_FLIGHT_CORRIDOR, {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude
+        });
+
+        const safeStores = storesResponse || [];
+        const safeStoreIds = new Set(safeStores.map(store => store.storeId));
+
+        const items = cartData.cartItems || [];
+        const unsafeItems = items.filter(item => !safeStoreIds.has(item.storeId));
+
+        for (const item of unsafeItems) {
+            try {
+                await APIHelper.delete(API_CONFIG.ENDPOINTS.CART_REMOVE(item.productId));
+            } catch (e) {
+                console.error('Error removing item:', e);
+            }
+        }
+        
+        Toast.success('Đã xóa các sản phẩm ngoài phạm vi');
+        loadCart(); // Reload cart
+        
+    } catch (error) {
+        console.error('Error removing unsafe items:', error);
+        Toast.error('Không thể xóa sản phẩm');
     } finally {
         Loading.hide();
     }
@@ -282,20 +378,119 @@ async function createOrders() {
         return;
     }
 
-    // Count stores
-    const items = cartData.cartItems || [];
-    const storeCount = new Set(items.map(item => item.storeId)).size;
-    
-    const message = storeCount > 1 
-        ? `Giỏ hàng có sản phẩm từ ${storeCount} cửa hàng khác nhau.\n\nHệ thống sẽ tạo ${storeCount} đơn hàng riêng biệt.\n\nXác nhận đặt đơn?`
-        : 'Xác nhận đặt đơn hàng?';
-    
-    if (!confirm(message)) {
+    // Get user location from localStorage
+    const userLocation = getUserLocation();
+    if (!userLocation) {
+        Toast.error('Vui lòng chọn địa chỉ giao hàng trước khi đặt đơn');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
         return;
     }
 
     try {
         Loading.show();
+
+        // STEP 1: Kiểm tra trạng thái sản phẩm
+        const items = cartData.cartItems || [];
+        const disabledItems = [];
+        
+        for (const item of items) {
+            try {
+                const productResponse = await APIHelper.get(`/products/${item.productId}`);
+                const product = productResponse.result;
+                
+                // Kiểm tra nếu sản phẩm bị vô hiệu hóa hoặc hết hàng
+                if (product.status === 'DISABLED') {
+                    disabledItems.push({
+                        ...item,
+                        reason: 'đã bị vô hiệu hóa'
+                    });
+                } else if (product.status === 'OUT_OF_STOCK') {
+                    disabledItems.push({
+                        ...item,
+                        reason: 'đã hết hàng'
+                    });
+                }
+            } catch (error) {
+                console.error(`Error checking product ${item.productId}:`, error);
+                // Nếu không lấy được thông tin sản phẩm, coi như sản phẩm không khả dụng
+                disabledItems.push({
+                    ...item,
+                    reason: 'không còn khả dụng'
+                });
+            }
+        }
+
+        // Nếu có sản phẩm bị vô hiệu hóa/hết hàng
+        if (disabledItems.length > 0) {
+            const disabledNames = disabledItems.map(item => 
+                `"${item.productName}" (${item.reason})`
+            ).join(', ');
+            
+            Toast.error(`Không thể đặt hàng! Các sản phẩm sau không còn khả dụng: ${disabledNames}`);
+            
+            // Show option to remove disabled items
+            if (confirm('Bạn có muốn xóa các sản phẩm không khả dụng khỏi giỏ hàng không?')) {
+                for (const item of disabledItems) {
+                    try {
+                        await APIHelper.delete(API_CONFIG.ENDPOINTS.CART_REMOVE(item.productId));
+                    } catch (e) {
+                        console.error('Error removing item:', e);
+                    }
+                }
+                Toast.success('Đã xóa các sản phẩm không khả dụng');
+                loadCart(); // Reload cart
+            }
+            
+            Loading.hide();
+            return;
+        }
+
+        // STEP 2: Get stores within flight corridor
+        const storesResponse = await APIHelper.post(API_CONFIG.ENDPOINTS.STORES_WITHIN_FLIGHT_CORRIDOR, {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude
+        });
+
+        const safeStores = storesResponse || [];
+        const safeStoreIds = new Set(safeStores.map(store => store.storeId));
+
+        // Check if all cart items are from safe stores
+        const unsafeItems = items.filter(item => !safeStoreIds.has(item.storeId));
+
+        if (unsafeItems.length > 0) {
+            const unsafeStoreNames = [...new Set(unsafeItems.map(item => item.storeName))].join(', ');
+            Toast.error(`Không thể đặt hàng! Các cửa hàng sau nằm ngoài phạm vi bay an toàn: ${unsafeStoreNames}`);
+            
+            // Show option to remove unsafe items
+            if (confirm('Bạn có muốn xóa các sản phẩm từ cửa hàng ngoài phạm vi không?')) {
+                for (const item of unsafeItems) {
+                    try {
+                        await APIHelper.delete(API_CONFIG.ENDPOINTS.CART_REMOVE(item.productId));
+                    } catch (e) {
+                        console.error('Error removing item:', e);
+                    }
+                }
+                Toast.success('Đã xóa sản phẩm ngoài phạm vi');
+                loadCart(); // Reload cart
+            }
+            
+            Loading.hide();
+            return;
+        }
+
+        // Count stores
+        const storeCount = new Set(items.map(item => item.storeId)).size;
+        
+        const message = storeCount > 1 
+            ? `Giỏ hàng có sản phẩm từ ${storeCount} cửa hàng khác nhau.\n\nHệ thống sẽ tạo ${storeCount} đơn hàng riêng biệt.\n\nĐịa chỉ giao hàng: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}\n\nXác nhận đặt đơn?`
+            : `Xác nhận đặt đơn hàng?\n\nĐịa chỉ giao hàng: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}`;
+        
+        if (!confirm(message)) {
+            Loading.hide();
+            return;
+        }
 
         // Create order from cart (without payment)
         const response = await APIHelper.post(API_CONFIG.ENDPOINTS.ORDERS);
@@ -304,7 +499,7 @@ async function createOrders() {
             const orders = response.result;
             const orderCount = orders.length;
             
-            Toast.success(`Đã tạo ${orderCount} đơn hàng thành công!`);
+            Toast.success(`Đã tạo ${orderCount} đơn hàng thành công! Giao đến địa chỉ đã chọn.`);
 
             // Redirect to orders page after 1.5 seconds
             setTimeout(() => {
@@ -320,6 +515,12 @@ async function createOrders() {
     } finally {
         Loading.hide();
     }
+}
+
+// Get user location from localStorage
+function getUserLocation() {
+    const locationStr = localStorage.getItem('foodfast_user_location');
+    return locationStr ? JSON.parse(locationStr) : null;
 }
 
 // OLD FUNCTION - Keep for backward compatibility but not used

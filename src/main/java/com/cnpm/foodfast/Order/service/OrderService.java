@@ -82,4 +82,10 @@ public interface OrderService {
      * Only allowed when order status is CREATED or PENDING_PAYMENT
      */
     OrderResponse addOrderItem(Long orderId, Long productId, Integer quantity);
+
+    /**
+     * Delete order - Only customer can delete their own order
+     * Only allowed when order is not PAID or not in delivery/completed status
+     */
+    void deleteOrder(Long orderId, String username);
 }

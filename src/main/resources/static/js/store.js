@@ -3,10 +3,14 @@
 let currentStore = null;
 let currentProduct = null;
 let modalQuantity = 1;
+let allStoresCache = []; // Cache all stores for search
 
 // Helper function to convert image URL to absolute path
 function getFullImageUrl(imageUrl) {
-    if (!imageUrl) return 'https://via.placeholder.com/400x200?text=No+Image';
+    if (!imageUrl) {
+        // Use SVG data URI for placeholder
+        return 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect width=%22400%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23ddd%22%3E🍽️%3C/text%3E%3C/svg%3E';
+    }
     
     // If already absolute URL (starts with http/https), return as is
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
@@ -19,7 +23,7 @@ function getFullImageUrl(imageUrl) {
     }
     
     // Default: return placeholder
-    return 'https://via.placeholder.com/400x200?text=Food';
+    return 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect width=%22400%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23ddd%22%3E🍽️%3C/text%3E%3C/svg%3E';
 }
 
 // Initialize on page load
@@ -48,10 +52,65 @@ function initializeStorePage() {
     document.addEventListener('click', (e) => {
         const dropdown = document.getElementById('dropdownMenu');
         const avatar = document.getElementById('userAvatar');
-        if (dropdown && avatar && !avatar.contains(e.target)) {
+        if (dropdown && !avatar?.contains(e.target)) {
             dropdown.classList.remove('show');
         }
     });
+}
+
+// Show warning banner
+function showWarningBanner(message) {
+    // Check if banner already exists
+    let banner = document.getElementById('warningBanner');
+    
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'warningBanner';
+        banner.style.cssText = `
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff9800;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 9999;
+            max-width: 90%;
+            text-align: center;
+            font-weight: 500;
+            animation: slideDown 0.3s ease-out;
+        `;
+        document.body.appendChild(banner);
+        
+        // Add animation style
+        if (!document.getElementById('warningBannerStyle')) {
+            const style = document.createElement('style');
+            style.id = 'warningBannerStyle';
+            style.textContent = `
+                @keyframes slideDown {
+                    from {
+                        top: -100px;
+                        opacity: 0;
+                    }
+                    to {
+                        top: 70px;
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    banner.innerHTML = `
+        <i class="fas fa-exclamation-triangle"></i> ${message}
+        <button onclick="document.getElementById('warningBanner').remove()" 
+                style="background: none; border: none; color: white; margin-left: 12px; cursor: pointer; font-size: 1.2rem;">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
 }
 
 // Check authentication status
@@ -69,6 +128,9 @@ async function loadAllStores() {
 
         const response = await APIHelper.get(API_CONFIG.ENDPOINTS.STORES);
         const stores = response.result || [];
+        
+        // Cache stores for search
+        allStoresCache = stores;
 
         displayStoresList(stores);
 
@@ -142,6 +204,35 @@ async function loadStoreDetails(storeId) {
         const storeResponse = await APIHelper.get(API_CONFIG.ENDPOINTS.STORE_BY_ID(storeId));
         currentStore = storeResponse.result;
 
+        // Check if user is logged in and has location
+        if (AuthHelper.isLoggedIn()) {
+            const userLocation = localStorage.getItem('foodfast_user_location');
+            
+            if (userLocation) {
+                // Validate that store is within safe flight corridor
+                try {
+                    const location = JSON.parse(userLocation);
+                    const response = await APIHelper.post(API_CONFIG.ENDPOINTS.STORES_WITHIN_FLIGHT_CORRIDOR, {
+                        latitude: location.latitude,
+                        longitude: location.longitude
+                    });
+
+                    const safeStores = response || [];
+                    const isStoreSafe = safeStores.some(store => store.storeId === parseInt(storeId));
+
+                    if (!isStoreSafe) {
+                        // Show warning banner
+                        showWarningBanner('⚠️ Cửa hàng này nằm ngoài hành lang bay an toàn của drone. Bạn không thể đặt hàng từ cửa hàng này.');
+                    }
+                } catch (error) {
+                    console.error('Error checking flight corridor:', error);
+                }
+            } else {
+                // Show info banner
+                showWarningBanner('📍 Vui lòng chọn vị trí giao hàng trên trang chủ để kiểm tra khả năng giao hàng.');
+            }
+        }
+
         // Load products
         const productsResponse = await APIHelper.get(API_CONFIG.ENDPOINTS.PRODUCTS_BY_STORE(storeId));
         const allProducts = productsResponse.products || productsResponse.result?.products || [];
@@ -211,7 +302,7 @@ function displayProducts(products) {
             <img src="${imageUrl}" 
                  alt="${product.name}" 
                  class="card-img"
-                 onerror="this.src='https://via.placeholder.com/400x200?text=Food'">
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect width=%22400%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23ddd%22%3E�️%3C/text%3E%3C/svg%3E'">
             <div class="card-body">
                 ${category ? `<span class="text-gray" style="font-size: 0.85rem; display: block; margin-bottom: 0.5rem;"><i class="fas fa-tag"></i> ${category}</span>` : ''}
                 <h3 class="card-title">${product.name}</h3>
@@ -304,6 +395,69 @@ async function addToCartFromModal() {
         return;
     }
 
+    // STEP 1: Kiểm tra trạng thái sản phẩm trước
+    try {
+        const productResponse = await APIHelper.get(`/products/${currentProduct.id}`);
+        const product = productResponse.result;
+        
+        if (product.status === 'DISABLED') {
+            Toast.error('Sản phẩm này đã bị vô hiệu hóa và không thể đặt hàng');
+            closeProductModal();
+            return;
+        }
+        
+        if (product.status === 'OUT_OF_STOCK') {
+            Toast.error('Sản phẩm này đã hết hàng');
+            closeProductModal();
+            return;
+        }
+        
+        if (product.status !== 'ACTIVE') {
+            Toast.error('Sản phẩm này hiện không khả dụng');
+            closeProductModal();
+            return;
+        }
+    } catch (error) {
+        console.error('Error checking product status:', error);
+        Toast.error('Không thể kiểm tra trạng thái sản phẩm');
+        return;
+    }
+
+    // Check if user has set location
+    const userLocation = localStorage.getItem('foodfast_user_location');
+    if (!userLocation) {
+        Toast.error('Vui lòng chọn vị trí giao hàng trên trang chủ trước khi đặt món');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 2000);
+        return;
+    }
+
+    // Validate that current store is within safe flight corridor
+    try {
+        const location = JSON.parse(userLocation);
+        const response = await APIHelper.post(API_CONFIG.ENDPOINTS.STORES_WITHIN_FLIGHT_CORRIDOR, {
+            latitude: location.latitude,
+            longitude: location.longitude
+        });
+
+        const safeStores = response || [];
+        const isStoreSafe = safeStores.some(store => store.storeId === currentStore.id);
+
+        if (!isStoreSafe) {
+            Toast.error('Cửa hàng này nằm ngoài hành lang bay an toàn của drone. Vui lòng chọn cửa hàng khác gần bạn hơn.');
+            closeProductModal();
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+            return;
+        }
+    } catch (error) {
+        console.error('Error checking flight corridor:', error);
+        Toast.error('Không thể xác minh phạm vi giao hàng. Vui lòng thử lại.');
+        return;
+    }
+
     try {
         Loading.show();
 
@@ -337,6 +491,33 @@ function searchStores(query) {
     // In production, this should be a server-side search
     loadAllStores();
     Toast.info(`Tìm kiếm: ${query}`);
+}
+
+// Perform store search
+function performStoreSearch() {
+    const searchInput = document.getElementById('storeSearchInput');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    if (!query) {
+        // If empty search, show all stores
+        displayStoresList(allStoresCache);
+        return;
+    }
+
+    // Filter stores by name or description
+    const filteredStores = allStoresCache.filter(store => {
+        const name = (store.name || '').toLowerCase();
+        const description = (store.description || '').toLowerCase();
+        return name.includes(query) || description.includes(query);
+    });
+
+    if (filteredStores.length > 0) {
+        displayStoresList(filteredStores);
+        Toast.success(`Tìm thấy ${filteredStores.length} cửa hàng`);
+    } else {
+        displayStoresEmptyState(`Không tìm thấy cửa hàng nào với từ khóa "${query}"`);
+        Toast.info('Không tìm thấy kết quả');
+    }
 }
 
 // Update cart badge

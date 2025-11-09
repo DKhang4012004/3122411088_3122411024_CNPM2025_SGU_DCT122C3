@@ -1,4 +1,3 @@
-
 // API Configuration
 const API_CONFIG = {
     // Use current origin to work with both localhost and ngrok
@@ -14,7 +13,7 @@ const API_CONFIG = {
 
         // Products
         PRODUCTS_BY_STORE: (storeId) => `/api/stores/${storeId}/products`,
-        PRODUCTS: '/products',
+        PRODUCTS: '/products', // No /api prefix for ProductController
 
         // Store Address
         STORE_ADDRESS_BY_STORE: (storeId) => `/storesaddresses/store/${storeId}`,
@@ -47,7 +46,10 @@ const API_CONFIG = {
         // Drones
         DRONES: '/drones',
         DRONE_BY_CODE: (code) => `/drones/${code}`,
-        DRONE_LOCATION: (code) => `/drones/${code}/location`
+        DRONE_LOCATION: (code) => `/drones/${code}/location`,
+
+        // Location
+        STORES_WITHIN_FLIGHT_CORRIDOR: '/location/stores-within-flight-corridor'
     }
 };
 
@@ -55,7 +57,8 @@ const API_CONFIG = {
 const STORAGE_KEYS = {
     TOKEN: 'foodfast_token',
     USER: 'foodfast_user',
-    CART: 'foodfast_cart'
+    CART: 'foodfast_cart',
+    USER_LOCATION: 'foodfast_user_location'
 };
 
 // Helper Functions
@@ -180,6 +183,32 @@ const FormatHelper = {
             return `${(km * 1000).toFixed(0)}m`;
         }
         return `${km.toFixed(1)}km`;
+    },
+
+    // Helper function to get full image URL with context path
+    getImageUrl(imageUrl) {
+        if (!imageUrl) {
+            return 'https://via.placeholder.com/400x200?text=No+Image';
+        }
+        
+        // If already absolute URL (starts with http/https), return as is
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+            return imageUrl;
+        }
+        
+        // If relative path, add context path
+        const baseUrl = window.location.origin;
+        const contextPath = '/home';
+        
+        if (imageUrl.startsWith('/')) {
+            // If URL already starts with context path, don't add it again
+            if (imageUrl.startsWith(contextPath)) {
+                return baseUrl + imageUrl;
+            }
+            return baseUrl + contextPath + imageUrl;
+        } else {
+            return baseUrl + contextPath + '/' + imageUrl;
+        }
     }
 };
 
@@ -258,4 +287,3 @@ const Loading = {
         }
     }
 };
-

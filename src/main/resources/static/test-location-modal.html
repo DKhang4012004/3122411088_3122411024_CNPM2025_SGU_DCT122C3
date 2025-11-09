@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Location Modal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container" style="padding: 2rem;">
+        <h1>Test Location Modal</h1>
+        <p>Click button below to test location modal:</p>
+        
+        <button onclick="testShowModal()" class="btn btn-primary">
+            <i class="fas fa-map-marker-alt"></i> Show Location Modal
+        </button>
+
+        <div id="status" style="margin-top: 2rem; padding: 1rem; border: 1px solid #ccc;">
+            <h3>Status:</h3>
+            <p id="statusText">Ready</p>
+        </div>
+    </div>
+
+    <!-- Location Selection Modal -->
+    <div class="modal" id="locationModal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-map-marker-alt"></i> Chọn Vị Trí Của Bạn
+                </h3>
+                <button onclick="hideModal()" class="btn-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center mb-3" style="color: #666;">
+                    Để hiển thị các cửa hàng và món ăn gần bạn nhất trong hành lang bay an toàn của drone
+                </p>
+
+                <!-- GPS Option -->
+                <div class="card mb-3" onclick="testGPS()" style="cursor: pointer;">
+                    <div class="card-body">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-location-arrow fa-2x text-primary"></i>
+                            <div>
+                                <h4>Sử dụng vị trí hiện tại</h4>
+                                <p style="margin: 0; color: #666;">Tự động lấy GPS</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Input Option -->
+                <div class="card" onclick="showManualForm()" style="cursor: pointer;">
+                    <div class="card-body">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-edit fa-2x text-success"></i>
+                            <div>
+                                <h4>Nhập tọa độ thủ công</h4>
+                                <p style="margin: 0; color: #666;">Tự nhập vĩ độ và kinh độ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Form -->
+                <div id="manualForm" style="display: none; margin-top: 1rem;">
+                    <hr>
+                    <form onsubmit="testManual(event)">
+                        <div class="form-group">
+                            <label>Vĩ độ (Latitude)</label>
+                            <input type="number" id="lat" class="form-control" step="0.000001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Kinh độ (Longitude)</label>
+                            <input type="number" id="lng" class="form-control" step="0.000001" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Xác nhận</button>
+                        <button type="button" onclick="hideManualForm()" class="btn btn-secondary">Hủy</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        function updateStatus(msg) {
+            document.getElementById('statusText').innerHTML = msg;
+        }
+
+        function testShowModal() {
+            updateStatus('Showing modal...');
+            const modal = document.getElementById('locationModal');
+            modal.style.display = 'flex';
+            updateStatus('Modal should be visible now');
+        }
+
+        function hideModal() {
+            updateStatus('Hiding modal...');
+            const modal = document.getElementById('locationModal');
+            modal.style.display = 'none';
+            updateStatus('Modal hidden');
+        }
+
+        function testGPS() {
+            updateStatus('Testing GPS...');
+            if (!navigator.geolocation) {
+                updateStatus('❌ GPS not supported');
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    updateStatus(`✓ GPS Success: ${position.coords.latitude}, ${position.coords.longitude}`);
+                    hideModal();
+                },
+                (error) => {
+                    updateStatus(`❌ GPS Error: ${error.message}`);
+                }
+            );
+        }
+
+        function showManualForm() {
+            document.getElementById('manualForm').style.display = 'block';
+            updateStatus('Manual form shown');
+        }
+
+        function hideManualForm() {
+            document.getElementById('manualForm').style.display = 'none';
+        }
+
+        function testManual(e) {
+            e.preventDefault();
+            const lat = document.getElementById('lat').value;
+            const lng = document.getElementById('lng').value;
+            updateStatus(`✓ Manual coordinates: ${lat}, ${lng}`);
+            hideModal();
+        }
+
+        // Test on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateStatus('✓ Page loaded. Scripts working. Click button to test modal.');
+        });
+    </script>
+</body>
+</html>

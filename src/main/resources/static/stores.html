@@ -20,12 +20,12 @@
                     <a href="index.html" class="nav-link">Trang chủ</a>
                     <a href="stores.html" class="nav-link active">Cửa hàng</a>
                     <a href="store-management.html" class="nav-link" id="storeManagementNav" style="display: none;">Quản lý</a>
-                    <a href="cart.html" class="nav-link">
+                    <a href="cart.html" class="nav-link" id="cartNav" style="display: none;">
                         <i class="fas fa-shopping-cart"></i>
                         Giỏ hàng
                         <span class="cart-badge" id="cartBadge">0</span>
                     </a>
-                    <a href="orders.html" class="nav-link">Đơn hàng</a>
+                    <a href="orders.html" class="nav-link" id="ordersNav" style="display: none;">Đơn hàng</a>
                 </nav>
                 <div class="header-actions">
                     <div class="user-menu" id="userMenu">
@@ -87,6 +87,15 @@
         <section class="section">
             <div class="container">
                 <h1 class="section-title">Danh Sách Cửa Hàng</h1>
+                
+                <!-- Search Box for Stores -->
+                <div class="search-box" style="max-width: 600px; margin: 0 auto 2rem auto;">
+                    <input type="text" id="storeSearchInput" placeholder="Tìm kiếm cửa hàng..." onkeypress="if(event.key==='Enter') performStoreSearch()">
+                    <button onclick="performStoreSearch()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                
                 <div class="grid grid-3" id="storesGrid">
                     <div class="empty-state">
                         <i class="fas fa-spinner fa-spin"></i>

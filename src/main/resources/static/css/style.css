@@ -364,6 +364,49 @@ img {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
+/* ===== HORIZONTAL SCROLL LAYOUT ===== */
+.products-scroll-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.products-horizontal {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    padding-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar but keep functionality */
+.products-horizontal::-webkit-scrollbar {
+    height: 8px;
+}
+
+.products-horizontal::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.products-horizontal::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+.products-horizontal::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+}
+
+/* Product card in horizontal layout */
+.products-horizontal .product-card,
+.products-horizontal .card {
+    min-width: 280px;
+    max-width: 280px;
+    flex-shrink: 0;
+}
+
 /* ===== SECTIONS ===== */
 .section {
     padding: 4rem 0;
@@ -799,38 +842,144 @@ img {
     font-size: 0.85rem;
     font-weight: 600;
     line-height: 1;
+    color: white;
     text-align: center;
     white-space: nowrap;
     vertical-align: baseline;
-    border-radius: 20px;
-}
-
-.badge-primary {
-    background-color: var(--primary-color);
-    color: white;
+    border-radius: 0.25rem;
 }
 
 .badge-success {
     background-color: var(--success-color);
-    color: white;
-}
-
-.badge-danger {
-    background-color: var(--danger-color);
-    color: white;
 }
 
 .badge-warning {
     background-color: var(--warning-color);
-    color: #333;
 }
 
-.badge-info {
-    background-color: #17a2b8;
-    color: white;
+.badge-danger {
+    background-color: var(--danger-color);
 }
 
-.badge-secondary {
-    background-color: #6c757d;
-    color: white;
+/* ===== LOCATION MODAL ===== */
+.location-option:hover {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+    transform: translateY(-2px);
+}
+
+#manualLocationForm .text-gray {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+}
+
+#locationModal .modal-content {
+    animation: slideIn 0.3s ease-out;
+}
+
+#locationModal .card-body h4 {
+    color: var(--dark);
+    font-size: 1.1rem;
+}
+
+#locationModal .card-body p {
+    color: #666;
+    line-height: 1.4;
+}
+
+/* Location modal specific */
+#locationModal {
+    display: none;
+}
+
+#locationModal.show,
+#locationModal[style*="display: flex"] {
+    display: flex !important;
+}
+
+/* Hover effects for location options */
+.location-option {
+    transition: all 0.3s ease;
+}
+
+.location-option:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== CURRENT LOCATION DISPLAY ===== */
+#currentLocationDisplay {
+    animation: slideInFromBottom 0.5s ease-out;
+    transition: all 0.3s ease;
+}
+
+#currentLocationDisplay:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes slideInFromBottom {
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive for mobile */
+@media (max-width: 768px) {
+    #currentLocationDisplay {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        font-size: 0.85rem;
+    }
+}
+
+/* ===== PAGINATION ===== */
+.pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.pagination-container button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-container #pageInfo {
+    min-width: 100px;
+    text-align: center;
+}
+
+/* Loading state for GPS */
+.location-option.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.location-option.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
 }

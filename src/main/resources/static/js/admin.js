@@ -208,8 +208,8 @@ async function loadDashboard() {
         const users = usersRes.result || [];
         document.getElementById('totalUsers').textContent = users.length;
 
-        // Load products
-        const productsRes = await apiRequest('/products');
+        // Load products (admin sees all status)
+        const productsRes = await apiRequest('/products/all-status');
         const products = productsRes.result || [];
         document.getElementById('totalProducts').textContent = products.length;
 
@@ -323,8 +323,8 @@ async function loadProducts() {
                 return;
             }
         } else {
-            // Admin sees all products
-            const response = await apiRequest('/products');
+            // Admin sees all products (including DISABLED)
+            const response = await apiRequest('/products/all-status');
             products = response.result || [];
         }
 
@@ -1284,8 +1284,7 @@ async function viewProduct(productId) {
 async function editProductStatus(productId, productName, currentStatus) {
     const availableStatuses = [
         { value: 'ACTIVE', label: 'Hoạt động', color: '#10b981' },
-        { value: 'DISABLED', label: 'Vô hiệu hóa', color: '#6b7280' },
-        { value: 'OUT_OF_STOCK', label: 'Hết hàng', color: '#ef4444' }
+        { value: 'DISABLED', label: 'Vô hiệu hóa', color: '#6b7280' }
     ];
     
     // Create dropdown options
@@ -1307,7 +1306,8 @@ async function editProductStatus(productId, productName, currentStatus) {
                 <strong>Lưu ý:</strong><br>
                 • <strong>Hoạt động:</strong> Sản phẩm hiển thị và có thể đặt hàng<br>
                 • <strong>Vô hiệu hóa:</strong> Sản phẩm bị ẩn khỏi danh sách<br>
-                • <strong>Hết hàng:</strong> Sản phẩm hiển thị nhưng không thể đặt
+                <br>
+                <span style="color: #f59e0b;">⚠️ Trạng thái "Hết hàng" được hệ thống tự động cập nhật dựa trên số lượng tồn kho</span>
             </p>
         </div>`,
         () => document.getElementById('statusSelect')?.value

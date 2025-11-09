@@ -51,8 +51,17 @@ public class ProductController {
 
     @GetMapping
     public APIResponse<List<ProductResponse>> getAllProducts() {
+        // Chỉ trả về sản phẩm ACTIVE cho người dùng thông thường
         return APIResponse.<List<ProductResponse>>builder()
                 .result(productService.getAll())
+                .build();
+    }
+    
+    @GetMapping("/all-status")
+    public APIResponse<List<ProductResponse>> getAllProductsAllStatus() {
+        // Admin endpoint: Trả về tất cả sản phẩm bất kể trạng thái
+        return APIResponse.<List<ProductResponse>>builder()
+                .result(productService.getAllWithAllStatus())
                 .build();
     }
 

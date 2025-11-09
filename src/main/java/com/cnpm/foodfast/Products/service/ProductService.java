@@ -14,6 +14,7 @@ public interface ProductService {
     List<ProductResponse> getByCategory(Long categoryId);
     List<ProductResponse> getByStore(Long storeId);
     List<ProductResponse> getAll();
+    List<ProductResponse> getAllWithAllStatus(); // Admin: Lấy tất cả sản phẩm bất kể trạng thái
     List<ProductResponse> searchProducts(String keyword);
     ProductResponse updateStatus(Long productId, ProductStatus status);
 }

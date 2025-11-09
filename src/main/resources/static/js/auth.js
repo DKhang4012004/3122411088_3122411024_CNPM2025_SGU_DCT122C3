@@ -83,8 +83,10 @@ class AuthManager {
     }
 
     updateNavbar() {
-        // Hide/show navbar items based on roles
+        // Hide/show navbar items based on authentication and roles
         const storeManagementLink = document.getElementById('storeManagementNav');
+        const cartLink = document.getElementById('cartNav');
+        const ordersLink = document.getElementById('ordersNav');
         
         if (storeManagementLink) {
             // "Quản lý" chỉ hiển thị cho ADMIN và STORE_OWNER
@@ -94,11 +96,21 @@ class AuthManager {
                 storeManagementLink.style.display = 'none';
             }
         }
+
+        // "Giỏ hàng" và "Đơn hàng" chỉ hiển thị khi đã đăng nhập
+        if (cartLink) {
+            cartLink.style.display = this.isAuthenticated() ? '' : 'none';
+        }
+        if (ordersLink) {
+            ordersLink.style.display = this.isAuthenticated() ? '' : 'none';
+        }
     }
 
     updateUI() {
         const userMenu = document.getElementById('userMenu');
-        if (!userMenu) return;
+        if (!userMenu) {
+            return;
+        }
 
         if (this.isAuthenticated()) {
             // Build dropdown menu items based on roles
@@ -250,8 +262,8 @@ function hideRegisterModal() {
 
 // Initialize auth UI when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // auth.updateUI() will be called from main.js
-    // Keep updateNavbar here as it might be needed early
+    // Update UI immediately
+    auth.updateUI();
     auth.updateNavbar();
 
     // Login modal handlers

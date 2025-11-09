@@ -15,6 +15,8 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
     List<Product> findByStoreId(Long storeId);
     
     List<Product> findByStoreIdAndStatus(Long storeId, com.cnpm.foodfast.enums.ProductStatus status);
+    
+    List<Product> findByStatus(com.cnpm.foodfast.enums.ProductStatus status);
 
     List<Product> findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String name, String description);
     

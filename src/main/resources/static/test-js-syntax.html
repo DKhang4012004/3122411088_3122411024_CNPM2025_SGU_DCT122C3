@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Test JS Syntax</title>
+</head>
+<body>
+    <h1>Testing JavaScript Syntax</h1>
+    <div id="status" style="padding: 20px; margin: 20px; border: 2px solid #333;">
+        <p>Checking JavaScript files...</p>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        
+        function checkScript(scriptPath, name) {
+            return new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = scriptPath;
+                script.onload = () => {
+                    statusDiv.innerHTML += `<p style="color: green;">✓ ${name} loaded successfully</p>`;
+                    resolve(true);
+                };
+                script.onerror = () => {
+                    statusDiv.innerHTML += `<p style="color: red;">✗ ${name} failed to load</p>`;
+                    resolve(false);
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        (async () => {
+            statusDiv.innerHTML = '<h2>JavaScript Loading Test</h2>';
+            await checkScript('js/config.js', 'config.js');
+            await checkScript('js/auth.js', 'auth.js');
+            await checkScript('js/main.js', 'main.js');
+            statusDiv.innerHTML += '<h3>Test Complete!</h3>';
+            statusDiv.innerHTML += '<p>If all files loaded successfully, check browser console for any runtime errors.</p>';
+        })();
+    </script>
+</body>
+</html>

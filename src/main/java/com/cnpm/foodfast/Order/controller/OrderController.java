@@ -276,4 +276,26 @@ public class OrderController {
                 .result(response)
                 .build());
     }
+
+    /**
+     * Xóa đơn hàng - Chỉ Customer mới có quyền xóa đơn hàng của mình
+     * DELETE /api/v1/orders/{orderId}
+     * Chỉ cho phép xóa khi:
+     * - Đơn hàng chưa thanh toán (payment_status != PAID)
+     * - Đơn hàng ở trạng thái CREATED, PENDING_PAYMENT hoặc CANCELLED
+     */
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<APIResponse<Void>> deleteOrder(@PathVariable Long orderId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        log.info("Customer {} requesting to delete order: {}", username, orderId);
+
+        orderService.deleteOrder(orderId, username);
+
+        return ResponseEntity.ok(APIResponse.<Void>builder()
+                .code(200)
+                .message("Order deleted successfully")
+                .build());
+    }
 }

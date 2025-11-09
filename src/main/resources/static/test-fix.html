@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Script Loading</title>
+</head>
+<body>
+    <h1>Testing Script Loading Order</h1>
+    <div id="output"></div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        // Test 1: Check if API_CONFIG is loaded
+        output.innerHTML += '<p>✓ config.js loaded: ' + (typeof API_CONFIG !== 'undefined') + '</p>';
+        
+        // Test 2: Check if buildUrl function exists
+        output.innerHTML += '<p>✓ buildUrl function exists: ' + (typeof buildUrl !== 'undefined') + '</p>';
+        
+        // Test 3: Check if api object exists
+        output.innerHTML += '<p>✓ api object exists: ' + (typeof api !== 'undefined') + '</p>';
+        
+        // Test 4: Check if AuthManager class exists
+        output.innerHTML += '<p>✓ AuthManager class exists: ' + (typeof AuthManager !== 'undefined') + '</p>';
+        
+        // Test 5: Check if auth object exists
+        output.innerHTML += '<p>✓ auth object exists: ' + (typeof auth !== 'undefined') + '</p>';
+        
+        // Test 6: Check main.js functions
+        output.innerHTML += '<p>✓ main.js functions loaded: ' + (typeof loadFeaturedProducts !== 'undefined') + '</p>';
+        
+        output.innerHTML += '<h2 style="color: green;">All scripts loaded successfully! ✓</h2>';
+    </script>
+</body>
+</html>

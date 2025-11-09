@@ -59,7 +59,7 @@ public class Product {
     @Column(name = "currency", length = 3)
     String currency;
 
-    @Column(name = "media_primary_url", length = 500)
+    @Column(name = "media_primary_url", length = 1000)
     String mediaPrimaryUrl;
 
     @Column(name = "extra_json", columnDefinition = "json")

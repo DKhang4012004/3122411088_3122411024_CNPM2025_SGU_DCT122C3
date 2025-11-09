@@ -113,6 +113,14 @@ public class ProductServiceImpl  implements ProductService {
 
     @Override
     public List<ProductResponse> getAll() {
+        // FIX: Chỉ trả về sản phẩm ACTIVE cho người dùng
+        List<Product> products = productRepository.findByStatus(ProductStatus.ACTIVE);
+        return productMapper.toProductResponse(products);
+    }
+    
+    @Override
+    public List<ProductResponse> getAllWithAllStatus() {
+        // Admin: Trả về tất cả sản phẩm bất kể trạng thái
         List<Product> products = productRepository.findAll();
         return productMapper.toProductResponse(products);
     }

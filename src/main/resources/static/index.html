@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodFast - Giao Đồ Ăn Nhanh Bằng Drone 🚁</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚁</text></svg>">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -20,12 +21,12 @@
                     <a href="index.html" class="nav-link active">Trang chủ</a>
                     <a href="stores.html" class="nav-link">Cửa hàng</a>
                     <a href="store-management.html" class="nav-link" id="storeManagementNav" style="display: none;">Quản lý</a>
-                    <a href="cart.html" class="nav-link">
+                    <a href="cart.html" class="nav-link" id="cartNav" style="display: none;">
                         <i class="fas fa-shopping-cart"></i>
                         Giỏ hàng
                         <span class="cart-badge" id="cartBadge">0</span>
                     </a>
-                    <a href="orders.html" class="nav-link">Đơn hàng</a>
+                    <a href="orders.html" class="nav-link" id="ordersNav" style="display: none;">Đơn hàng</a>
                 </nav>
                 <div class="header-actions">
                     <div class="user-menu" id="userMenu">
@@ -36,14 +37,38 @@
         </div>
     </header>
 
+    <!-- Current Location Display (Fixed at bottom-left corner) -->
+    <div id="currentLocationDisplay" style="display: none; position: fixed; bottom: 20px; left: 20px; background: white; padding: 12px 16px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 1000; max-width: 300px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <i class="fas fa-map-marker-alt" style="color: var(--primary-color);"></i>
+            <strong style="font-size: 0.9rem;">Vị trí hiện tại</strong>
+            <button onclick="showLocationModal()" class="btn btn-sm" style="margin-left: auto; padding: 4px 8px; font-size: 0.75rem;">
+                <i class="fas fa-sync-alt"></i> Đổi
+            </button>
+        </div>
+        <div style="font-size: 0.85rem; color: #666;">
+            <div style="display: flex; gap: 4px;">
+                <i class="fas fa-compass" style="width: 16px;"></i>
+                <span id="currentLatLng">--</span>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                <i class="fas fa-route" style="width: 16px;"></i>
+                <span id="currentMethod">--</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <h1><i class="fas fa-drone"></i> Giao Đồ Ăn Bằng Drone</h1>
             <p>Nhanh chóng • An toàn • Hiện đại</p>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Tìm món ăn, cửa hàng...">
-                <button onclick="searchStores()">
+            <div class="search-box" style="position: relative;">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm món ăn, cửa hàng..." onkeypress="if(event.key==='Enter') performSearch()">
+                <button onclick="clearSearch()" style="position: absolute; right: 60px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #666; padding: 8px 12px; cursor: pointer; font-size: 1.2rem;" title="Xóa tìm kiếm">
+                    <i class="fas fa-times"></i>
+                </button>
+                <button onclick="performSearch()">
                     <i class="fas fa-search"></i>
                 </button>
             </div>
@@ -53,14 +78,29 @@
     <!-- Featured Products Section -->
     <section class="section">
         <div class="container">
-            <h2 class="section-title">🔥 Món Ăn Nổi Bật</h2>
-            <p class="section-subtitle">Những món ăn được yêu thích nhất</p>
-            <div class="grid grid-4" id="featuredProducts">
-                <!-- Loading... -->
-                <div class="empty-state">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <h3>Đang tải...</h3>
+            <div class="d-flex align-center justify-between mb-3" style="flex-wrap: wrap; gap: 1rem;">
+                <div style="flex: 1; min-width: 250px;">
+                    <h2 class="section-title" style="text-align: left; margin-bottom: 0.5rem;">🔥 Món Ăn Nổi Bật</h2>
+                    <p class="section-subtitle" id="productsSectionSubtitle" style="margin: 0;">Những món ăn được yêu thích nhất</p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: #666;">
+                        <i class="fas fa-shield-alt" style="color: #28a745;"></i> Chỉ hiển thị cửa hàng trong hành lang bay an toàn của drone
+                    </p>
                 </div>
+                <button id="changeLocationBtn" class="btn btn-primary" style="display: none;" onclick="showLocationModal()">
+                    <i class="fas fa-map-marker-alt"></i> Chọn lại địa chỉ
+                </button>
+            </div>
+            <div class="grid grid-4" id="featuredProducts"></div>
+            
+            <!-- Pagination -->
+            <div id="productsPagination" class="pagination-container" style="display: none; margin-top: 2rem; text-align: center;">
+                <button class="btn btn-secondary" id="prevPageBtn" onclick="changePage(-1)" style="margin: 0 0.5rem;">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </button>
+                <span id="pageInfo" style="margin: 0 1rem; font-weight: bold;">Trang 1</span>
+                <button class="btn btn-secondary" id="nextPageBtn" onclick="changePage(1)" style="margin: 0 0.5rem;">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
     </section>
@@ -244,10 +284,146 @@
         </div>
     </div>
 
+    <!-- Location Selection Modal -->
+    <div class="modal" id="locationModal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-map-marker-alt"></i> Chọn Vị Trí Của Bạn
+                </h3>
+            </div>
+            <div class="modal-body">
+                <p class="text-center mb-3" style="color: #666;">
+                    Để hiển thị các cửa hàng và món ăn gần bạn nhất trong hành lang bay an toàn của drone
+                </p>
+
+                <!-- GPS Option -->
+                <div class="location-option card mb-3" onclick="useCurrentLocation()" style="cursor: pointer; border: 2px solid #e0e0e0; transition: all 0.3s;">
+                    <div class="card-body" style="padding: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-location-arrow fa-2x text-primary"></i>
+                            <div>
+                                <h4 style="margin: 0 0 0.5rem 0;">Sử dụng vị trí hiện tại</h4>
+                                <p style="margin: 0; color: #666; font-size: 0.9rem;">Tự động lấy GPS từ thiết bị của bạn</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Input Option -->
+                <div class="location-option card" onclick="showManualLocationInput()" style="cursor: pointer; border: 2px solid #e0e0e0; transition: all 0.3s;">
+                    <div class="card-body" style="padding: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <i class="fas fa-edit fa-2x text-success"></i>
+                            <div>
+                                <h4 style="margin: 0 0 0.5rem 0;">Nhập tọa độ thủ công</h4>
+                                <p style="margin: 0; color: #666; font-size: 0.9rem;">Tự nhập vĩ độ và kinh độ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Input Form (Hidden initially) -->
+                <div id="manualLocationForm" style="display: none; margin-top: 1rem;">
+                    <hr style="margin: 1.5rem 0;">
+                    <form onsubmit="setManualLocation(event)">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-compass"></i> Vĩ độ (Latitude)
+                            </label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="manualLatitude"
+                                   step="0.000001"
+                                   min="-90"
+                                   max="90"
+                                   placeholder="Ví dụ: 10.762622"
+                                   required>
+                            <small class="text-gray">Khoảng từ -90 đến 90</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-compass"></i> Kinh độ (Longitude)
+                            </label>
+                            <input type="number"
+                                   class="form-control"
+                                   id="manualLongitude"
+                                   step="0.000001"
+                                   min="-180"
+                                   max="180"
+                                   placeholder="Ví dụ: 106.660172"
+                                   required>
+                            <small class="text-gray">Khoảng từ -180 đến 180</small>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary" onclick="hideManualLocationInput()" style="flex: 1;">
+                                <i class="fas fa-times"></i> Hủy
+                            </button>
+                            <button type="submit" class="btn btn-success" style="flex: 1;">
+                                <i class="fas fa-check"></i> Xác nhận
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="text-center mt-3">
+                    <p style="color: #999; font-size: 0.85rem;">
+                        <i class="fas fa-info-circle"></i> Vị trí của bạn được lưu trong phiên làm việc
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="productModalTitle">Chi tiết sản phẩm</h3>
+                <button class="modal-close" onclick="closeProductModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <img id="productModalImage" src="" alt="Product" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px;">
+                    
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem; color: #333;">Mô tả</h4>
+                        <p id="productModalDescription" style="color: #666; line-height: 1.6;">Mô tả sản phẩm</p>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div>
+                            <p style="color: #666; margin-bottom: 0.25rem; font-size: 0.9rem;">Giá</p>
+                            <p id="productModalPrice" style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color); margin: 0;">0₫</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button class="btn btn-secondary" onclick="decreaseModalQuantity()">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="modalQuantity" style="font-size: 1.2rem; font-weight: bold; min-width: 40px; text-align: center;">1</span>
+                            <button class="btn btn-secondary" onclick="increaseModalQuantity()">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-outline" onclick="viewProductStoreFromModal()" style="flex: 1;">
+                            <i class="fas fa-store"></i> Xem cửa hàng
+                        </button>
+                        <button class="btn btn-primary" onclick="addToCartFromModal()" style="flex: 2;">
+                            <i class="fas fa-cart-plus"></i> Thêm vào giỏ hàng
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
-

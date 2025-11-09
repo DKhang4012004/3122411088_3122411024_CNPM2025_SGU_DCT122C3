@@ -618,4 +618,63 @@ public class OrderServiceImpl implements OrderService {
     private String generateOrderCode() {
         return "ORD" + System.currentTimeMillis() + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
+
+    @Override
+    @Transactional
+    public void deleteOrder(Long orderId, String username) {
+        log.info("Deleting order {} by user: {}", orderId, username);
+
+        // 1. Lấy thông tin order
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        // 2. Lấy userId từ username
+        Long userId = userRepository.findIdByUsername(username);
+        if (userId == null) {
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
+        // 3. Kiểm tra quyền: chỉ customer chủ của đơn hàng mới được xóa
+        if (!order.getUserId().equals(userId)) {
+            throw new BadRequestException("You do not have permission to delete this order. This order belongs to another user.");
+        }
+
+        // 4. Kiểm tra trạng thái đơn hàng - chỉ cho phép xóa khi chưa thanh toán hoặc đã hủy
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new BadRequestException("Cannot delete paid orders. Payment status: " + order.getPaymentStatus());
+        }
+
+        // Không cho phép xóa đơn hàng đang giao hoặc đã giao
+        if (order.getStatus() == OrderStatus.IN_DELIVERY ||
+            order.getStatus() == OrderStatus.DELIVERED ||
+            order.getStatus() == OrderStatus.ACCEPT) {
+            throw new BadRequestException("Cannot delete order in status: " + order.getStatus() +
+                                        ". Only CREATED, PENDING_PAYMENT or CANCELLED orders can be deleted.");
+        }
+
+        // 5. Hoàn lại tồn kho nếu đơn hàng chưa hủy
+        if (order.getStatus() != OrderStatus.CANCELLED) {
+            List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
+            for (OrderItem item : items) {
+                Product product = productRepository.findById(item.getProductId()).orElse(null);
+                if (product != null) {
+                    // Hoàn lại số lượng đã reserve
+                    product.setReservedQuantity(product.getReservedQuantity() - item.getQuantity());
+                    product.setQuantityAvailable(product.getQuantityAvailable() + item.getQuantity());
+                    productRepository.save(product);
+                    log.info("Restored {} units of product {} to stock", item.getQuantity(), product.getId());
+                }
+            }
+        }
+
+        // 6. Xóa order items trước
+        orderItemRepository.deleteByOrderId(orderId);
+        orderItemRepository.flush();
+
+        // 7. Xóa order
+        orderRepository.delete(order);
+        orderRepository.flush();
+
+        log.info("Order {} deleted successfully by user: {}", orderId, username);
+    }
 }
