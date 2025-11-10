@@ -29,6 +29,12 @@ public class StoreAddressImpl extends StoreAddress {
 
         StoreAddress storeAddress= storeMapper.toStoreAddress(request);
         storeAddress.setStore(store);
+        
+        // ✅ TỰ ĐỘNG GÁN BÁN KÍNH BAY MẶC ĐỊNH = 3 KM
+        if (storeAddress.getFlightCorridorRadius() == null) {
+            storeAddress.setFlightCorridorRadius(3.0);
+        }
+        
         storeAddressRepository.save(storeAddress);
         return storeMapper.toStoreAddressResponse(storeAddress);
     }

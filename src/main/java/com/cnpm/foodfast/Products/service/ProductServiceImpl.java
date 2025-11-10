@@ -71,6 +71,17 @@ public class ProductServiceImpl  implements ProductService {
             product.setCategory(category);
         }
         
+        // ✅ VALIDATION: Kiểm tra số lượng available không được nhỏ hơn reserved
+        if (request.getQuantityAvailable() != null) {
+            Integer currentReserved = product.getReservedQuantity() != null ? product.getReservedQuantity() : 0;
+            if (request.getQuantityAvailable() < currentReserved) {
+                throw new IllegalArgumentException(
+                    String.format("Không thể đặt số lượng khả dụng (%d) nhỏ hơn số lượng đang được đặt trước (%d)",
+                                  request.getQuantityAvailable(), currentReserved)
+                );
+            }
+        }
+        
         productMapper.updateProduct(request, product);
         product = productRepository.save(product);
         return productMapper.toProductResponse(product);

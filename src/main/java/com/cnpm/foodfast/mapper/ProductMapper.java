@@ -25,6 +25,7 @@ public interface ProductMapper {
 
     @Mapping(source = "storeId", target = "store")
     @Mapping(source = "categoryId", target = "category")
+    @Mapping(target = "reservedQuantity", ignore = true)  // ✅ KHÔNG CHO UPDATE reservedQuantity
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateProduct(ProductRequest request, @MappingTarget Product product);
 

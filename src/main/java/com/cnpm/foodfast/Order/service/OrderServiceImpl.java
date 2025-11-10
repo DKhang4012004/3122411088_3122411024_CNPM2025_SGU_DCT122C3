@@ -216,9 +216,10 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
-        if (order.getPaymentStatus() == PaymentStatus.PAID) {
-            throw new IllegalStateException("Cannot cancel paid order");
-        }
+        // ✅ CHO PHÉP HỦY ĐỠN ĐÃ THANH TOÁN - Admin sẽ hoàn tiền sau
+        // if (order.getPaymentStatus() == PaymentStatus.PAID) {
+        //     throw new IllegalStateException("Cannot cancel paid order");
+        // }
 
         List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
         for (OrderItem item : items) {

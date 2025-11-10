@@ -635,6 +635,9 @@ function switchTab(tab, element) {
     if (tab === 'orders' && currentStoreId) {
         loadStoreOrders();
     }
+    if (tab === 'ledger' && currentStoreId) {
+        loadLedgerData();
+    }
 }
 
 function getTabLabel(tab) {
@@ -642,7 +645,8 @@ function getTabLabel(tab) {
         'info': 'Thông tin cửa hàng',
         'products': 'Sản phẩm',
         'orders': 'Đơn hàng',
-        'bank': 'Thông tin thanh toán'
+        'bank': 'Thông tin thanh toán',
+        'ledger': 'Sổ cái'
     };
     return labels[tab] || '';
 }
@@ -1034,7 +1038,7 @@ async function saveProduct(event) {
         mediaPrimaryUrl: form.imageUrl.value || 'https://via.placeholder.com/400x300?text=No+Image',
         safetyStock: 10,
         quantityAvailable: parseInt(form.quantity.value) || 100,
-        reservedQuantity: 0,
+        // ✅ KHÔNG GỬI reservedQuantity - để backend tự quản lý (tránh mất dữ liệu đơn hàng đang chờ)
         weightGram: parseFloat(form.weight.value) || 500,
         lengthCm: 20,
         widthCm: 20,
@@ -1627,6 +1631,178 @@ function handleDrop(e) {
         
         handleImageFileSelect(fakeEvent);
     }
+}
+
+// ==================== LEDGER FUNCTIONS ====================
+
+// Load ledger data (sổ cái)
+async function loadLedgerData() {
+    if (!currentStoreId) {
+        console.error('No store selected');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('foodfast_token');
+        
+        // Load unpaid amount
+        const unpaidResponse = await fetch(`${API_BASE_URL}/api/v1/ledger/store/${currentStoreId}/unpaid-amount`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (unpaidResponse.ok) {
+            const unpaidData = await unpaidResponse.json();
+            document.getElementById('unpaidAmount').textContent = formatCurrency(unpaidData.result);
+        }
+
+        // Load ledger entries
+        const entriesResponse = await fetch(`${API_BASE_URL}/api/v1/ledger/store/${currentStoreId}/entries`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (entriesResponse.ok) {
+            const entriesData = await entriesResponse.json();
+            displayLedgerEntries(entriesData.result);
+        }
+
+        // Load payout batches
+        const payoutsResponse = await fetch(`${API_BASE_URL}/api/v1/ledger/store/${currentStoreId}/payouts`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (payoutsResponse.ok) {
+            const payoutsData = await payoutsResponse.json();
+            displayPayoutBatches(payoutsData.result);
+        }
+
+    } catch (error) {
+        console.error('Error loading ledger data:', error);
+        showToast('Không thể tải dữ liệu sổ cái', 'error');
+    }
+}
+
+// Display ledger entries
+function displayLedgerEntries(entries) {
+    const tbody = document.getElementById('ledgerEntriesTable');
+    
+    if (!entries || entries.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray);">
+                    <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    Chưa có giao dịch nào
+                </td>
+            </tr>
+        `;
+        
+        // Reset summary
+        document.getElementById('totalRevenue').textContent = '0 ₫';
+        document.getElementById('totalFees').textContent = '0 ₫';
+        return;
+    }
+
+    // Calculate totals
+    let totalRevenue = 0;
+    let totalFees = 0;
+    
+    entries.forEach(entry => {
+        totalRevenue += entry.totalOrderAmount;
+        totalFees += (entry.appCommissionAmount + entry.paymentGatewayFee);
+    });
+
+    document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+    document.getElementById('totalFees').textContent = formatCurrency(totalFees);
+
+    // Display entries
+    tbody.innerHTML = entries.map(entry => `
+        <tr>
+            <td>#ORD${entry.orderId}</td>
+            <td><strong>${formatCurrency(entry.totalOrderAmount)}</strong></td>
+            <td style="color: #f57c00;">${formatCurrency(entry.appCommissionAmount)}</td>
+            <td style="color: #f57c00;">${formatCurrency(entry.paymentGatewayFee)}</td>
+            <td><strong style="color: #388e3c;">${formatCurrency(entry.netAmountOwed)}</strong></td>
+            <td>${getLedgerStatusBadge(entry.status)}</td>
+            <td>${formatDateTime(entry.createdAt)}</td>
+        </tr>
+    `).join('');
+}
+
+// Display payout batches
+function displayPayoutBatches(batches) {
+    const tbody = document.getElementById('payoutBatchesTable');
+    
+    if (!batches || batches.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray);">
+                    <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    Chưa có lịch sử thanh toán
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = batches.map(batch => `
+        <tr>
+            <td><strong>#${batch.id}</strong></td>
+            <td><strong style="color: #388e3c;">${formatCurrency(batch.totalPayoutAmount)}</strong></td>
+            <td>${batch.transactionCode || '<em>Chưa có</em>'}</td>
+            <td>${getPayoutStatusBadge(batch.status)}</td>
+            <td>${formatDateTime(batch.createdAt)}</td>
+            <td>${batch.processedAt ? formatDateTime(batch.processedAt) : '<em>Chưa xử lý</em>'}</td>
+        </tr>
+    `).join('');
+}
+
+// Get ledger status badge
+function getLedgerStatusBadge(status) {
+    const statusMap = {
+        'UNPAID': { class: 'warning', text: 'Chưa thanh toán' },
+        'PROCESSING': { class: 'info', text: 'Đang xử lý' },
+        'PAID': { class: 'success', text: 'Đã thanh toán' }
+    };
+    
+    const config = statusMap[status] || { class: 'secondary', text: status };
+    return `<span class="badge badge-${config.class}">${config.text}</span>`;
+}
+
+// Get payout status badge
+function getPayoutStatusBadge(status) {
+    const statusMap = {
+        'PENDING': { class: 'warning', text: 'Chờ xử lý' },
+        'PROCESSING': { class: 'info', text: 'Đang xử lý' },
+        'PAID': { class: 'success', text: 'Đã thanh toán' },
+        'FAILED': { class: 'danger', text: 'Thất bại' }
+    };
+    
+    const config = statusMap[status] || { class: 'secondary', text: status };
+    return `<span class="badge badge-${config.class}">${config.text}</span>`;
+}
+
+// Format currency
+function formatCurrency(amount) {
+    if (!amount && amount !== 0) return '0 ₫';
+    return new Intl.NumberFormat('vi-VN').format(amount) + ' ₫';
+}
+
+// Format date time
+function formatDateTime(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 // Close modals when clicking outside

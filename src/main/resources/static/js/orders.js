@@ -401,15 +401,27 @@ async function payOrder(orderId) {
 
 // Cancel/delete an order
 async function cancelOrder(orderId) {
-    if (!confirm('Bạn có chắc muốn hủy đơn hàng này? Đơn hàng sẽ bị xóa vĩnh viễn.')) {
+    if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) {
         return;
     }
 
     try {
         Loading.show();
         
-        // Call DELETE API
-        const response = await APIHelper.delete(API_CONFIG.ENDPOINTS.ORDER_BY_ID(orderId));
+        // ✅ Gọi đúng API POST cancel thay vì DELETE (với context path /home)
+        const token = localStorage.getItem('foodfast_token');
+        const response = await fetch(`/home/api/v1/orders/${orderId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Không thể hủy đơn hàng');
+        }
         
         Toast.success('Đơn hàng đã được hủy thành công');
         

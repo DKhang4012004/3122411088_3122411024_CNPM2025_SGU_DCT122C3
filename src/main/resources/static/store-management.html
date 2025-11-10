@@ -227,6 +227,206 @@
             cursor: pointer;
             color: var(--gray);
         }
+
+        /* Ledger Summary Cards */
+        .ledger-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #e9ecef;
+            border-radius: 16px;
+            padding: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), #667eea);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            border-color: var(--primary);
+        }
+        .summary-card:hover::before {
+            opacity: 1;
+        }
+        .summary-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .summary-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .summary-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+        .summary-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #212529;
+            letter-spacing: -0.5px;
+        }
+        .summary-value.unpaid {
+            color: #10b981;
+            text-shadow: 0 1px 2px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Ledger Tables Enhancement */
+        #ledgerTab .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+        #ledgerTab table {
+            margin: 0;
+        }
+        #ledgerTab table thead {
+            background: linear-gradient(135deg, #667eea 0%, var(--primary) 100%);
+        }
+        #ledgerTab table thead th {
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 1.25rem 1rem;
+            border: none;
+        }
+        #ledgerTab table tbody tr {
+            transition: all 0.2s ease;
+        }
+        #ledgerTab table tbody tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.01);
+        }
+        #ledgerTab table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ecef;
+        }
+        #ledgerTab table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Section Headers in Ledger */
+        #ledgerTab h3 {
+            color: #212529;
+            font-weight: 700;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid #e9ecef;
+        }
+        #ledgerTab h3 i {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        /* Badge styles - Enhanced */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 24px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .badge-success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        .badge-warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+        .badge-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        .badge-danger {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+        .badge-secondary {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #4b5563;
+            border: 1px solid #9ca3af;
+        }
+        .badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+
+        /* Empty State Styling */
+        #ledgerTab .table-container tbody tr td[colspan] {
+            background: #f8f9fa;
+            padding: 3rem 2rem !important;
+        }
+        #ledgerTab .table-container tbody tr td[colspan] i {
+            color: #cbd5e1;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        /* Ledger Info Card Enhancement */
+        #ledgerTab .info-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+        #ledgerTab .info-card h2 {
+            background: linear-gradient(135deg, var(--primary) 0%, #667eea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -332,6 +532,9 @@
                 </button>
                 <button class="tab" onclick="switchTab('bank', this)">
                     <i class="fas fa-university"></i> Thông tin thanh toán
+                </button>
+                <button class="tab" onclick="switchTab('ledger', this)">
+                    <i class="fas fa-book"></i> Sổ cái
                 </button>
             </div>
 
@@ -531,6 +734,99 @@
                             <i class="fas fa-save"></i> Cập nhật thông tin
                         </button>
                     </form>
+                </div>
+            </div>
+
+            <!-- Tab Content: Ledger (Sổ cái) -->
+            <div id="ledgerTab" class="tab-content">
+                <div class="info-card">
+                    <h2><i class="fas fa-book"></i> Sổ Cái & Thanh Toán</h2>
+                    
+                    <!-- Thống kê tổng quan -->
+                    <div class="ledger-summary">
+                        <div class="summary-card">
+                            <div class="summary-icon" style="background: #e3f2fd;">
+                                <i class="fas fa-coins" style="color: #1976d2;"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-label">Tổng doanh thu đơn hàng</span>
+                                <span class="summary-value" id="totalRevenue">0 ₫</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon" style="background: #fff3e0;">
+                                <i class="fas fa-percent" style="color: #f57c00;"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-label">Hoa hồng & phí (21%)</span>
+                                <span class="summary-value" id="totalFees">0 ₫</span>
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-icon" style="background: #e8f5e9;">
+                                <i class="fas fa-hand-holding-usd" style="color: #388e3c;"></i>
+                            </div>
+                            <div class="summary-info">
+                                <span class="summary-label">Số tiền chưa thanh toán</span>
+                                <span class="summary-value unpaid" id="unpaidAmount">0 ₫</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bảng chi tiết sổ cái -->
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem;">
+                        <i class="fas fa-list"></i> Chi Tiết Giao Dịch
+                    </h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Hoa hồng (20%)</th>
+                                    <th>Phí cổng (1%)</th>
+                                    <th>Thực nhận</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerEntriesTable">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--gray);">
+                                        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                        Chưa có giao dịch nào
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Lịch sử thanh toán -->
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem;">
+                        <i class="fas fa-history"></i> Lịch Sử Thanh Toán
+                    </h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Mã lô</th>
+                                    <th>Số tiền</th>
+                                    <th>Mã giao dịch</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Ngày xử lý</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payoutBatchesTable">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--gray);">
+                                        <i class="fas fa-receipt" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                                        Chưa có lịch sử thanh toán
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

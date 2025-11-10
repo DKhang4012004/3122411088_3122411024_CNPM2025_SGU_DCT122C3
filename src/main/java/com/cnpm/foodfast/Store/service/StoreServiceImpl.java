@@ -95,8 +95,10 @@ public class StoreServiceImpl implements StoreService {
     public List<StoreResponse> getAllStores() {
         log.info("Getting all stores");
 
+        // ✅ CHỈ TRẢ VỀ CÁC CỬA HÀNG ĐANG HOẠT ĐỘNG (ACTIVE)
         List<Store> stores = storeRepository.findAll();
         return stores.stream()
+                .filter(store -> store.getStoreStatus() == StoreStatus.ACTIVE)
                 .map(storeMapper::toStoreResponse)
                 .collect(Collectors.toList());
     }
