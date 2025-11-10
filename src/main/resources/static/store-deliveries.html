@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuẩn Bị Đơn Hàng - FoodFast Store</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .deliveries-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray);
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .deliveries-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .delivery-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+
+        .delivery-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .delivery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .delivery-id {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .delivery-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-QUEUED {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-ASSIGNED {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-LAUNCHED {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-ARRIVING {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-COMPLETED {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-FAILED {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .delivery-info {
+            margin: 1rem 0;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--gray);
+        }
+
+        .info-row i {
+            width: 20px;
+            color: var(--primary);
+        }
+
+        .drone-info {
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .drone-info h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .time-estimates {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .time-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .time-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .delivery-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-launch {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-arriving {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-complete {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .btn-view {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .deliveries-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="deliveries-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-title">
+                <h1><i class="fas fa-utensils"></i> Chuẩn Bị Đơn Hàng</h1>
+                <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Đánh dấu món ăn đã sẵn sàng để giao</p>
+            </div>
+            <div class="header-stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-label">Đơn hôm nay</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="preparingOrders">0</div>
+                    <div class="stat-label">Đang chuẩn bị</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="readyOrders">0</div>
+                    <div class="stat-label">Sẵn sàng giao</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label><i class="fas fa-filter"></i> Trạng thái</label>
+                <select id="statusFilter">
+                    <option value="">Tất cả</option>
+                    <option value="ACCEPT">Cần chuẩn bị</option>
+                    <option value="PREPARING">Đang chuẩn bị</option>
+                    <option value="READY">Sẵn sàng giao</option>
+                    <option value="IN_DELIVERY">Đang giao</option>
+                    <option value="DELIVERED">Đã giao</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-search"></i> Tìm kiếm</label>
+                <input type="text" id="searchInput" placeholder="Tìm theo mã đơn hàng...">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-calendar"></i> Ngày</label>
+                <input type="date" id="dateFilter">
+            </div>
+            <button class="btn btn-primary" onclick="refreshDeliveries()" style="align-self: flex-end;">
+                <i class="fas fa-sync"></i> Làm mới
+            </button>
+        </div>
+
+        <!-- Deliveries Grid -->
+        <div class="deliveries-grid" id="deliveriesGrid">
+            <!-- Delivery cards will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="fas fa-box-open"></i>
+            <h3>Chưa có giao hàng nào</h3>
+            <p>Các đơn hàng đã được chấp nhận sẽ xuất hiện tại đây</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/helpers.js"></script>
+    <script src="js/store-deliveries.js"></script>
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Điều Khiển Drone - Admin FoodFast</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Top Navigation Bar */
+        .top-navbar {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+            transform: translateX(-2px);
+        }
+
+        .nav-title {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: white;
+        }
+
+        .nav-title i {
+            color: #f59e0b;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-link {
+            background: transparent;
+            color: rgba(255,255,255,0.85);
+            border: 1px solid transparent;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .nav-link.logout-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .nav-link.logout-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #fecaca;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .nav-title {
+                font-size: 1.2rem;
+                order: 1;
+                flex: 1 1 100%;
+            }
+
+            .nav-btn {
+                order: 2;
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
+
+            .nav-links {
+                order: 3;
+                flex: 1 1 100%;
+                justify-content: flex-end;
+                gap: 0.5rem;
+            }
+
+            .nav-link {
+                font-size: 0.85rem;
+                padding: 0.6rem 1rem;
+            }
+
+            .nav-link span {
+                display: none;
+            }
+        }
+
+        .drone-control-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-box {
+            text-align: center;
+            background: rgba(255,255,255,0.2);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        /* Drone List Sidebar */
+        .drone-sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: fit-content;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .drone-list-item {
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .drone-list-item:hover {
+            border-color: var(--primary);
+            background: #f8f9fa;
+        }
+
+        .drone-list-item.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+        }
+
+        .drone-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .drone-status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-AVAILABLE {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-IN_FLIGHT {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-CHARGING {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-MAINTENANCE {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Deliveries Panel */
+        .deliveries-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: #f8f9fa;
+            padding: 0.25rem;
+            border-radius: 8px;
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .filter-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .deliveries-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .delivery-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .delivery-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .delivery-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .order-info h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .order-meta {
+            display: flex;
+            gap: 1rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .delivery-status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .delivery-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .info-section h4 {
+            margin: 0 0 0.75rem 0;
+            color: var(--primary);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .info-label {
+            color: var(--gray);
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .delivery-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-launch {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-arriving {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-complete {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+        }
+
+        .btn-view-map {
+            background: white;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Map placeholder */
+        .map-section {
+            background: #f8f9fa;
+            height: 300px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1rem 0;
+            border: 2px dashed #ddd;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .drone-sidebar {
+                max-height: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .delivery-body {
+                grid-template-columns: 1fr;
+            }
+
+            .header-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-navbar">
+        <div class="nav-content">
+            <button onclick="goBack()" class="nav-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại</span>
+            </button>
+            <h2 class="nav-title">
+                <i class="fas fa-helicopter"></i>
+                Điều Khiển Drone
+            </h2>
+            <div class="nav-links">
+                <a href="/home/admin.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/home/admin.html#drones" class="nav-link">
+                    <i class="fas fa-list"></i>
+                    <span>Quản lý Drone</span>
+                </a>
+                <button onclick="logout()" class="nav-link logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="drone-control-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>
+                        <i class="fas fa-helicopter"></i>
+                        Điều Khiển Drone
+                    </h1>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalDrones">0</div>
+                        <div class="stat-label">Tổng số drone</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="availableDrones">0</div>
+                        <div class="stat-label">Sẵn sàng</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="inFlightDrones">0</div>
+                        <div class="stat-label">Đang bay</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="activeDeliveries">0</div>
+                        <div class="stat-label">Giao hàng đang chạy</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Drone List Sidebar -->
+            <div class="drone-sidebar">
+                <div class="sidebar-header">
+                    <h3><i class="fas fa-list"></i> Danh Sách Drone</h3>
+                    <button class="btn btn-sm btn-primary" onclick="refreshDrones()">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                </div>
+                <div id="dronesList">
+                    <!-- Drone items will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Deliveries Panel -->
+            <div class="deliveries-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-shipping-fast"></i> Giao Hàng Đang Chờ</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-status="ASSIGNED">Sẵn sàng bay</button>
+                        <button class="filter-tab" data-status="LAUNCHED">Đang bay</button>
+                        <button class="filter-tab" data-status="ARRIVING">Sắp đến</button>
+                        <button class="filter-tab" data-status="ALL">Tất cả</button>
+                    </div>
+                </div>
+
+                <div class="deliveries-grid" id="deliveriesGrid">
+                    <!-- Delivery cards will be inserted here -->
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-drone"></i>
+                    <h3>Không có giao hàng nào</h3>
+                    <p>Các đơn hàng sẵn sàng giao sẽ xuất hiện tại đây</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/admin-drone-control.js"></script>
+</body>
+</html>
