@@ -212,13 +212,13 @@ public class DeliveryController {
     }
 
     /**
-     * Complete delivery (Giao hàng thành công)
+     * Complete delivery by admin/system (Admin xác nhận giao hàng)
      * POST /api/v1/deliveries/{deliveryId}/complete
      */
     @PostMapping("/{deliveryId}/complete")
     public ResponseEntity<APIResponse<DeliveryResponse>> completeDelivery(
             @PathVariable Long deliveryId) {
-        log.info("Completing delivery: {}", deliveryId);
+        log.info("[ADMIN] Completing delivery: {}", deliveryId);
 
         UpdateDeliveryStatusRequest request = UpdateDeliveryStatusRequest.builder()
                 .status(com.cnpm.foodfast.enums.DeliveryStatus.COMPLETED)
@@ -228,7 +228,29 @@ public class DeliveryController {
 
         return ResponseEntity.ok(APIResponse.<DeliveryResponse>builder()
                 .code(200)
-                .message("Delivery completed successfully")
+                .message("Delivery completed successfully by admin")
+                .result(response)
+                .build());
+    }
+
+    /**
+     * Customer confirms delivery received (Khách hàng xác nhận đã nhận hàng)
+     * POST /api/v1/deliveries/{deliveryId}/confirm-received
+     */
+    @PostMapping("/{deliveryId}/confirm-received")
+    public ResponseEntity<APIResponse<DeliveryResponse>> confirmDeliveryReceived(
+            @PathVariable Long deliveryId) {
+        log.info("[CUSTOMER] Customer confirming delivery received: {}", deliveryId);
+
+        UpdateDeliveryStatusRequest request = UpdateDeliveryStatusRequest.builder()
+                .status(com.cnpm.foodfast.enums.DeliveryStatus.COMPLETED)
+                .build();
+
+        DeliveryResponse response = deliveryService.updateDeliveryStatus(deliveryId, request);
+
+        return ResponseEntity.ok(APIResponse.<DeliveryResponse>builder()
+                .code(200)
+                .message("Cảm ơn bạn! Đơn hàng đã được xác nhận giao thành công")
                 .result(response)
                 .build());
     }

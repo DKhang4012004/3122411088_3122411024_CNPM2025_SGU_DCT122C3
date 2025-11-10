@@ -672,6 +672,12 @@ async function loadOrdersByStore() {
                                 <button class="action-btn view" onclick="viewOrder('${order.orderCode}')" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </button>
+                                ${order.status === 'CANCELLED' ? `
+                                    <button class="action-btn refund" onclick="refundOrder(${order.id}, '${order.orderCode}')" 
+                                            title="Hoàn tiền">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                ` : ''}
                             </div>
                         </td>
                     </tr>
@@ -698,6 +704,7 @@ function getOrderStatusClass(status) {
         'SHIPPING': 'in_use',
         'DELIVERED': 'active',
         'CANCELLED': 'inactive',
+        'REFUNDED': 'active',
         'COMPLETED': 'active'
     };
     return statusMap[status] || 'pending';
@@ -715,6 +722,7 @@ function getOrderStatusText(status) {
         'SHIPPING': 'Đang giao',
         'DELIVERED': 'Đã giao',
         'CANCELLED': 'Đã hủy',
+        'REFUNDED': 'Đã hoàn tiền',
         'COMPLETED': 'Hoàn thành'
     };
     return statusMap[status] || status;
@@ -722,6 +730,43 @@ function getOrderStatusText(status) {
 
 function viewOrder(orderCode) {
     alert(`Xem chi tiết đơn hàng ${orderCode} (Chức năng đang phát triển)`);
+}
+
+// ✅ Hoàn tiền cho đơn hàng đã hủy
+async function refundOrder(orderId, orderCode) {
+    if (!confirm(`Xác nhận hoàn tiền cho đơn hàng ${orderCode}?\n\nĐơn hàng sẽ chuyển sang trạng thái "Đã hoàn tiền".`)) {
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('foodfast_token');
+        if (!token) {
+            alert('⚠️ Vui lòng đăng nhập lại');
+            return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/v1/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                status: 'REFUNDED'
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+
+        alert('✅ Đã hoàn tiền thành công cho đơn hàng ' + orderCode);
+        loadOrders(); // Reload orders list
+    } catch (error) {
+        console.error('Error refunding order:', error);
+        alert(`❌ Lỗi hoàn tiền: ${error.message}`);
+    }
 }
 
 async function loadLedger() {
@@ -1584,11 +1629,17 @@ async function editStoreStatus(storeId, storeName, currentStatus) {
         try {
             console.log('Updating store status:', storeId, newStatus);
             
-            // Direct fetch without auth (since permitAll)
+            // ✅ GỬI TOKEN ĐỂ XÁC THỰC ADMIN
+            const token = localStorage.getItem('foodfast_token');
+            if (!token) {
+                throw new Error('Vui lòng đăng nhập lại');
+            }
+            
             const response = await fetch(`${API_BASE_URL}/api/stores/${storeId}/status?status=${newStatus}`, {
                 method: 'PATCH',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 }
             });
 

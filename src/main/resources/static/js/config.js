@@ -261,6 +261,9 @@ const Toast = {
     }
 };
 
+// Base URL for API calls (with /home context path)
+const API_BASE_URL = "http://localhost:8080/home";
+
 // Loading spinner
 const Loading = {
     show() {

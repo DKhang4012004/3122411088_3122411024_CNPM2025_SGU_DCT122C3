@@ -38,6 +38,10 @@ public class OrderResponse {
     LocalDateTime estimatedArrivalTime;
     Integer estimatedFlightTimeMinutes;
     Double distanceKm;
+    
+    // ✅ Actual delivery times from database (for completed orders)
+    LocalDateTime actualDepartureTime;
+    LocalDateTime actualArrivalTime;
 
     List<OrderItemResponse> items;
 

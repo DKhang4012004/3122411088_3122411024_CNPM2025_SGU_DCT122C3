@@ -483,17 +483,26 @@ async function createOrders() {
         // Count stores
         const storeCount = new Set(items.map(item => item.storeId)).size;
         
+        // Build address snapshot JSON
+        const addressSnapshot = JSON.stringify({
+            address: userLocation.address || 'Địa chỉ đã chọn',
+            lat: userLocation.latitude || userLocation.lat,
+            lng: userLocation.longitude || userLocation.lng
+        });
+        
         const message = storeCount > 1 
-            ? `Giỏ hàng có sản phẩm từ ${storeCount} cửa hàng khác nhau.\n\nHệ thống sẽ tạo ${storeCount} đơn hàng riêng biệt.\n\nĐịa chỉ giao hàng: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}\n\nXác nhận đặt đơn?`
-            : `Xác nhận đặt đơn hàng?\n\nĐịa chỉ giao hàng: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}`;
+            ? `Giỏ hàng có sản phẩm từ ${storeCount} cửa hàng khác nhau.\n\nHệ thống sẽ tạo ${storeCount} đơn hàng riêng biệt.\n\nĐịa chỉ giao hàng: ${userLocation.address || userLocation.latitude.toFixed(6) + ', ' + userLocation.longitude.toFixed(6)}\n\nXác nhận đặt đơn?`
+            : `Xác nhận đặt đơn hàng?\n\nĐịa chỉ giao hàng: ${userLocation.address || userLocation.latitude.toFixed(6) + ', ' + userLocation.longitude.toFixed(6)}`;
         
         if (!confirm(message)) {
             Loading.hide();
             return;
         }
 
-        // Create order from cart (without payment)
-        const response = await APIHelper.post(API_CONFIG.ENDPOINTS.ORDERS);
+        // Create order from cart with address
+        const response = await APIHelper.post(API_CONFIG.ENDPOINTS.ORDERS, {
+            deliveryAddressSnapshot: addressSnapshot
+        });
 
         if (response.result && response.result.length > 0) {
             const orders = response.result;

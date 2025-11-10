@@ -107,7 +107,8 @@ public class ProductServiceImpl  implements ProductService {
         storeRepository.findById(storeId)
                 .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
         
-        List<Product> products = productRepository.findByStoreId(storeId);
+        // ✅ CHỈ TRẢ VỀ SẢN PHẨM ACTIVE CHO KHÁCH HÀNG
+        List<Product> products = productRepository.findByStoreIdAndStatus(storeId, ProductStatus.ACTIVE);
         return productMapper.toProductResponse(products);
     }
 

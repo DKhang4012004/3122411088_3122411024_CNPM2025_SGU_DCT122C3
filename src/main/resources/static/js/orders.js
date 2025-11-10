@@ -740,6 +740,31 @@ async function displayDeliveryTracking(delivery) {
     const statusInfo = getDeliveryStatusInfo(delivery.currentStatus);
     
     content.innerHTML = `
+        <!-- ARRIVING Alert -->
+        ${delivery.currentStatus === 'ARRIVING' ? `
+        <div style="background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%); 
+                    color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;
+                    text-align: center; box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+                    animation: arrivinAlert 1s ease-in-out infinite alternate;">
+            <i class="fas fa-helicopter" style="font-size: 3rem; margin-bottom: 0.5rem; animation: bounce 1s infinite;"></i>
+            <h2 style="margin: 0.5rem 0; font-weight: bold;">🚁 DRONE SẮP ĐẾN!</h2>
+            <p style="font-size: 1.1rem; margin: 0;">Vui lòng chuẩn bị nhận hàng</p>
+            <p style="font-size: 0.9rem; margin: 0.5rem 0 0 0; opacity: 0.9;">
+                Dự kiến: ${delivery.estimatedArrivalTime ? FormatHelper.date(delivery.estimatedArrivalTime) : 'Vài phút nữa'}
+            </p>
+        </div>
+        <style>
+            @keyframes arrivinAlert {
+                0% { transform: scale(1); }
+                100% { transform: scale(1.02); }
+            }
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+        </style>
+        ` : ''}
+        
         <div style="text-align: center; margin-bottom: 2rem;">
             <i class="fas fa-drone" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
             <h3 style="margin: 0;">${statusInfo.text}</h3>
@@ -761,37 +786,79 @@ async function displayDeliveryTracking(delivery) {
         <!-- Timeline -->
         <div class="card">
             <div class="card-body">
-                <h4><i class="fas fa-list"></i> Lịch sử giao hàng</h4>
+                <h4><i class="fas fa-list"></i> Trạng thái giao hàng</h4>
                 <div style="position: relative; padding-left: 2rem;">
-                    ${delivery.actualDepartureTime ? `
+                    
+                    <!-- Step 1: ASSIGNED -->
+                    ${delivery.currentStatus !== 'QUEUED' ? `
                     <div style="margin: 1rem 0; position: relative;">
                         <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--success-color); border-radius: 50%; top: 5px;"></div>
                         <div style="position: absolute; left: -1.44rem; width: 2px; height: 100%; background: var(--light); top: 17px;"></div>
-                        <strong>Đã lấy hàng</strong>
+                        <strong>✅ Đã phân công drone</strong>
                         <p style="margin: 0.25rem 0; color: var(--gray); font-size: 0.9rem;">
-                            ${FormatHelper.date(delivery.actualDepartureTime)}
-                        </p>
-                    </div>
-                    ` : ''}
-                    
-                    ${delivery.actualArrivalTime ? `
-                    <div style="margin: 1rem 0; position: relative;">
-                        <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--success-color); border-radius: 50%; top: 5px;"></div>
-                        <strong>Đã giao hàng</strong>
-                        <p style="margin: 0.25rem 0; color: var(--gray); font-size: 0.9rem;">
-                            ${FormatHelper.date(delivery.actualArrivalTime)}
+                            ${delivery.droneCode ? 'Drone: ' + delivery.droneCode : 'Đang chuẩn bị'}
                         </p>
                     </div>
                     ` : `
                     <div style="margin: 1rem 0; position: relative;">
                         <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--warning-color); border-radius: 50%; top: 5px;"></div>
-                        <strong>Đang giao hàng</strong>
-                        <p style="margin: 0.25rem 0; color: var(--gray); font-size: 0.9rem;">
-                            Dự kiến: ${delivery.estimatedArrivalTime ? FormatHelper.date(delivery.estimatedArrivalTime) : '15-30 phút'}
-                        </p>
+                        <strong>⏳ Đang chờ phân công drone...</strong>
                     </div>
                     `}
+                    
+                    <!-- Step 2: LAUNCHED -->
+                    ${delivery.actualDepartureTime ? `
+                    <div style="margin: 1rem 0; position: relative;">
+                        <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--success-color); border-radius: 50%; top: 5px;"></div>
+                        <div style="position: absolute; left: -1.44rem; width: 2px; height: 100%; background: var(--light); top: 17px;"></div>
+                        <strong>🚀 Drone đã khởi hành</strong>
+                        <p style="margin: 0.25rem 0; color: var(--gray); font-size: 0.9rem;">
+                            ${FormatHelper.date(delivery.actualDepartureTime)}
+                        </p>
+                    </div>
+                    ` : (delivery.currentStatus === 'ASSIGNED' ? `
+                    <div style="margin: 1rem 0; position: relative;">
+                        <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--light); border: 2px solid var(--gray); border-radius: 50%; top: 5px;"></div>
+                        <strong style="color: var(--gray);">🚀 Chờ khởi hành...</strong>
+                    </div>
+                    ` : '')}
+                    
+                    <!-- Step 3: ARRIVING -->
+                    ${delivery.currentStatus === 'ARRIVING' ? `
+                    <div style="margin: 1rem 0; position: relative;">
+                        <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--warning-color); border-radius: 50%; top: 5px; animation: pulse 1.5s infinite;"></div>
+                        <div style="position: absolute; left: -1.44rem; width: 2px; height: 100%; background: var(--light); top: 17px;"></div>
+                        <strong style="color: var(--warning-color);">🚁 Drone sắp đến! Chuẩn bị nhận hàng</strong>
+                        <p style="margin: 0.25rem 0; color: var(--warning-color); font-size: 0.9rem; font-weight: bold;">
+                            Dự kiến: ${delivery.estimatedArrivalTime ? FormatHelper.date(delivery.estimatedArrivalTime) : 'Vài phút nữa'}
+                        </p>
+                    </div>
+                    ` : (delivery.currentStatus === 'LAUNCHED' ? `
+                    <div style="margin: 1rem 0; position: relative;">
+                        <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--light); border: 2px solid var(--gray); border-radius: 50%; top: 5px;"></div>
+                        <strong style="color: var(--gray);">🚁 Đang trên đường...</strong>
+                    </div>
+                    ` : '')}
+                    
+                    <!-- Step 4: COMPLETED -->
+                    ${delivery.actualArrivalTime ? `
+                    <div style="margin: 1rem 0; position: relative;">
+                        <div style="position: absolute; left: -2rem; width: 12px; height: 12px; background: var(--success-color); border-radius: 50%; top: 5px;"></div>
+                        <strong style="color: var(--success-color);">✅ Đã giao hàng thành công!</strong>
+                        <p style="margin: 0.25rem 0; color: var(--gray); font-size: 0.9rem;">
+                            ${FormatHelper.date(delivery.actualArrivalTime)}
+                        </p>
+                    </div>
+                    ` : ''}
                 </div>
+                
+                <!-- Add pulse animation for ARRIVING status -->
+                <style>
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; transform: scale(1); }
+                        50% { opacity: 0.5; transform: scale(1.2); }
+                    }
+                </style>
             </div>
         </div>
         
@@ -810,20 +877,74 @@ async function displayDeliveryTracking(delivery) {
                 </div>
             </div>
         </div>
+        
+        <!-- Customer Actions -->
+        ${delivery.currentStatus === 'ARRIVING' ? `
+        <div style="margin-top: 1.5rem; text-align: center;">
+            <button onclick="confirmDeliveryReceived(${delivery.id})" 
+                    style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+                           color: white; border: none; padding: 1rem 2rem; 
+                           border-radius: 12px; font-size: 1.1rem; font-weight: bold;
+                           cursor: pointer; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+                           transition: all 0.3s ease;">
+                <i class="fas fa-check-circle"></i> Xác nhận đã nhận hàng
+            </button>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--gray);">
+                ⚠️ Chỉ nhấn khi bạn đã nhận được hàng từ drone
+            </p>
+        </div>
+        ` : ''}
     `;
 }
 
 // Get delivery status info
 function getDeliveryStatusInfo(status) {
     const statusMap = {
-        'PENDING': { text: 'Chờ lấy hàng', icon: 'clock', color: 'warning' },
+        // Backend delivery statuses
+        'QUEUED': { text: 'Chờ xử lý', icon: 'clock', color: 'warning' },
         'ASSIGNED': { text: 'Đã phân công drone', icon: 'check-circle', color: 'info' },
+        'LAUNCHED': { text: 'Drone đã khởi hành', icon: 'rocket', color: 'primary' },
+        'ARRIVING': { text: '🚁 Drone sắp đến!', icon: 'shipping-fast', color: 'warning' },
+        'COMPLETED': { text: 'Đã giao thành công', icon: 'check-double', color: 'success' },
+        'FAILED': { text: 'Giao hàng thất bại', icon: 'times-circle', color: 'danger' },
+        
+        // Legacy statuses (backward compatibility)
+        'PENDING': { text: 'Chờ lấy hàng', icon: 'clock', color: 'warning' },
         'PICKED_UP': { text: 'Đang giao hàng', icon: 'drone', color: 'primary' },
         'IN_TRANSIT': { text: 'Đang trên đường', icon: 'shipping-fast', color: 'primary' },
-        'DELIVERED': { text: 'Đã giao thành công', icon: 'check-double', color: 'success' },
-        'FAILED': { text: 'Giao hàng thất bại', icon: 'times-circle', color: 'danger' }
+        'DELIVERED': { text: 'Đã giao thành công', icon: 'check-double', color: 'success' }
     };
     return statusMap[status] || { text: 'Đang xử lý', icon: 'spinner', color: 'info' };
+}
+
+// Customer confirms delivery received
+async function confirmDeliveryReceived(deliveryId) {
+    if (!confirm('⚠️ Xác nhận bạn đã nhận được hàng từ drone?\n\nLưu ý: Hành động này không thể hoàn tác!')) {
+        return;
+    }
+
+    try {
+        Loading.show();
+        
+        const response = await APIHelper.post(`/api/v1/deliveries/${deliveryId}/confirm-received`);
+        
+        if (response.code === 200) {
+            Toast.success('✅ Cảm ơn bạn! Đơn hàng đã được xác nhận giao thành công');
+            
+            // Close modal and reload
+            closeTrackingModal();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            Toast.error(response.message || 'Không thể xác nhận đơn hàng');
+        }
+    } catch (error) {
+        console.error('Error confirming delivery:', error);
+        Toast.error('Có lỗi xảy ra khi xác nhận đơn hàng');
+    } finally {
+        Loading.hide();
+    }
 }
 
 // Close tracking modal
@@ -938,10 +1059,33 @@ function formatDistance(distanceKm) {
 
 /**
  * Calculate remaining time until arrival
+ * ✅ CHỈ TÍNH CHO ĐƠN ĐANG GIAO - LOAD TỪ DATABASE CHO ĐƠN ĐÃ GIAO
  */
-function calculateRemainingTime(estimatedArrivalTime) {
+function calculateRemainingTime(estimatedArrivalTime, orderStatus, actualArrivalTime) {
     if (!estimatedArrivalTime) return null;
     
+    // ✅ KHÔNG TÍNH REAL-TIME CHO ĐƠN ĐÃ GIAO - SỬ DỤNG actualArrivalTime TỪ DATABASE
+    if (orderStatus === 'DELIVERED' || orderStatus === 'COMPLETED') {
+        if (actualArrivalTime) {
+            // Tính thời gian trễ DỰA TRÊN DATABASE (cố định)
+            const estimated = new Date(estimatedArrivalTime);
+            const actual = new Date(actualArrivalTime);
+            const diffMs = actual - estimated;
+            const diffMinutes = Math.floor(diffMs / 60000);
+            
+            if (diffMinutes > 0) {
+                return {
+                    minutes: diffMinutes,
+                    isLate: true,
+                    text: `Đã giao trễ ${diffMinutes} phút`,
+                    isFixed: true // ✅ Đánh dấu là thời gian cố định từ DB
+                };
+            }
+        }
+        return null; // Không hiển thị nếu giao đúng giờ hoặc sớm
+    }
+    
+    // ✅ CHỈ TÍNH REAL-TIME CHO ĐƠN ĐANG GIAO
     const now = new Date();
     const arrival = new Date(estimatedArrivalTime);
     const diffMs = arrival - now;
@@ -989,16 +1133,22 @@ function renderDeliveryTimeEstimate(order) {
     const departureTime = formatTime(hasActualTime ? order.actualDepartureTime : order.estimatedDepartureTime);
     const timeToUse = hasActualTime ? order.actualArrivalTime : order.estimatedArrivalTime;
     const distance = formatDistance(order.distanceKm);
-    const remaining = calculateRemainingTime(timeToUse);
+    
+    // ✅ Truyền thêm actualArrivalTime để tính thời gian cố định từ DB cho đơn đã giao
+    const remaining = calculateRemainingTime(
+        order.estimatedArrivalTime, 
+        order.status, 
+        order.actualArrivalTime
+    );
     
     let statusClass = 'on-time';
     let statusIcon = 'fa-clock';
     let statusText = hasActualTime ? 'Thời gian giao hàng' : 'Dự kiến giao';
     
     if (order.status === 'DELIVERED') {
-        statusClass = 'completed';
+        statusClass = 'completed delivered'; // ✅ Thêm class để dừng update
         statusIcon = 'fa-check-circle';
-        statusText = 'Đã giao';
+        statusText = 'Đã giao lúc'; // ✅ Rõ ràng hơn
     } else if (remaining && remaining.isLate) {
         statusClass = 'delayed';
         statusIcon = 'fa-exclamation-circle';
@@ -1012,7 +1162,7 @@ function renderDeliveryTimeEstimate(order) {
     }
     
     return `
-        <div class="delivery-estimate ${statusClass}">
+        <div class="delivery-estimate ${statusClass}" data-order-id="${order.id || order.orderId || ''}">
             <div class="estimate-header">
                 <i class="fas ${statusIcon}"></i>
                 <span>${statusText}</span>

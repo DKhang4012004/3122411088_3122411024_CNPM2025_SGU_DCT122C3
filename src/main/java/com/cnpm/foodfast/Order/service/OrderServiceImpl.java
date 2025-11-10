@@ -51,8 +51,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public List<OrderResponse> createOrdersFromCart(String username) {
-        log.info("Creating orders from cart for authenticated user: {}", username);
+    public List<OrderResponse> createOrdersFromCart(String username, com.cnpm.foodfast.dto.request.order.CreateOrderRequest request) {
+        log.info("Creating orders from cart for authenticated user: {} with address: {}", 
+                 username, request != null ? request.getDeliveryAddressSnapshot() : "N/A");
 
         try {
             // 1. Lấy userId từ username
@@ -108,6 +109,7 @@ public class OrderServiceImpl implements OrderService {
                         .shippingFee(BigDecimal.ZERO)
                         .taxAmount(BigDecimal.ZERO)
                         .totalPayable(BigDecimal.ZERO)
+                        .deliveryAddressSnapshot(request != null ? request.getDeliveryAddressSnapshot() : null)
                         .createdAt(LocalDateTime.now())
                         .updatedAt(LocalDateTime.now())
                         .build();
@@ -413,8 +415,15 @@ public class OrderServiceImpl implements OrderService {
      * Validate status transition logic
      */
     private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
-        // Không cho phép chuyển từ DELIVERED hoặc CANCELLED
-        if (currentStatus == OrderStatus.DELIVERED || currentStatus == OrderStatus.CANCELLED) {
+        // ✅ CHO PHÉP CHUYỂN TỪ CANCELLED → REFUNDED (Admin hoàn tiền)
+        if (currentStatus == OrderStatus.CANCELLED && newStatus == OrderStatus.REFUNDED) {
+            return; // Valid transition for refund
+        }
+        
+        // Không cho phép chuyển từ DELIVERED, CANCELLED hoặc REFUNDED
+        if (currentStatus == OrderStatus.DELIVERED || 
+            currentStatus == OrderStatus.CANCELLED || 
+            currentStatus == OrderStatus.REFUNDED) {
             throw new BadRequestException("Cannot change status of " + currentStatus + " order");
         }
 
@@ -468,6 +477,8 @@ public class OrderServiceImpl implements OrderService {
         // Get delivery time estimation if delivery exists
         LocalDateTime estimatedDepartureTime = null;
         LocalDateTime estimatedArrivalTime = null;
+        LocalDateTime actualDepartureTime = null; // ✅ Thời gian khởi hành thực tế
+        LocalDateTime actualArrivalTime = null;   // ✅ Thời gian đến thực tế
         Integer estimatedFlightTimeMinutes = null;
         Double distanceKm = null;
 
@@ -479,6 +490,9 @@ public class OrderServiceImpl implements OrderService {
                 estimatedArrivalTime = delivery.getEstimatedArrivalTime();
                 estimatedFlightTimeMinutes = delivery.getEstimatedFlightTimeMinutes();
                 distanceKm = delivery.getDistanceKm();
+                // ✅ Load actual times từ database
+                actualDepartureTime = delivery.getActualDepartureTime();
+                actualArrivalTime = delivery.getActualArrivalTime();
             }
         } catch (Exception e) {
             log.warn("Failed to get delivery info for order {}: {}", order.getId(), e.getMessage());
@@ -501,6 +515,8 @@ public class OrderServiceImpl implements OrderService {
                 .estimatedArrivalTime(estimatedArrivalTime)
                 .estimatedFlightTimeMinutes(estimatedFlightTimeMinutes)
                 .distanceKm(distanceKm)
+                .actualDepartureTime(actualDepartureTime)   // ✅ Trả về actual times
+                .actualArrivalTime(actualArrivalTime)       // ✅ Trả về actual times
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())

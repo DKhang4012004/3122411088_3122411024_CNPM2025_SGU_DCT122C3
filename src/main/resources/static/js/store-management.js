@@ -1,8 +1,8 @@
 // Store Management JavaScript
 console.log('=== Store Management Script Loaded ===');
 
-// API Base URL from config.js
-const API_BASE_URL = API_CONFIG.BASE_URL;
+// Note: API_BASE_URL is already defined in config.js
+// No need to redeclare it here
 console.log('API_BASE_URL:', API_BASE_URL);
 console.log('API_CONFIG:', API_CONFIG);
 
@@ -292,7 +292,15 @@ async function loadStoreInfo() {
 
             document.getElementById('storeName').value = store.name || '';
             document.getElementById('storeDescription').value = store.description || '';
+            // ✅ Set giá trị cho dropdown ẩn (để giữ giá trị khi submit)
             document.getElementById('storeStatus').value = store.storeStatus || 'PENDING';
+            // ✅ Hiển thị trạng thái dưới dạng text chỉ đọc
+            const statusText = {
+                'ACTIVE': 'Đang hoạt động',
+                'INACTIVE': 'Tạm ngừng',
+                'PENDING': 'Chờ duyệt'
+            };
+            document.getElementById('storeStatusDisplay').value = statusText[store.storeStatus] || 'Không xác định';
             document.getElementById('storeEmail').value = store.payoutEmail || '';
             document.getElementById('storeCreatedAt').value = store.createdAt ?
                 new Date(store.createdAt).toLocaleString('vi-VN') : '';
@@ -477,6 +485,7 @@ async function updateStoreInfo(event) {
     const token = localStorage.getItem('foodfast_token');
     const form = event.target;
 
+    // ✅ KHÔNG GỬI storeStatus - CHỈ ADMIN MỚI CÓ QUYỀN THAY ĐỔI TRẠNG THÁI
     const formData = {
         name: form.name.value,
         description: form.description.value,

@@ -32,16 +32,22 @@ public class SecurityConfig {
                         "/products","/products/**",
                         "/categories","/categories/**",
                         "/stores","/stores/**",
-                        "/api/stores","/api/stores/**",
+                        "/api/v1/deliveries","/api/v1/deliveries/**",
                         "/location","/location/**",
                         "/storesaddresses","/storesaddresses/**",
-                        "/drones","/drones/**").permitAll()
+                        "/drones","/drones/**",
+                        "/deliveries","/deliveries/**").permitAll()
                 .requestMatchers("/users/userCreated").permitAll()
+                
+                // ✅ Store endpoints - CHỈ CHANGE STATUS CẦN ADMIN, CÒN LẠI PUBLIC
+                .requestMatchers("/api/stores/*/status").hasRole("ADMIN") // Chỉ admin mới đổi status
+                .requestMatchers("/api/stores","/api/stores/**").permitAll() // Còn lại public
 
                 // Allow static resources (HTML, CSS, JS, images)
                 .requestMatchers("/static/**", "/images/**", "/uploads/**",
                         "/*.html", "/*.css", "/*.js", "/*.png", "/*.jpg",
-                        "/test-*.html", "/debug-*.html", "/drone-*.html", "/index.html").permitAll()
+                        "/test-*.html", "/debug-*.html", "/drone-*.html", 
+                        "/admin-drone-control.html", "/index.html").permitAll()
 
                         // File upload endpoints (require authentication)
                         .requestMatchers("/api/upload/**").authenticated()

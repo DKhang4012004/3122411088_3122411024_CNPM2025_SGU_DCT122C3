@@ -13,4 +13,5 @@ public class CreateOrderRequest {
     Long deliveryAddressId;
     String deliveryNote;
     String voucherCode;
+    String deliveryAddressSnapshot; // JSON string: {"address":"...", "lat":10.772, "lng":106.660}
 }

@@ -29,15 +29,17 @@ public class OrderController {
      * Lấy userId từ token đăng nhập
      */
     @PostMapping
-    public ResponseEntity<APIResponse<List<OrderResponse>>> createOrdersFromCart() {
+    public ResponseEntity<APIResponse<List<OrderResponse>>> createOrdersFromCart(
+            @RequestBody(required = false) CreateOrderRequest request) {
 
         // Lấy username từ authentication context
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        log.info("Creating orders from cart for authenticated user: {}", username);
+        log.info("Creating orders from cart for authenticated user: {} with address: {}", 
+                 username, request != null ? request.getDeliveryAddressSnapshot() : "N/A");
 
-        List<OrderResponse> responses = orderService.createOrdersFromCart(username);
+        List<OrderResponse> responses = orderService.createOrdersFromCart(username, request);
 
         return ResponseEntity.ok(APIResponse.<List<OrderResponse>>builder()
                 .code(200)

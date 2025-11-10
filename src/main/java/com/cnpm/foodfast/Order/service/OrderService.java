@@ -13,7 +13,7 @@ public interface OrderService {
      * Create new orders from authenticated user's cart
      * Returns list of orders (one per store)
      */
-    List<OrderResponse> createOrdersFromCart(String username);
+    List<OrderResponse> createOrdersFromCart(String username, com.cnpm.foodfast.dto.request.order.CreateOrderRequest request);
 
     /**
      * Get order by ID

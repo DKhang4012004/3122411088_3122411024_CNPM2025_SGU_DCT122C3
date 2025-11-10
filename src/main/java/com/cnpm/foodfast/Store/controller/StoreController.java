@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -93,11 +94,18 @@ public class StoreController {
 
     /**
      * Change store status
+     * ✅ CHỈ ADMIN MỚI CÓ QUYỀN THAY ĐỔI TRẠNG THÁI CỬA HÀNG
      */
     @PatchMapping("/{storeId}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public APIResponse<StoreResponse> changeStoreStatus(@PathVariable Long storeId,
                                                          @RequestParam StoreStatus status) {
         log.info("REST request to change store {} status to {}", storeId, status);
+        
+        // DEBUG: Log authorities để kiểm tra
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        log.info("User authorities: {}", authentication.getAuthorities());
+        
         return APIResponse.<StoreResponse>builder()
                 .result(storeService.changeStoreStatus(storeId, status))
                 .build();

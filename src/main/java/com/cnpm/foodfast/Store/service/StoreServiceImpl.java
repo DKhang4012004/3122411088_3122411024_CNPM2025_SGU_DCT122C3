@@ -46,7 +46,8 @@ public class StoreServiceImpl implements StoreService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Store store = storeMapper.toStore(request);
-        store.setStoreStatus(StoreStatus.ACTIVE);
+        // ✅ MẶC ĐỊNH CỬA HÀNG MỚI Ở TRẠNG THÁI INACTIVE, ĐỢI ADMIN DUYỆT
+        store.setStoreStatus(StoreStatus.INACTIVE);
         store = storeRepository.save(store);
 
         return storeMapper.toStoreResponse(store);
@@ -173,14 +174,19 @@ public class StoreServiceImpl implements StoreService {
     }
 
     private StoreWithProductsResponse buildStoreWithProductsResponse(Store store, List<Product> products) {
+        // ✅ LỌC CHỈ LẤY SẢN PHẨM ACTIVE CHO KHÁCH HÀNG
+        List<Product> activeProducts = products.stream()
+                .filter(p -> p.getStatus() == ProductStatus.ACTIVE)
+                .collect(Collectors.toList());
+        
         // Convert products to ProductResponse
-        List<ProductResponse> productResponses = products.stream()
+        List<ProductResponse> productResponses = activeProducts.stream()
                 .map(this::convertToProductResponse)
                 .collect(Collectors.toList());
 
         // Count available products
-        long availableCount = products.stream()
-                .filter(p -> p.getStatus() == ProductStatus.ACTIVE && p.getQuantityAvailable() > 0)
+        long availableCount = activeProducts.stream()
+                .filter(p -> p.getQuantityAvailable() > 0)
                 .count();
 
         return StoreWithProductsResponse.builder()
