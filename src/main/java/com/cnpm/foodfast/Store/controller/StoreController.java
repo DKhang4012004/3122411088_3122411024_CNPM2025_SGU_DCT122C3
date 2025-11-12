@@ -71,13 +71,25 @@ public class StoreController {
     }
 
     /**
-     * Get all stores
+     * Get all stores (Only ACTIVE stores for homepage)
      */
     @GetMapping
     public APIResponse<List<StoreResponse>> getAllStores() {
-        log.info("REST request to get all stores");
+        log.info("REST request to get all ACTIVE stores");
         return APIResponse.<List<StoreResponse>>builder()
                 .result(storeService.getAllStores())
+                .build();
+    }
+
+    /**
+     * Get all stores including INACTIVE (Admin only)
+     */
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public APIResponse<List<StoreResponse>> getAllStoresForAdmin() {
+        log.info("REST request to get all stores (including INACTIVE) for admin");
+        return APIResponse.<List<StoreResponse>>builder()
+                .result(storeService.getAllStoresForAdmin())
                 .build();
     }
 

@@ -30,9 +30,14 @@ public interface StoreService {
     StoreResponse getStoreById(Long storeId);
 
     /**
-     * Get all stores
+     * Get all ACTIVE stores (for homepage)
      */
     List<StoreResponse> getAllStores();
+
+    /**
+     * Get all stores including INACTIVE (for admin)
+     */
+    List<StoreResponse> getAllStoresForAdmin();
 
     /**
      * Get stores by owner user ID

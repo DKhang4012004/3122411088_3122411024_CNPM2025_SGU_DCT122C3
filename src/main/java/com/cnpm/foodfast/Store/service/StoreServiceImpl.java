@@ -93,12 +93,23 @@ public class StoreServiceImpl implements StoreService {
 
     @Override
     public List<StoreResponse> getAllStores() {
-        log.info("Getting all stores");
+        log.info("Getting all ACTIVE stores for homepage");
 
-        // ✅ CHỈ TRẢ VỀ CÁC CỬA HÀNG ĐANG HOẠT ĐỘNG (ACTIVE)
+        // ✅ CHỈ TRẢ VỀ CÁC CỬA HÀNG ĐANG HOẠT ĐỘNG (ACTIVE) - DÀNH CHO TRANG CHỦ
         List<Store> stores = storeRepository.findAll();
         return stores.stream()
                 .filter(store -> store.getStoreStatus() == StoreStatus.ACTIVE)
+                .map(storeMapper::toStoreResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StoreResponse> getAllStoresForAdmin() {
+        log.info("Getting all stores for admin (including INACTIVE and PENDING)");
+
+        // ✅ TRẢ VỀ TẤT CẢ CỬA HÀNG (BAO GỒM INACTIVE, PENDING) - DÀNH CHO ADMIN
+        List<Store> stores = storeRepository.findAll();
+        return stores.stream()
                 .map(storeMapper::toStoreResponse)
                 .collect(Collectors.toList());
     }

@@ -404,7 +404,8 @@ async function loadStores() {
     tbody.innerHTML = '<tr><td colspan="6" class="loading"><i class="fas fa-spinner fa-spin"></i><br>Đang tải...</td></tr>';
 
     try {
-        const response = await apiRequest('/api/stores');
+        // ✅ ADMIN: GỌI ENDPOINT MỚI ĐỂ LẤY TẤT CẢ CỬA HÀNG (BAO GỒM INACTIVE, PENDING)
+        const response = await apiRequest('/api/stores/admin/all');
         const stores = response.result || [];
 
         if (stores.length === 0) {
