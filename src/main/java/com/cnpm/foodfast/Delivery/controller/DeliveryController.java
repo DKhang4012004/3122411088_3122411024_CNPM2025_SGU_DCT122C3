@@ -289,5 +289,24 @@ public class DeliveryController {
                 .result(responses)
                 .build());
     }
+
+    /**
+     * Get delivery tracking information for map visualization
+     * GET /api/v1/deliveries/{deliveryId}/tracking
+     */
+    @GetMapping("/{deliveryId}/tracking")
+    public ResponseEntity<APIResponse<com.cnpm.foodfast.dto.response.delivery.DeliveryTrackingResponse>> getTrackingInfo(
+            @PathVariable Long deliveryId) {
+        log.info("Getting tracking info for delivery: {}", deliveryId);
+
+        com.cnpm.foodfast.dto.response.delivery.DeliveryTrackingResponse response = 
+                deliveryService.getTrackingInfo(deliveryId);
+
+        return ResponseEntity.ok(APIResponse.<com.cnpm.foodfast.dto.response.delivery.DeliveryTrackingResponse>builder()
+                .code(200)
+                .message("Tracking info retrieved successfully")
+                .result(response)
+                .build());
+    }
 }
 

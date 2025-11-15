@@ -71,7 +71,9 @@ public class DeliveryService {
             storeCoords.getLatitude(), storeCoords.getLongitude(),
             customerCoords.getLatitude(), customerCoords.getLongitude()
         );
-        int flightTimeMinutes = droneService.estimateFlightTime(distanceKm);
+        
+        // ⚡ FORCE 0.5 PHÚT (30 GIÂY) CHO DEMO - Tổng 1 phút
+        int flightTimeMinutes = 1; // Fixed 30 seconds for quick demo (stored as 1 min, actual = 30s)
         
         // Ước tính thời gian (giả sử cửa hàng chuẩn bị 15 phút)
         int prepTimeMinutes = 15;
@@ -129,10 +131,12 @@ public class DeliveryService {
         delivery.setUpdatedAt(LocalDateTime.now());
         
         // ⭐ TÍNH THỜI GIAN THỰC TẾ KHI GÁN DRONE ⭐
-        // Thời gian khởi hành thực tế = bây giờ + 5 phút (chuẩn bị)
-        LocalDateTime actualDeparture = LocalDateTime.now().plusMinutes(5);
-        // Thời gian đến thực tế = khởi hành + flight time (đã tính trong estimated)
-        LocalDateTime actualArrival = actualDeparture.plusMinutes(delivery.getEstimatedFlightTimeMinutes());
+        // Thời gian khởi hành thực tế = bây giờ + 30 giây (chuẩn bị)
+        LocalDateTime actualDeparture = LocalDateTime.now().plusSeconds(30);
+        
+        // ⚡ FORCE 30 GIÂY CHO DEMO - Tổng 1 phút
+        int flightTimeSeconds = 30; // Fixed 30 seconds regardless of distance
+        LocalDateTime actualArrival = actualDeparture.plusSeconds(flightTimeSeconds);
         
         delivery.setActualDepartureTime(actualDeparture);
         delivery.setActualArrivalTime(actualArrival);
@@ -439,6 +443,120 @@ public class DeliveryService {
     private static class AddressCoordinates {
         private double latitude;
         private double longitude;
+    }
+
+    /**
+     * Get tracking information for delivery (used by map visualization)
+     */
+    public com.cnpm.foodfast.dto.response.delivery.DeliveryTrackingResponse getTrackingInfo(Long deliveryId) {
+        log.info("Getting tracking info for delivery: {}", deliveryId);
+
+        Delivery delivery = deliveryRepository.findById(deliveryId)
+                .orElseThrow(() -> new AppException(ErrorCode.DELIVERY_NOT_FOUND));
+
+        Order order = orderRepository.findById(delivery.getOrderId())
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        Store store = storeRepository.findById(delivery.getPickupStoreId())
+                .orElseThrow(() -> new AppException(ErrorCode.STORE_NOT_EXISTED));
+
+        // Get drone if assigned
+        com.cnpm.foodfast.dto.response.delivery.Position dronePosition = null;
+        String droneModel = null;
+        Integer batteryPercent = null;
+
+        if (delivery.getDroneId() != null) {
+            Drone drone = droneRepository.findById(delivery.getDroneId()).orElse(null);
+            if (drone != null) {
+                dronePosition = new com.cnpm.foodfast.dto.response.delivery.Position(
+                        drone.getLastLatitude() != null ? drone.getLastLatitude() : java.math.BigDecimal.ZERO,
+                        drone.getLastLongitude() != null ? drone.getLastLongitude() : java.math.BigDecimal.ZERO
+                );
+                droneModel = drone.getModel();
+                batteryPercent = drone.getCurrentBatteryPercent();
+            }
+        }
+
+        // Get store position
+        AddressCoordinates storeCoords = getStoreCoordinates(store);
+        com.cnpm.foodfast.dto.response.delivery.Position storePosition = 
+                new com.cnpm.foodfast.dto.response.delivery.Position(
+                        storeCoords.getLatitude(), storeCoords.getLongitude()
+                );
+
+        // Get customer position
+        AddressCoordinates customerCoords = parseAddressCoordinates(delivery.getDropoffAddressSnapshot());
+        com.cnpm.foodfast.dto.response.delivery.Position customerPosition = 
+                new com.cnpm.foodfast.dto.response.delivery.Position(
+                        customerCoords.getLatitude(), customerCoords.getLongitude()
+                );
+
+        // Calculate progress
+        int progress = calculateProgress(delivery);
+
+        return com.cnpm.foodfast.dto.response.delivery.DeliveryTrackingResponse.builder()
+                .deliveryId(delivery.getId())
+                .orderId(order.getId())
+                .orderCode(order.getOrderCode())
+                .status(delivery.getCurrentStatus())
+                .dronePosition(dronePosition)
+                .storePosition(storePosition)
+                .customerPosition(customerPosition)
+                .progress(progress)
+                .distanceKm(delivery.getDistanceKm())
+                .estimatedArrival(delivery.getActualArrivalTime())
+                .actualDeparture(delivery.getActualDepartureTime())
+                .droneId(delivery.getDroneId())
+                .droneModel(droneModel)
+                .batteryPercent(batteryPercent)
+                .build();
+    }
+
+    /**
+     * Calculate delivery progress (0-100%)
+     */
+    private int calculateProgress(Delivery delivery) {
+        if (delivery.getCurrentStatus() == DeliveryStatus.QUEUED || 
+            delivery.getCurrentStatus() == DeliveryStatus.ASSIGNED) {
+            return 0;
+        }
+
+        if (delivery.getCurrentStatus() == DeliveryStatus.COMPLETED) {
+            return 100;
+        }
+
+        // Calculate based on time elapsed
+        if (delivery.getActualDepartureTime() != null && delivery.getActualArrivalTime() != null) {
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            java.time.LocalDateTime start = delivery.getActualDepartureTime();
+            java.time.LocalDateTime end = delivery.getActualArrivalTime();
+
+            long totalSeconds = java.time.Duration.between(start, end).getSeconds();
+            long elapsedSeconds = java.time.Duration.between(start, now).getSeconds();
+
+            if (totalSeconds > 0) {
+                // ⚠️ FIX: Nếu đã quá giờ arrival nhưng status không phải COMPLETED
+                // → Cap ở 99% thay vì 100% để tránh hiển thị sai
+                if (elapsedSeconds >= totalSeconds && delivery.getCurrentStatus() != DeliveryStatus.COMPLETED) {
+                    log.warn("Delivery {} exceeded estimated arrival time but not completed yet. " +
+                             "Status: {}, Expected: {}, Now: {}", 
+                             delivery.getId(), delivery.getCurrentStatus(), end, now);
+                    return 99; // Cap at 99% until actually completed
+                }
+                
+                int progress = (int) Math.min(100, (elapsedSeconds * 100) / totalSeconds);
+                return Math.max(0, progress);
+            }
+        }
+
+        // Default based on status
+        if (delivery.getCurrentStatus() == DeliveryStatus.LAUNCHED) {
+            return 30;
+        } else if (delivery.getCurrentStatus() == DeliveryStatus.ARRIVING) {
+            return 80;
+        }
+
+        return 0;
     }
 }
 

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theo Dõi Giao Hàng - FoodFast Drone Delivery</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            height: calc(100vh - 200px);
+        }
+
+        /* Tracking Info Panel */
+        .tracking-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow-y: auto;
+        }
+
+        .order-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .order-info h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .order-code {
+            font-size: 1.1em;
+            font-weight: bold;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 12px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .status-badge {
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 0.95em;
+            text-align: center;
+            margin: 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-QUEUED { background: #9e9e9e; color: white; }
+        .status-ASSIGNED { background: #2196F3; color: white; }
+        .status-LAUNCHED { background: #ffc107; color: #333; }
+        .status-ARRIVING { background: #ff9800; color: white; }
+        .status-COMPLETED { background: #4caf50; color: white; }
+
+        .info-section {
+            margin: 20px 0;
+        }
+
+        .info-section h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .info-value {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50 0%, #8bc34a 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* Drone Info */
+        .drone-info {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .drone-info .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+
+        .battery {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .battery-bar {
+            flex: 1;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .battery-fill {
+            height: 100%;
+            background: #4caf50;
+            transition: width 0.3s;
+        }
+
+        /* Map Container */
+        .map-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        .map-legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .icon-store { 
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+        .icon-customer { 
+            background: linear-gradient(135deg, #4caf50 0%, #388E3C 100%);
+        }
+        .icon-drone { 
+            background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+            animation: pulse-legend 2s infinite;
+        }
+
+        @keyframes pulse-legend {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-drone {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(255, 87, 34, 0.6);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 6px 25px rgba(255, 87, 34, 0.9);
+            }
+        }
+
+        /* Custom marker styles */
+        .drone-marker, .store-marker, .customer-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .timeline-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 40px;
+            width: 2px;
+            height: calc(100% + 10px);
+            background: #e0e0e0;
+        }
+
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .timeline-icon.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .timeline-content {
+            flex: 1;
+        }
+
+        .timeline-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .timeline-time {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .map-container {
+                height: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-helicopter"></i> FoodFast Drone Delivery</h1>
+            <p>Theo dõi giao hàng real-time</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Tracking Panel -->
+            <div class="tracking-panel">
+                <div id="loadingPanel" class="loading">
+                    <div class="spinner"></div>
+                    <p>Đang tải thông tin giao hàng...</p>
+                </div>
+
+                <div id="trackingContent" style="display: none;">
+                    <div class="order-info">
+                        <h3><i class="fas fa-receipt"></i> Thông Tin Đơn Hàng</h3>
+                        <div class="order-code" id="orderCode">ORD-XXXXX</div>
+                    </div>
+
+                    <div id="statusBadge" class="status-badge">QUEUED</div>
+
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill">0%</div>
+                        </div>
+                        <div id="progressText" class="progress-text">0%</div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4><i class="fas fa-info-circle"></i> Chi Tiết</h4>
+                        <div class="info-item">
+                            <span class="info-label">Khoảng cách</span>
+                            <span class="info-value" id="distance">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Thời gian còn lại</span>
+                            <span class="info-value" id="eta">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Giờ khởi hành</span>
+                            <span class="info-value" id="departureTime">-</span>
+                        </div>
+                    </div>
+
+                    <div id="droneInfoSection" class="drone-info" style="display: none;">
+                        <h4><i class="fas fa-helicopter"></i> Thông Tin Drone</h4>
+                        <div class="info-row">
+                            <span>Model:</span>
+                            <span id="droneModel">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Drone ID:</span>
+                            <span id="droneId">-</span>
+                        </div>
+                        <div class="battery">
+                            <span>Pin:</span>
+                            <div class="battery-bar">
+                                <div id="batteryFill" class="battery-fill" style="width: 100%"></div>
+                            </div>
+                            <span id="batteryPercent">100%</span>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <h4><i class="fas fa-clock"></i> Timeline</h4>
+                        <div class="timeline" id="timeline">
+                            <!-- Timeline items will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="errorPanel" class="error-message" style="display: none;">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Lỗi</strong>
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <div class="map-overlay">
+                    <div class="map-legend">
+                        <div class="legend-item">
+                            <div class="legend-icon icon-store"></div>
+                            <span>Cửa hàng</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon icon-drone"></div>
+                            <span>Drone</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon icon-customer"></div>
+                            <span>Điểm giao</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet Map Library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        const API_BASE_URL = '/home';
+        const deliveryId = new URLSearchParams(window.location.search).get('deliveryId');
+
+        let map, droneMarker, storeMarker, customerMarker, flightPath;
+        let updateInterval;
+
+        // Initialize map
+        function initMap() {
+            // Create map centered on HCMC
+            map = L.map('map').setView([10.762622, 106.660172], 13);
+
+            // Add tile layer (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Custom icons
+            const droneIcon = L.divIcon({
+                html: `<div style="
+                    background: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+                    border: 4px solid white;
+                    border-radius: 50%;
+                    width: 50px;
+                    height: 50px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 15px rgba(255, 87, 34, 0.6);
+                    animation: pulse-drone 2s infinite;
+                ">
+                    <i class="fas fa-drone" style="color: white; font-size: 24px;"></i>
+                </div>`,
+                className: 'drone-marker',
+                iconSize: [50, 50],
+                iconAnchor: [25, 25]
+            });
+
+            const storeIcon = L.divIcon({
+                html: `<div style="
+                    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 3px 10px rgba(33, 150, 243, 0.5);
+                ">
+                    <i class="fas fa-store" style="color: white; font-size: 18px;"></i>
+                </div>`,
+                className: 'store-marker',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+
+            const customerIcon = L.divIcon({
+                html: `<div style="
+                    background: linear-gradient(135deg, #4caf50 0%, #388E3C 100%);
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 3px 10px rgba(76, 175, 80, 0.5);
+                ">
+                    <i class="fas fa-home" style="color: white; font-size: 18px;"></i>
+                </div>`,
+                className: 'customer-marker',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20]
+            });
+
+            // Create markers (hidden initially)
+            droneMarker = L.marker([10.762622, 106.660172], {icon: droneIcon}).addTo(map);
+            storeMarker = L.marker([10.762622, 106.660172], {icon: storeIcon}).addTo(map);
+            customerMarker = L.marker([10.772622, 106.670172], {icon: customerIcon}).addTo(map);
+
+            // Create flight path
+            flightPath = L.polyline([], {
+                color: '#2196F3',
+                weight: 3,
+                opacity: 0.6,
+                dashArray: '10, 10'
+            }).addTo(map);
+        }
+
+        // Format datetime
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Calculate time remaining
+        function calculateTimeRemaining(arrivalTime, status) {
+            if (!arrivalTime) return '-';
+            
+            // Nếu đã completed, hiển thị "Đã giao"
+            if (status === 'COMPLETED') {
+                return 'Đã giao';
+            }
+            
+            const now = new Date();
+            const arrival = new Date(arrivalTime);
+            const diffMs = arrival - now;
+            
+            // Nếu quá giờ dự kiến nhưng chưa complete → Hiển thị "Đang giao..."
+            if (diffMs <= 0) {
+                return 'Đang giao hàng...';
+            }
+            
+            const minutes = Math.ceil(diffMs / 60000);
+            if (minutes === 0) return '< 1 phút';
+            return `${minutes} phút`;
+        }
+
+        // Get status text in Vietnamese
+        function getStatusText(status) {
+            const statusMap = {
+                'QUEUED': 'Đang chờ',
+                'ASSIGNED': 'Đã gán drone',
+                'LAUNCHED': 'Đang bay',
+                'ARRIVING': 'Sắp đến',
+                'COMPLETED': 'Đã giao'
+            };
+            return statusMap[status] || status;
+        }
+
+        // Update timeline
+        function updateTimeline(status) {
+            const timeline = document.getElementById('timeline');
+            const stages = [
+                { status: 'QUEUED', icon: 'fa-clock', text: 'Đơn hàng đã thanh toán' },
+                { status: 'ASSIGNED', icon: 'fa-check-circle', text: 'Đã gán drone' },
+                { status: 'LAUNCHED', icon: 'fa-helicopter', text: 'Drone đã cất cánh' },
+                { status: 'ARRIVING', icon: 'fa-map-marker-alt', text: 'Đang đến gần' },
+                { status: 'COMPLETED', icon: 'fa-flag-checkered', text: 'Giao hàng thành công' }
+            ];
+
+            const statusOrder = ['QUEUED', 'ASSIGNED', 'LAUNCHED', 'ARRIVING', 'COMPLETED'];
+            const currentIndex = statusOrder.indexOf(status);
+
+            timeline.innerHTML = stages.map((stage, index) => {
+                const isActive = index <= currentIndex;
+                return `
+                    <div class="timeline-item">
+                        <div class="timeline-icon ${isActive ? 'active' : ''}">
+                            <i class="fas ${stage.icon}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-title">${stage.text}</div>
+                            <div class="timeline-time">${isActive ? 'Hoàn thành' : 'Chờ xử lý'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Fetch tracking data
+        async function updateTracking() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/deliveries/${deliveryId}/tracking`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tracking data');
+                }
+
+                const data = await response.json();
+                const result = data.result;
+
+                // Hide loading, show content
+                document.getElementById('loadingPanel').style.display = 'none';
+                document.getElementById('trackingContent').style.display = 'block';
+
+                // Update order info
+                document.getElementById('orderCode').textContent = result.orderCode;
+
+                // Update status
+                const statusBadge = document.getElementById('statusBadge');
+                statusBadge.textContent = getStatusText(result.status);
+                statusBadge.className = 'status-badge status-' + result.status;
+
+                // Update progress
+                const progress = result.progress || 0;
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('progressFill').textContent = progress + '%';
+                document.getElementById('progressText').textContent = `Tiến độ: ${progress}%`;
+
+                // Update info
+                document.getElementById('distance').textContent = result.distanceKm ? result.distanceKm.toFixed(2) + ' km' : '-';
+                document.getElementById('eta').textContent = calculateTimeRemaining(result.estimatedArrival, result.status);
+                document.getElementById('departureTime').textContent = formatDateTime(result.actualDeparture);
+
+                // Update drone info
+                if (result.droneId) {
+                    document.getElementById('droneInfoSection').style.display = 'block';
+                    document.getElementById('droneModel').textContent = result.droneModel || '-';
+                    document.getElementById('droneId').textContent = result.droneId;
+                    
+                    const battery = result.batteryPercent || 100;
+                    document.getElementById('batteryFill').style.width = battery + '%';
+                    document.getElementById('batteryPercent').textContent = battery + '%';
+                }
+
+                // Update timeline
+                updateTimeline(result.status);
+
+                // Update map markers
+                if (result.storePosition) {
+                    const storeLat = parseFloat(result.storePosition.latitude);
+                    const storeLng = parseFloat(result.storePosition.longitude);
+                    storeMarker.setLatLng([storeLat, storeLng]);
+                    storeMarker.bindPopup('<b>Cửa hàng</b><br>Điểm lấy hàng');
+                }
+
+                if (result.customerPosition) {
+                    const custLat = parseFloat(result.customerPosition.latitude);
+                    const custLng = parseFloat(result.customerPosition.longitude);
+                    customerMarker.setLatLng([custLat, custLng]);
+                    customerMarker.bindPopup('<b>Điểm giao hàng</b><br>Địa chỉ khách hàng');
+                }
+
+                if (result.dronePosition && result.dronePosition.latitude && result.dronePosition.longitude) {
+                    const droneLat = parseFloat(result.dronePosition.latitude);
+                    const droneLng = parseFloat(result.dronePosition.longitude);
+                    
+                    // Animate drone movement
+                    droneMarker.setLatLng([droneLat, droneLng]);
+                    droneMarker.bindPopup(`<b>Drone ${result.droneModel || ''}</b><br>Đang giao hàng<br>Pin: ${result.batteryPercent}%`);
+                    
+                    // Center map on drone if in flight
+                    if (result.status === 'LAUNCHED' || result.status === 'ARRIVING') {
+                        map.setView([droneLat, droneLng], 14);
+                    }
+                }
+
+                // Update flight path
+                if (result.storePosition && result.customerPosition) {
+                    const storeLat = parseFloat(result.storePosition.latitude);
+                    const storeLng = parseFloat(result.storePosition.longitude);
+                    const custLat = parseFloat(result.customerPosition.latitude);
+                    const custLng = parseFloat(result.customerPosition.longitude);
+                    
+                    flightPath.setLatLngs([[storeLat, storeLng], [custLat, custLng]]);
+                }
+
+                // Auto-fit bounds to show all markers
+                if (result.storePosition && result.customerPosition) {
+                    const bounds = L.latLngBounds([
+                        [parseFloat(result.storePosition.latitude), parseFloat(result.storePosition.longitude)],
+                        [parseFloat(result.customerPosition.latitude), parseFloat(result.customerPosition.longitude)]
+                    ]);
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+
+                // Stop updating if completed
+                if (result.status === 'COMPLETED') {
+                    clearInterval(updateInterval);
+                    alert('🎉 Giao hàng thành công! Cảm ơn bạn đã sử dụng dịch vụ FoodFast.');
+                }
+
+            } catch (error) {
+                console.error('Error fetching tracking data:', error);
+                document.getElementById('loadingPanel').style.display = 'none';
+                document.getElementById('errorPanel').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+            }
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            if (!deliveryId) {
+                document.getElementById('loadingPanel').style.display = 'none';
+                document.getElementById('errorPanel').style.display = 'block';
+                document.getElementById('errorMessage').textContent = 'Không tìm thấy mã giao hàng. Vui lòng kiểm tra lại URL.';
+                return;
+            }
+
+            initMap();
+            updateTracking();
+            
+            // Update every 5 seconds
+            updateInterval = setInterval(updateTracking, 5000);
+        };
+    </script>
+</body>
+</html>

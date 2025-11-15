@@ -137,6 +137,10 @@ async function loadOrders() {
         } else {
             // Check which stores are within flight corridor
             await checkStoresInFlightCorridor(orders);
+            
+            // Fetch delivery status for orders in delivery (before display)
+            await fetchDeliveryStatusForOrders(orders);
+            
             displayOrders(orders);
         }
 
@@ -317,6 +321,81 @@ function displayOrders(orders) {
                     </div>
                 </div>
                 
+                <!-- 🚁 ARRIVING Alert - Drone sắp đến! -->
+                ${order.deliveryStatus === 'ARRIVING' ? `
+                <div style="
+                    background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+                    color: white;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    margin-bottom: 1rem;
+                    text-align: center;
+                    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+                    animation: pulse-alert 1.5s ease-in-out infinite alternate;
+                ">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">
+                        <i class="fas fa-drone" style="animation: bounce 1s infinite;"></i>
+                    </div>
+                    <h3 style="margin: 0.5rem 0; font-weight: bold; font-size: 1.3rem;">
+                        🚁 DRONE SẮP ĐẾN!
+                    </h3>
+                    <p style="margin: 0.5rem 0; font-size: 1rem; opacity: 0.95;">
+                        Vui lòng chuẩn bị nhận hàng
+                    </p>
+                    <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">
+                        Dự kiến: ${order.estimatedArrivalTime ? formatTime(order.estimatedArrivalTime) : 'Vài phút nữa'}
+                    </p>
+                </div>
+                <style>
+                    @keyframes pulse-alert {
+                        0% { transform: scale(1); box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4); }
+                        100% { transform: scale(1.02); box-shadow: 0 6px 20px rgba(255, 152, 0, 0.6); }
+                    }
+                    @keyframes bounce {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-10px); }
+                    }
+                </style>
+                ` : ''}
+                
+                <!-- ✅ DELIVERED Alert - Drone đã đến! -->
+                ${(order.status === 'IN_DELIVERY' && order.deliveryStatus === 'COMPLETED') || order.status === 'DELIVERED' ? `
+                <div style="
+                    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+                    color: white;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    margin-bottom: 1rem;
+                    text-align: center;
+                    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+                    animation: pulse-success 1.5s ease-in-out 3;
+                ">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">
+                        <i class="fas fa-check-circle" style="animation: scale-check 0.6s ease-out;"></i>
+                    </div>
+                    <h3 style="margin: 0.5rem 0; font-weight: bold; font-size: 1.3rem;">
+                        ✅ DRONE ĐÃ ĐẾN!
+                    </h3>
+                    <p style="margin: 0.5rem 0; font-size: 1rem; opacity: 0.95;">
+                        Hàng của bạn đã được giao thành công
+                    </p>
+                    <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">
+                        Thời gian: ${order.actualArrivalTime ? formatTime(order.actualArrivalTime) : 'Vừa xong'}
+                    </p>
+                </div>
+                <style>
+                    @keyframes pulse-success {
+                        0%, 100% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                    }
+                    @keyframes scale-check {
+                        0% { transform: scale(0); }
+                        50% { transform: scale(1.2); }
+                        100% { transform: scale(1); }
+                    }
+                </style>
+                ` : ''}
+                
                 <!-- Delivery Time Estimate -->
                 ${(order.status === 'PAID' || order.status === 'ACCEPT' || order.status === 'IN_DELIVERY' || order.status === 'DELIVERED') && order.estimatedArrivalTime ? renderDeliveryTimeEstimate(order) : ''}
                 
@@ -345,9 +424,14 @@ function displayOrders(orders) {
                         <button class="btn btn-outline btn-sm" onclick="viewOrderDetail(${order.id})">
                             <i class="fas fa-eye"></i> Chi tiết
                         </button>
-                        ${order.status === 'IN_DELIVERY' || order.status === 'PAID' ? `
+                        ${['ACCEPT', 'CONFIRMED', 'IN_DELIVERY', 'PAID'].includes(order.status) ? `
                             <button class="btn btn-primary btn-sm" onclick="trackDelivery(${order.id})">
                                 <i class="fas fa-drone"></i> Theo dõi
+                            </button>
+                        ` : ''}
+                        ${order.status === 'IN_DELIVERY' ? `
+                            <button class="btn btn-success btn-sm" onclick="confirmReceived(${order.id})">
+                                <i class="fas fa-check-circle"></i> Đã nhận hàng
                             </button>
                         ` : ''}
                         ${canCancel ? `
@@ -433,6 +517,32 @@ async function cancelOrder(orderId) {
     } catch (error) {
         console.error('Error cancelling order:', error);
         Toast.error('Không thể hủy đơn hàng: ' + error.message);
+    } finally {
+        Loading.hide();
+    }
+}
+
+// Confirm received order (customer confirms delivery)
+async function confirmReceived(orderId) {
+    if (!confirm('Xác nhận bạn đã nhận được hàng?')) {
+        return;
+    }
+
+    try {
+        Loading.show();
+        
+        const response = await APIHelper.post(`/api/v1/orders/${orderId}/mark-delivered`);
+        
+        Toast.success('✅ Đã xác nhận nhận hàng thành công!');
+        
+        // Reload orders list
+        setTimeout(() => {
+            loadOrders();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error confirming delivery:', error);
+        Toast.error('Không thể xác nhận: ' + error.message);
     } finally {
         Loading.hide();
     }
@@ -712,19 +822,16 @@ async function trackDelivery(orderId) {
         
         if (!delivery) {
             Toast.warning('Chưa có thông tin giao hàng');
+            Loading.hide();
             return;
         }
         
-        deliveryInfo = delivery;
-        displayDeliveryTracking(delivery);
-        
-        // Show modal
-        document.getElementById('trackingModal').classList.add('show');
+        // Redirect to dedicated tracking page with map visualization
+        window.location.href = `/home/delivery-tracking.html?deliveryId=${delivery.id}`;
         
     } catch (error) {
         console.error('Error loading delivery:', error);
         Toast.error('Không thể tải thông tin giao hàng');
-    } finally {
         Loading.hide();
     }
 }
@@ -1224,6 +1331,32 @@ function renderProgressBar(order) {
             </div>
         </div>
     `;
+}
+
+/**
+ * Fetch delivery status for orders in delivery
+ * Note: This modifies the orders array in-place, adding deliveryStatus property
+ */
+async function fetchDeliveryStatusForOrders(orders) {
+    const inDeliveryOrders = orders.filter(order => 
+        order.status === 'IN_DELIVERY' || order.status === 'ACCEPT'
+    );
+    
+    if (inDeliveryOrders.length === 0) return;
+    
+    // Fetch delivery status for each order (parallel for speed)
+    await Promise.all(inDeliveryOrders.map(async (order) => {
+        try {
+            const response = await APIHelper.get(`/api/v1/deliveries/order/${order.id}`);
+            if (response && response.result) {
+                order.deliveryStatus = response.result.currentStatus;
+                console.log(`✓ Order ${order.orderCode} - Delivery: ${order.deliveryStatus}`);
+            }
+        } catch (error) {
+            // Silently ignore - order doesn't have delivery yet (expected for old orders)
+            order.deliveryStatus = null;
+        }
+    }));
 }
 
 console.log('Orders.js loaded successfully');

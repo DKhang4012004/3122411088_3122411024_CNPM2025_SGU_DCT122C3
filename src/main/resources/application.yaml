@@ -40,6 +40,11 @@ app:
     rate: 0.20
   payment-gateway:
     fee-rate: 0.01
+  delivery:
+    simulation:
+      enabled: true
+      prep-time-minutes: 0.5
+      update-interval-seconds: 3
 
 management:
   endpoints:

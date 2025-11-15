@@ -48,6 +48,7 @@ public class OrderServiceImpl implements OrderService {
     private final DroneRepository droneRepository;
     private final DeliveryRepository deliveryRepository;
     private final com.cnpm.foodfast.Delivery.service.DeliveryService deliveryService;
+    private final com.cnpm.foodfast.Delivery.service.DeliverySimulationService deliverySimulationService;
 
     @Override
     @Transactional
@@ -322,6 +323,11 @@ public class OrderServiceImpl implements OrderService {
             deliveryService.assignDrone(delivery.getId(), availableDrone.getId());
             log.info("✓ Drone {} assigned to delivery {} for order {}", 
                      availableDrone.getModel(), delivery.getId(), orderId);
+            
+            // 🚁 BẮT ĐẦU SIMULATION TỰ ĐỘNG - Drone sẽ tự bay!
+            deliverySimulationService.startSimulation(delivery.getId());
+            log.info("🚁 Delivery simulation started for delivery {}", delivery.getId());
+            
         } catch (Exception e) {
             log.error("Failed to assign drone for order {}: {}", orderId, e.getMessage());
             // Không fail accept order nếu gán drone lỗi
