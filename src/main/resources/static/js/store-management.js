@@ -355,6 +355,16 @@ async function loadStoreAddress() {
 function getFullImageUrl(imageUrl) {
     if (!imageUrl) return 'https://via.placeholder.com/60?text=No+Image';
     
+    // Debug log
+    const original = imageUrl;
+    
+    // Clean up URL - remove trailing dots, spaces, etc.
+    imageUrl = String(imageUrl).trim().replace(/\.+$/, '');
+    
+    if (original !== imageUrl) {
+        console.warn('🔧 Cleaned imageUrl:', original, '→', imageUrl);
+    }
+    
     // If already absolute URL (starts with http/https), return as is
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
         return imageUrl;

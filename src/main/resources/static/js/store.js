@@ -12,6 +12,9 @@ function getFullImageUrl(imageUrl) {
         return 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect width=%22400%22 height=%22200%22 fill=%22%23f0f0f0%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2240%22 fill=%22%23ddd%22%3E🍽️%3C/text%3E%3C/svg%3E';
     }
     
+    // Clean up URL - remove trailing dots, spaces, etc.
+    imageUrl = String(imageUrl).trim().replace(/\.+$/, '');
+    
     // If already absolute URL (starts with http/https), return as is
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
         return imageUrl;
