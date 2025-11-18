@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/drone_delivery?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false
     username: root
-    password: root
+    password: khang141204
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -22,7 +22,7 @@ spring:
 
 jwt:
   signerKey: "wXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezwXUQDod+4Vgzo8ZHaBmOmuIxoQyDV0Tu2n4EsvwepwkF2QGn9DezABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
+#  expirationMs: 86400000 # 1 day
 vnpay:
   tmn-code: "HCVE5UQF"
   hash-secret: "QQ8FJPL59KYNDMMPJNJOGFJ7FCVNL41J"
