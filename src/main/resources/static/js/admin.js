@@ -1,5 +1,5 @@
 // Admin Panel JavaScript
-const API_BASE_URL = 'http://localhost:8080/home';
+const API_BASE_URL = 'https://scapulohumeral-unostentatiously-hortensia.ngrok-free.dev/home';
 
 // Current user info
 let currentUser = null;

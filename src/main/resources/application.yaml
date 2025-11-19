@@ -1,4 +1,5 @@
 server:
+  address: 0.0.0.0
   port: 8080
   servlet:
     context-path: /home
@@ -32,8 +33,8 @@ vnpay:
   tmn-code: "HCVE5UQF"
   hash-secret: "QQ8FJPL59KYNDMMPJNJOGFJ7FCVNL41J"
   url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-#  return-url: "https://scapulohumeral-unostentatiously-hortensia.ngrok-free.dev/home/api/v1/payments/vnpay-return"
-  return-url: "http://localhost:8080/home/api/v1/payments/vnpay-return"
+  return-url: "https://scapulohumeral-unostentatiously-hortensia.ngrok-free.dev/home/api/v1/payments/vnpay-return"
+#  return-url: "http://localhost:8080/home/api/v1/payments/vnpay-return"
 
   api-url: "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction"
   version: "2.1.0"

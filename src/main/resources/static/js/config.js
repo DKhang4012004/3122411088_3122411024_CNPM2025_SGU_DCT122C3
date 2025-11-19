@@ -1,7 +1,8 @@
 // API Configuration
 const API_CONFIG = {
     // Use current origin to work with both localhost and ngrok
-    BASE_URL: "http://localhost:8080" + '/home',
+    // BASE_URL: "http://localhost:8080" + '/home',
+    BASE_URL:  "https://scapulohumeral-unostentatiously-hortensia.ngrok-free.dev/home",
     ENDPOINTS: {
         // Authentication
         LOGIN: '/auth/login',
@@ -262,7 +263,8 @@ const Toast = {
 };
 
 // Base URL for API calls (with /home context path)
-const API_BASE_URL = "http://localhost:8080/home";
+// const API_BASE_URL = "http://localhost:8080/home";
+ const API_BASE_URL = "https://scapulohumeral-unostentatiously-hortensia.ngrok-free.dev/home";
 
 // Loading spinner
 const Loading = {
