@@ -44,6 +44,7 @@ public class ProductServiceImpl  implements ProductService {
         
         Product product = productMapper.toProduct(request);
         product.setStatus(ProductStatus.ACTIVE);
+        product.setReservedQuantity(1);
         product.setStore(store);
         product.setCategory(category);
         

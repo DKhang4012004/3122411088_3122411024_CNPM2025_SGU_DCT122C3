@@ -83,7 +83,7 @@ public class Product {
 
     @Builder.Default
     @Column(name = "reserved_quantity")
-    Integer reservedQuantity = 0;
+    Integer reservedQuantity =0;
 
     @Column(name = "created_at", nullable = false, updatable = false, insertable = false,
             columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP")
