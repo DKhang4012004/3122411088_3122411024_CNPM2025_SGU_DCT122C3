@@ -1,5 +1,5 @@
 // Admin Panel JavaScript
-const API_BASE_URL = 'https://shieldless-pamula-adhesively.ngrok-free.dev/home';
+const API_BASE_URL = 'https://melodious-commitment-production.up.railway.app/home';
 
 // Current user info
 let currentUser = null;
