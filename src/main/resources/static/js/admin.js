@@ -1,5 +1,5 @@
 // Admin Panel JavaScript
-const API_BASE_URL = 'https://melodious-commitment-production.up.railway.app/home';
+const API_BASE_URL = 'https://31224110883122411024cnpm2025sgudct122c3-production.up.railway.app/home';
 
 // Current user info
 let currentUser = null;

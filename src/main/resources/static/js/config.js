@@ -2,7 +2,7 @@
 const API_CONFIG = {
     // Use current origin to work with both localhost and ngrok
     // BASE_URL: "http://localhost:8080" + '/home',
-    BASE_URL:  "https://melodious-commitment-production.up.railway.app/home",
+    BASE_URL:  "https://31224110883122411024cnpm2025sgudct122c3-production.up.railway.app/home",
     ENDPOINTS: {
         // Authentication
         LOGIN: '/auth/login',
@@ -264,7 +264,7 @@ const Toast = {
 
 // Base URL for API calls (with /home context path)
 // const API_BASE_URL = "http://localhost:8080/home";
- const API_BASE_URL = "https://melodious-commitment-production.up.railway.app/home";
+ const API_BASE_URL = "https://31224110883122411024cnpm2025sgudct122c3-production.up.railway.app/home";
 
 // Loading spinner
 const Loading = {
