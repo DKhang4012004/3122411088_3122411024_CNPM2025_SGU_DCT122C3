@@ -72,6 +72,19 @@ public class DeliverySimulationService {
             Coordinates storeCoords = getStoreCoordinates(delivery.getPickupStoreId());
             Coordinates customerCoords = getCustomerCoordinates(delivery.getDropoffAddressSnapshot());
 
+            // ✅ FIX: SET DRONE VỀ STORE NGAY LẬP TỨC - Tránh bay từ vị trí cũ
+            if (delivery.getDroneId() != null) {
+                Drone drone = droneRepository.findById(delivery.getDroneId()).orElse(null);
+                if (drone != null) {
+                    drone.setLastLatitude(storeCoords.latitude);
+                    drone.setLastLongitude(storeCoords.longitude);
+                    drone.setLastTelemetryAt(LocalDateTime.now());
+                    droneRepository.save(drone);
+                    log.info("🎯 RESET: Drone {} teleported to store START position: {}, {}", 
+                             drone.getId(), storeCoords.latitude, storeCoords.longitude);
+                }
+            }
+
             int totalMinutes = delivery.getEstimatedFlightTimeMinutes();
             if (totalMinutes <= 0) {
                 totalMinutes = 1; // Default 1 minute for quick demo
@@ -83,14 +96,15 @@ public class DeliverySimulationService {
                 launchDelivery(deliveryId);
             }, launchDelaySeconds, TimeUnit.SECONDS);
 
-            // BƯỚC 2: Cập nhật vị trí drone liên tục (từ launch đến arriving)
-            // totalMinutes là thời gian bay THỰC TẾ (2 phút), chứ không phải tổng thời gian từ đầu
+            // BƯỚC 2: Cập nhật vị trí drone liên tục - BAY HẾT 100% ĐƯỜNG ĐI
             int flightTimeSeconds = totalMinutes * 60; // 2 phút = 120 giây
-            int arrivingThresholdSeconds = (int) (flightTimeSeconds * 0.8); // 80% = 96 giây
-            int totalUpdates = arrivingThresholdSeconds / updateIntervalSeconds; // 96/5 = 19 updates
             
-            log.info("📊 Flight simulation: {} seconds, {} updates every {} seconds", 
-                     flightTimeSeconds, totalUpdates, updateIntervalSeconds);
+            // ✅ FIX: Bay HẾT 100% đường đi, không dừng ở 80%
+            int totalUpdates = flightTimeSeconds / updateIntervalSeconds; // 120/3 = 40 updates → 100%
+            int arrivingAtUpdate = (int) (totalUpdates * 0.9); // Status ARRIVING ở 90%, nhưng vẫn bay tiếp
+            
+            log.info("📊 Flight simulation: {} seconds, {} updates (100% distance), ARRIVING at update {}", 
+                     flightTimeSeconds, totalUpdates, arrivingAtUpdate);
             
             for (int i = 1; i <= totalUpdates; i++) {
                 final int step = i;
@@ -98,19 +112,40 @@ public class DeliverySimulationService {
 
                 scheduler.schedule(() -> {
                     updateDronePosition(deliveryId, storeCoords, customerCoords, step, totalUpdates);
+                    
+                    // ✅ Đổi status thành ARRIVING ở 90% nhưng VẪN BAY TIẾP đến 100%
+                    if (step == arrivingAtUpdate) {
+                        updateToArriving(deliveryId);
+                    }
                 }, delaySeconds, TimeUnit.SECONDS);
             }
 
-            // BƯỚC 3: Đến 80% thời gian bay → ARRIVING
-            long arrivingDelaySeconds = launchDelaySeconds + arrivingThresholdSeconds;
+            // ✅ ĐẢM BẢO drone đến CHÍNH XÁC 100% - Update cuối cùng FORCE TO 100%
+            long finalUpdateDelay = launchDelaySeconds + (totalUpdates * updateIntervalSeconds) + 2;
+            final Long droneIdFinal = delivery.getDroneId();
             scheduler.schedule(() -> {
-                updateToArriving(deliveryId);
-            }, arrivingDelaySeconds, TimeUnit.SECONDS);
+                try {
+                    if (droneIdFinal != null) {
+                        Drone drone = droneRepository.findById(droneIdFinal).orElse(null);
+                        if (drone != null) {
+                            // 🎯 FORCE: Set drone CHÍNH XÁC = customer position (100%)
+                            drone.setLastLatitude(customerCoords.latitude);
+                            drone.setLastLongitude(customerCoords.longitude);
+                            drone.setLastTelemetryAt(LocalDateTime.now());
+                            droneRepository.save(drone);
+                            log.info("🎯🎯🎯 FINAL POSITION FORCED: Drone {} at customer [{}, {}]", 
+                                     drone.getId(), customerCoords.latitude, customerCoords.longitude);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Error in final update: {}", e.getMessage());
+                }
+            }, finalUpdateDelay, TimeUnit.SECONDS);
 
             // ⚠️ KHÔNG TỰ ĐỘNG COMPLETE - Khách hàng phải xác nhận "Đã nhận hàng"
-            // BƯỚC 4 đã bị TẮT: Customer phải click "Đã nhận hàng" để complete
-            log.info("✅ Simulation scheduled for delivery {}. Will reach ARRIVING in {} seconds. Customer must confirm receipt.", 
-                     deliveryId, arrivingDelaySeconds);
+            long arrivingDelaySeconds = launchDelaySeconds + (arrivingAtUpdate * updateIntervalSeconds);
+            log.info("✅ Simulation scheduled: {} updates to 100%, ARRIVING at {}s, final update at {}s. Customer must confirm receipt.", 
+                     totalUpdates, arrivingDelaySeconds, finalUpdateDelay);
 
         } catch (Exception e) {
             log.error("Error starting simulation for delivery {}: {}", deliveryId, e.getMessage(), e);
@@ -133,29 +168,19 @@ public class DeliverySimulationService {
             delivery.setUpdatedAt(LocalDateTime.now());
             deliveryRepository.save(delivery);
 
-            // Update order status
+            // Update order status (chỉ nếu chưa phải IN_DELIVERY)
             Order order = orderRepository.findById(delivery.getOrderId()).orElse(null);
-            if (order != null) {
+            if (order != null && order.getStatus() != OrderStatus.IN_DELIVERY) {
                 order.setStatus(OrderStatus.IN_DELIVERY);
                 order.setUpdatedAt(LocalDateTime.now());
                 orderRepository.save(order);
+                log.info("Order {} status updated to IN_DELIVERY on drone launch", delivery.getOrderId());
             }
 
-            // ⭐ SET DRONE POSITION TO STORE (starting point)
-            if (delivery.getDroneId() != null) {
-                Drone drone = droneRepository.findById(delivery.getDroneId()).orElse(null);
-                if (drone != null) {
-                    Coordinates storeCoords = getStoreCoordinates(delivery.getPickupStoreId());
-                    drone.setLastLatitude(storeCoords.latitude);
-                    drone.setLastLongitude(storeCoords.longitude);
-                    drone.setLastTelemetryAt(LocalDateTime.now());
-                    droneRepository.save(drone);
-                    log.info("✈️ Drone {} positioned at store: {}, {}", 
-                             drone.getId(), storeCoords.latitude, storeCoords.longitude);
-                }
-            }
+            // ✅ KHÔNG SET POSITION Ở ĐÂY - Đã set trong startSimulation() rồi
+            // Tránh drone nhảy do set 2 lần
 
-            log.info("🚁 Delivery {} LAUNCHED - Drone is taking off", deliveryId);
+            log.info("🚁 Delivery {} LAUNCHED - Drone is taking off from store", deliveryId);
 
         } catch (Exception e) {
             log.error("Error launching delivery {}: {}", deliveryId, e.getMessage());
@@ -179,10 +204,21 @@ public class DeliverySimulationService {
                 return;
             }
 
-            // Tính vị trí hiện tại theo % quãng đường
+            // ⭐ QUAN TRỌNG: Tính vị trí hiện tại theo % quãng đường
+            // progress = 0 → vị trí store (start)
+            // progress = 1 → vị trí customer (end)
             double progress = (double) currentStep / totalSteps;
+            
+            // Interpolation tuyến tính: current = start + (end - start) * progress
             BigDecimal currentLat = interpolate(start.latitude, end.latitude, progress);
             BigDecimal currentLng = interpolate(start.longitude, end.longitude, progress);
+
+            // ✅ Đảm bảo drone luôn bay theo đường thẳng
+            log.info("🚁 Drone {} moving: step {}/{} ({}%) - From [{}, {}] to [{}, {}] → Current: [{}, {}]", 
+                     drone.getId(), currentStep, totalSteps, (int)(progress * 100),
+                     start.latitude, start.longitude,
+                     end.latitude, end.longitude,
+                     currentLat, currentLng);
 
             // Update drone position
             drone.setLastLatitude(currentLat);
@@ -195,9 +231,6 @@ public class DeliverySimulationService {
             }
             
             droneRepository.save(drone);
-
-            log.debug("📍 Drone {} position updated: {}, {} ({}%)", 
-                     drone.getId(), currentLat, currentLng, (int)(progress * 100));
 
         } catch (Exception e) {
             log.error("Error updating drone position: {}", e.getMessage());
@@ -290,18 +323,21 @@ public class DeliverySimulationService {
             if (store.getAddresses() != null && !store.getAddresses().isEmpty()) {
                 StoreAddress address = store.getAddresses().get(0);
                 if (address.getLatitude() != null && address.getLongitude() != null) {
-                    return new Coordinates(
+                    Coordinates coords = new Coordinates(
                             BigDecimal.valueOf(address.getLatitude().doubleValue()), 
                             BigDecimal.valueOf(address.getLongitude().doubleValue())
                     );
+                    log.info("✅ Store {} coordinates from DB: {}, {}", storeId, coords.latitude, coords.longitude);
+                    return coords;
                 }
             }
 
-            // Default coordinates (HCMC center)
-            log.warn("Store {} has no coordinates, using default", storeId);
+            // ✅ HARDCODE: Khớp CHÍNH XÁC với frontend delivery-tracking.html line 598
+            // Store marker = [10.762622, 106.660172] - Khu vực Bình Thạnh, HCMC
+            log.warn("⚠️ Store {} has no GPS in DB, using hardcoded location matching frontend icon", storeId);
             return new Coordinates(
-                    BigDecimal.valueOf(10.762622), 
-                    BigDecimal.valueOf(106.660172)
+                    BigDecimal.valueOf(10.762622),  // Lat: KHỚP với storeMarker frontend
+                    BigDecimal.valueOf(106.660172)  // Lng: KHỚP với storeMarker frontend
             );
 
         } catch (Exception e) {
@@ -322,18 +358,21 @@ public class DeliverySimulationService {
                 JsonNode node = objectMapper.readTree(addressSnapshot);
                 
                 if (node.has("latitude") && node.has("longitude")) {
-                    return new Coordinates(
+                    Coordinates coords = new Coordinates(
                             BigDecimal.valueOf(node.get("latitude").asDouble()),
                             BigDecimal.valueOf(node.get("longitude").asDouble())
                     );
+                    log.info("✅ Customer coordinates parsed from snapshot: {}, {}", coords.latitude, coords.longitude);
+                    return coords;
                 }
             }
 
-            // Default: Random location gần store (khoảng 0.01 degree ~ 1km)
-            log.warn("No customer coordinates in address snapshot, using random nearby location");
+            // ✅ HARDCODE: Khớp CHÍNH XÁC với frontend delivery-tracking.html line 599
+            // Customer marker = [10.772622, 106.670172] - Cách store ~1.5km về Đông Bắc
+            log.warn("⚠️ No customer GPS in snapshot, using hardcoded location matching frontend icon. Snapshot: {}", addressSnapshot);
             return new Coordinates(
-                    BigDecimal.valueOf(10.762622 + (Math.random() * 0.02 - 0.01)),
-                    BigDecimal.valueOf(106.660172 + (Math.random() * 0.02 - 0.01))
+                    BigDecimal.valueOf(10.772622),  // Lat: KHỚP với customerMarker frontend
+                    BigDecimal.valueOf(106.670172)  // Lng: KHỚP với customerMarker frontend
             );
 
         } catch (Exception e) {

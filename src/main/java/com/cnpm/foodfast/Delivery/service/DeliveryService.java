@@ -18,6 +18,8 @@ import com.cnpm.foodfast.enums.DroneStatus;
 import com.cnpm.foodfast.enums.OrderStatus;
 import com.cnpm.foodfast.exception.AppException;
 import com.cnpm.foodfast.exception.ErrorCode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class DeliveryService {
     private final DroneRepository droneRepository;
     private final StoreRepository storeRepository;
     private final DroneService droneService;
+    private final ObjectMapper objectMapper;
 
     /**
      * Tạo delivery mới khi order được thanh toán thành công
@@ -405,18 +408,23 @@ public class DeliveryService {
      */
     private AddressCoordinates parseAddressCoordinates(String addressSnapshot) {
         try {
-            // Giả sử addressSnapshot có format JSON với latitude/longitude
-            // Ví dụ: {"address":"...","latitude":10.772,"longitude":106.660}
-            if (addressSnapshot != null && addressSnapshot.contains("latitude")) {
-                String latStr = addressSnapshot.split("\"latitude\":")[1].split(",")[0];
-                String lngStr = addressSnapshot.split("\"longitude\":")[1].split("}")[0];
-                return new AddressCoordinates(Double.parseDouble(latStr), Double.parseDouble(lngStr));
+            if (addressSnapshot != null && !addressSnapshot.isEmpty()) {
+                // ✅ Dùng ObjectMapper để parse JSON chính xác (giống DeliverySimulationService)
+                JsonNode node = objectMapper.readTree(addressSnapshot);
+                
+                if (node.has("latitude") && node.has("longitude")) {
+                    double lat = node.get("latitude").asDouble();
+                    double lng = node.get("longitude").asDouble();
+                    log.info("✅ Customer coordinates parsed from snapshot: {}, {}", lat, lng);
+                    return new AddressCoordinates(lat, lng);
+                }
             }
         } catch (Exception e) {
-            log.warn("Failed to parse coordinates from address snapshot, using default", e);
+            log.warn("⚠️ Failed to parse coordinates from snapshot, using default. Snapshot: {}", addressSnapshot, e);
         }
-        // Default coordinates (Sài Gòn center) nếu parse fail
-        return new AddressCoordinates(10.772622, 106.660172);
+        // ✅ Default coordinates KHỚP với frontend customerMarker [10.772622, 106.670172]
+        log.info("⚠️ Using default customer coordinates: 10.772622, 106.670172");
+        return new AddressCoordinates(10.772622, 106.670172);
     }
 
     /**

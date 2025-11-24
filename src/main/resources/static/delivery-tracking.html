@@ -484,6 +484,44 @@
 
         let map, droneMarker, storeMarker, customerMarker, flightPath;
         let updateInterval;
+        let droneAnimationFrame = null; // Track animation frame
+
+        // ✅ SMOOTH ANIMATION: Di chuyển drone từ A đến B trong duration ms
+        function animateDroneMovement(startPos, endPos, duration) {
+            if (droneAnimationFrame) {
+                cancelAnimationFrame(droneAnimationFrame);
+            }
+
+            const startTime = performance.now();
+            const startLat = startPos.lat;
+            const startLng = startPos.lng;
+            const endLat = endPos.lat;
+            const endLng = endPos.lng;
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1); // 0 to 1
+                
+                // Easing function (ease-in-out) để mượt hơn
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                // Tính vị trí hiện tại
+                const currentLat = startLat + (endLat - startLat) * eased;
+                const currentLng = startLng + (endLng - startLng) * eased;
+
+                droneMarker.setLatLng([currentLat, currentLng]);
+
+                if (progress < 1) {
+                    droneAnimationFrame = requestAnimationFrame(animate);
+                } else {
+                    droneAnimationFrame = null;
+                }
+            }
+
+            droneAnimationFrame = requestAnimationFrame(animate);
+        }
 
         // Initialize map
         function initMap() {
@@ -560,13 +598,23 @@
             storeMarker = L.marker([10.762622, 106.660172], {icon: storeIcon}).addTo(map);
             customerMarker = L.marker([10.772622, 106.670172], {icon: customerIcon}).addTo(map);
 
-            // Create flight path
+            // Create flight path - Đường thẳng từ cửa hàng đến khách hàng
             flightPath = L.polyline([], {
                 color: '#2196F3',
-                weight: 3,
-                opacity: 0.6,
-                dashArray: '10, 10'
+                weight: 4,
+                opacity: 0.7,
+                dashArray: '10, 10',
+                dashOffset: '0',
+                lineJoin: 'round',
+                lineCap: 'round'
             }).addTo(map);
+
+            // Thêm animation cho đường kẻ (chạy dần)
+            let dashOffset = 0;
+            setInterval(() => {
+                dashOffset -= 1;
+                flightPath.setStyle({ dashOffset: dashOffset.toString() });
+            }, 50);
         }
 
         // Format datetime
@@ -709,33 +757,46 @@
                     const droneLat = parseFloat(result.dronePosition.latitude);
                     const droneLng = parseFloat(result.dronePosition.longitude);
                     
-                    // Animate drone movement
-                    droneMarker.setLatLng([droneLat, droneLng]);
+                    // Get current position
+                    const currentPos = droneMarker.getLatLng();
+                    const targetPos = L.latLng(droneLat, droneLng);
+                    
+                    // ✅ SMOOTH ANIMATION: Di chuyển từ từ từ vị trí hiện tại đến vị trí mới
+                    // Chỉ animate nếu khoảng cách > 0.0001 độ (tránh jitter)
+                    const distance = currentPos.distanceTo(targetPos);
+                    if (distance > 10) { // > 10 meters
+                        animateDroneMovement(currentPos, targetPos, 2000); // 2 giây
+                    } else {
+                        droneMarker.setLatLng(targetPos);
+                    }
+                    
                     droneMarker.bindPopup(`<b>Drone ${result.droneModel || ''}</b><br>Đang giao hàng<br>Pin: ${result.batteryPercent}%`);
                     
-                    // Center map on drone if in flight
+                    // Center map on drone if in flight (smooth pan)
                     if (result.status === 'LAUNCHED' || result.status === 'ARRIVING') {
-                        map.setView([droneLat, droneLng], 14);
+                        map.panTo([droneLat, droneLng], { animate: true, duration: 1.5 });
                     }
                 }
 
-                // Update flight path
+                // ✅ Update flight path - Vẽ đường thẳng từ cửa hàng đến khách hàng
                 if (result.storePosition && result.customerPosition) {
                     const storeLat = parseFloat(result.storePosition.latitude);
                     const storeLng = parseFloat(result.storePosition.longitude);
                     const custLat = parseFloat(result.customerPosition.latitude);
                     const custLng = parseFloat(result.customerPosition.longitude);
                     
+                    // Vẽ đường thẳng (không cong)
                     flightPath.setLatLngs([[storeLat, storeLng], [custLat, custLng]]);
-                }
-
-                // Auto-fit bounds to show all markers
-                if (result.storePosition && result.customerPosition) {
-                    const bounds = L.latLngBounds([
-                        [parseFloat(result.storePosition.latitude), parseFloat(result.storePosition.longitude)],
-                        [parseFloat(result.customerPosition.latitude), parseFloat(result.customerPosition.longitude)]
-                    ]);
-                    map.fitBounds(bounds, { padding: [50, 50] });
+                    
+                    // Auto-fit bounds chỉ lần đầu tiên
+                    if (!map._boundsSet) {
+                        const bounds = L.latLngBounds([
+                            [storeLat, storeLng],
+                            [custLat, custLng]
+                        ]);
+                        map.fitBounds(bounds, { padding: [80, 80], maxZoom: 14 });
+                        map._boundsSet = true;
+                    }
                 }
 
                 // Stop updating if completed

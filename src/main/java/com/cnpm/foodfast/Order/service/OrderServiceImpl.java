@@ -6,10 +6,7 @@ import com.cnpm.foodfast.dto.request.order.UpdateOrderStatusRequest;
 import com.cnpm.foodfast.dto.response.order.OrderItemResponse;
 import com.cnpm.foodfast.dto.response.order.OrderResponse;
 import com.cnpm.foodfast.entity.*;
-import com.cnpm.foodfast.enums.CartStatus;
-import com.cnpm.foodfast.enums.OrderStatus;
-import com.cnpm.foodfast.enums.PaymentStatus;
-import com.cnpm.foodfast.enums.DroneStatus;
+import com.cnpm.foodfast.enums.*;
 import com.cnpm.foodfast.exception.ResourceNotFoundException;
 import com.cnpm.foodfast.exception.BadRequestException;
 import com.cnpm.foodfast.Products.repository.ProductRepository;
@@ -244,6 +241,12 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse updateOrderStatus(Long orderId, UpdateOrderStatusRequest request) {
         log.info("Updating order {} status to: {}", orderId, request.getStatus());
 
+        // ⭐ QUAN TRỌNG: Nếu status = IN_DELIVERY, gọi markAsInDelivery() để gán drone
+        if (request.getStatus() == OrderStatus.IN_DELIVERY) {
+            log.info("Status IN_DELIVERY requested - calling markAsInDelivery() to assign drone");
+            return markAsInDelivery(orderId);
+        }
+
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
 
@@ -309,31 +312,11 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("Failed to create ledger entry", e);
         }
 
-        // ⭐ GÁN DRONE VÀ TÍNH THỜI GIAN THỰC TẾ KHI ACCEPT ⭐
-        try {
-            // Tìm delivery của order này
-            Delivery delivery = deliveryRepository.findByOrderId(orderId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Delivery not found for order: " + orderId));
-            
-            // Tìm drone available đầu tiên
-            Drone availableDrone = droneRepository.findFirstByStatus(DroneStatus.AVAILABLE)
-                    .orElseThrow(() -> new BadRequestException("No available drone found"));
-            
-            // Gán drone cho delivery → Tự động tính actual time
-            deliveryService.assignDrone(delivery.getId(), availableDrone.getId());
-            log.info("✓ Drone {} assigned to delivery {} for order {}", 
-                     availableDrone.getModel(), delivery.getId(), orderId);
-            
-            // 🚁 BẮT ĐẦU SIMULATION TỰ ĐỘNG - Drone sẽ tự bay!
-            deliverySimulationService.startSimulation(delivery.getId());
-            log.info("🚁 Delivery simulation started for delivery {}", delivery.getId());
-            
-        } catch (Exception e) {
-            log.error("Failed to assign drone for order {}: {}", orderId, e.getMessage());
-            // Không fail accept order nếu gán drone lỗi
-        }
+        // ⚠️ KHÔNG GÁN DRONE Ở ĐÂY - Đợi store click "Bắt đầu giao hàng"
+        // Delivery đã được tạo với status QUEUED khi order created
+        // Store sẽ click "Bắt đầu giao hàng" → markAsInDelivery() → gán drone + simulation
 
-        log.info("Order {} accepted (status = ACCEPT) with {} available drones and ledger created successfully",
+        log.info("Order {} accepted (status = ACCEPT) with {} available drones. Waiting for store to start delivery.",
                  orderId, availableDroneCount);
         return buildOrderResponse(order);
     }
@@ -369,7 +352,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderResponse markAsInDelivery(Long orderId) {
-        log.info("Marking order {} as IN_DELIVERY", orderId);
+        log.info("[STORE] Store starting delivery for order: {}", orderId);
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
@@ -380,15 +363,71 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Kiểm tra trạng thái hiện tại
-        if (order.getStatus() != OrderStatus.PAID) {
-            throw new BadRequestException("Order must be in PAID status. Current: " + order.getStatus());
+        if (order.getStatus() != OrderStatus.ACCEPT && order.getStatus() != OrderStatus.IN_DELIVERY) {
+            throw new BadRequestException("Order must be in ACCEPT or IN_DELIVERY status. Current: " + order.getStatus());
         }
 
+        // ⚠️ Nếu đã IN_DELIVERY rồi, kiểm tra xem drone đã được gán chưa
+        if (order.getStatus() == OrderStatus.IN_DELIVERY) {
+            Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Delivery not found for order: " + orderId));
+            
+            // Nếu drone đã được gán (status >= ASSIGNED), return luôn
+            if (delivery.getCurrentStatus() != DeliveryStatus.QUEUED) {
+                log.info("Order {} already in delivery with drone assigned. Status: {}", orderId, delivery.getCurrentStatus());
+                return buildOrderResponse(order);
+            }
+            
+            // Nếu chưa gán drone, tiếp tục xử lý bên dưới
+            log.info("Order {} is IN_DELIVERY but drone not assigned yet. Assigning now...", orderId);
+        }
+
+        // ⭐ KIỂM TRA CÓ DRONE AVAILABLE KHÔNG ⭐
+        boolean hasAvailableDrone = droneRepository.existsByStatus(DroneStatus.AVAILABLE);
+        if (!hasAvailableDrone) {
+            long totalDrones = droneRepository.count();
+            log.error("Cannot start delivery for order {} - No available drones. Total drones: {}", orderId, totalDrones);
+            throw new BadRequestException(
+                "Không thể bắt đầu giao hàng! Hiện tại không có drone nào đang rảnh. " +
+                "Vui lòng thử lại sau hoặc liên hệ bộ phận hỗ trợ."
+            );
+        }
+
+        // ⭐ GÁN DRONE VÀ BẮT ĐẦU SIMULATION ⭐
+        // Tìm delivery của order này
+        Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Delivery not found for order: " + orderId));
+        
+        // Kiểm tra delivery status phải là QUEUED
+        if (delivery.getCurrentStatus() != DeliveryStatus.QUEUED) {
+            throw new BadRequestException("Delivery already assigned. Current status: " + delivery.getCurrentStatus());
+        }
+        
+        // Tìm drone available đầu tiên
+        Drone availableDrone = droneRepository.findFirstByStatus(DroneStatus.AVAILABLE)
+                .orElseThrow(() -> new BadRequestException("No available drone found"));
+        
+        // Gán drone cho delivery → Tự động tính actual time
+        deliveryService.assignDrone(delivery.getId(), availableDrone.getId());
+        log.info("✓ Drone {} assigned to delivery {} for order {}", 
+                 availableDrone.getModel(), delivery.getId(), orderId);
+        
+        // 🚁 BẮT ĐẦU SIMULATION - Drone sẽ tự bay sau 30 giây!
+        deliverySimulationService.startSimulation(delivery.getId());
+        log.info("🚁 Delivery simulation started for delivery {}. Drone will launch in 30 seconds.", delivery.getId());
+        
+        // ✅ UPDATE Order.status = IN_DELIVERY ngay lập tức để frontend thấy thay đổi
+        // (launchDelivery() sau 30s sẽ không update lại vì đã IN_DELIVERY rồi)
         order.setStatus(OrderStatus.IN_DELIVERY);
         order.setUpdatedAt(LocalDateTime.now());
         order = orderRepository.save(order);
+        log.info("✅ Order {} status updated to IN_DELIVERY", orderId);
 
-        log.info("Order {} marked as IN_DELIVERY", orderId);
+        // Reload order để lấy thông tin mới nhất
+        order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+
+        log.info("✅ Order {} - Drone assigned and simulation started. Waiting for launch...", orderId);
         return buildOrderResponse(order);
     }
 
@@ -413,6 +452,36 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.DELIVERED);
         order.setUpdatedAt(LocalDateTime.now());
         order = orderRepository.save(order);
+
+        // ⭐ FIX: Cập nhật delivery status và giải phóng drone ⭐
+        try {
+            Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Delivery not found for order: " + orderId));
+            
+            // Update delivery status to COMPLETED
+            delivery.setCurrentStatus(DeliveryStatus.COMPLETED);
+            delivery.setActualArrivalTime(LocalDateTime.now());
+            delivery.setUpdatedAt(LocalDateTime.now());
+            deliveryRepository.save(delivery);
+            
+            // ⭐ GIẢI PHÓNG DRONE VỀ AVAILABLE ⭐
+            if (delivery.getDroneId() != null) {
+                Drone drone = droneRepository.findById(delivery.getDroneId())
+                        .orElse(null);
+                if (drone != null) {
+                    drone.setStatus(DroneStatus.AVAILABLE);
+                    droneRepository.save(drone);
+                    log.info("✓ Drone {} released to AVAILABLE after order {} delivered", 
+                             drone.getId(), orderId);
+                }
+            }
+            
+            log.info("✓ Delivery {} marked as COMPLETED and drone released", delivery.getId());
+            
+        } catch (Exception e) {
+            log.error("Failed to update delivery/drone for order {}: {}", orderId, e.getMessage());
+            // Không fail order update nếu delivery/drone update lỗi
+        }
 
         log.info("Order {} marked as DELIVERED", orderId);
         return buildOrderResponse(order);
