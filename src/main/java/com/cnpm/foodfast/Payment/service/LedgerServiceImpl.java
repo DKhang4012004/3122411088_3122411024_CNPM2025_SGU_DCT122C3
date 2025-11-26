@@ -26,7 +26,7 @@ public class LedgerServiceImpl implements LedgerService {
     private final StoreLedgerRepository storeLedgerRepository;
     private final PayoutBatchRepository payoutBatchRepository;
 
-    @Value("${app.commission.rate:0.20}")
+    @Value("${app.commission.rate:0.14}")
     private BigDecimal commissionRate;
 
     @Value("${app.payment-gateway.fee-rate:0.01}")
