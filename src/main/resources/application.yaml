@@ -43,7 +43,7 @@ vnpay:
 
 app:
   commission:
-    rate: 0.20
+    rate: 0.14
   payment-gateway:
     fee-rate: 0.01
   delivery:
