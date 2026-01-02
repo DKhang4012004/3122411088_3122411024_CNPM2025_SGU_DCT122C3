@@ -32,51 +32,8 @@ start-server.bat
 start-ngrok.bat
 ```
 
-### 4. Access Application
 
-- **Web UI:** http://localhost:8080/home
-- **API Docs:** http://localhost:8080/home/swagger-ui.html
 
----
-
-## 📖 Tài Liệu
-
-### Hướng dẫn chính
-1. **COMPLETE_FLOW_GUIDE.md** - Hướng dẫn test đầy đủ từ A-Z
-2. **ORDER_FLOW_SIMPLIFIED.md** - Flow xử lý đơn hàng (simplified)
-3. **API_ENDPOINTS_COMPLETE.md** - Danh sách API endpoints
-4. **ALL_FIXES_COMPLETE.md** - Tổng hợp các fixes
-
-### Postman Collections
-- `Complete_Order_Flow_Test.postman_collection.json`
-- `Delivery_Complete_Flow.postman_collection.json`
-- `Drone_Complete_APIs.postman_collection.json`
-
----
-
-## 🎯 Flow Hoạt Động
-
-### 1. Khách hàng đặt hàng
-```
-Trang chủ → Chọn cửa hàng → Thêm món → Giỏ hàng → Thanh toán VNPay
-```
-
-### 2. Cửa hàng xử lý
-```
-store-management.html → Chấp nhận đơn → Chuẩn bị món → Giao cho drone
-```
-
-### 3. Drone giao hàng
-```
-drone-management.html → Chọn drone → Tạo delivery → Theo dõi giao hàng
-```
-
-### Status Flow
-```
-PAID → ACCEPT → IN_DELIVERY → DELIVERED
-```
-
----
 
 ## 🗂️ Cấu Trúc Project
 
@@ -97,8 +54,8 @@ foodfast/
 │   │           ├── index.html
 │   │           ├── cart.html
 │   │           ├── orders.html
-│   │           ├── store-management.html ⭐
-│   │           ├── drone-management.html ⭐
+│   │           ├── store-management.html 
+│   │           ├── drone-management.html 
 │   │           └── js/
 ├── docs/                       # Documentation
 ├── _archived_docs/             # Old docs (archived)
@@ -132,31 +89,7 @@ foodfast/
 
 ---
 
-## 🧪 Testing
 
-### Test Data
-
-**Default Users:**
-- Username: `danh11` / Password: `123456`
-
-**VNPay Sandbox:**
-- Bank: NCB
-- Card: `9704198526191432198`
-- Name: `NGUYEN VAN A`
-- Date: `07/15`
-- OTP: `123456`
-
-### Test Flow
-
-1. **Login:** http://localhost:8080/home
-2. **Đặt hàng:** Chọn món → Giỏ hàng → Thanh toán
-3. **Quản lý (Store):** http://localhost:8080/home/store-management.html
-4. **Giao hàng (Drone):** http://localhost:8080/home/drone-management.html
-
-### Postman
-Import collections trong thư mục gốc và test APIs.
-
----
 
 ## 🛠️ Tech Stack
 
@@ -198,80 +131,6 @@ spring:
     password: your_password
 ```
 
-### VNPay Config
 
-```java
-vnpay.tmnCode=YOUR_TMN_CODE
-vnpay.hashSecret=YOUR_HASH_SECRET
-vnpay.url=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-```
 
----
-
-## 🐛 Troubleshooting
-
-### Lỗi thường gặp
-
-**1. Không thấy đơn hàng trong store-management**
-- Check: User đã login chưa?
-- Check: Store có đơn hàng không?
-- Solution: Xem `_archived_docs/FIX_STORE_ORDERS_NOT_SHOWING.md`
-
-**2. Bị logout sau VNPay**
-- Check: URL có phải ngrok không?
-- Solution: System tự động redirect về localhost
-
-**3. Drone không khả dụng**
-- Check: Database có drones với status AVAILABLE không?
-- Solution: Run `insert-test-data.bat`
-
----
-
-## 📂 Archived Documentation
-
-Các tài liệu cũ đã được di chuyển vào `_archived_docs/` để giữ project gọn gàng.
-
-Nếu cần xem lại history fixes, check folder đó.
-
----
-
-## 🤝 Contributing
-
-1. Fork the project
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
----
-
-## 📧 Contact
-
-- **Project:** FoodFast Drone Delivery
-- **Team:** CNPM - HKI 4
-- **Year:** 2025
-
----
-
-## 📜 License
-
-This project is for educational purposes.
-
----
-
-## 🎉 Status
-
-✅ **Hoàn thành**
-- Backend APIs: Complete
-- Frontend UI: Complete
-- Store Management: Complete
-- Drone Management: Complete
-- Payment Integration: Complete
-- Documentation: Up-to-date
-
-🚀 **Ready for demo!**
-
----
-
-**Last Updated:** November 4, 2025
 
