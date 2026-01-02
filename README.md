@@ -57,8 +57,6 @@ foodfast/
 │   │           ├── store-management.html 
 │   │           ├── drone-management.html 
 │   │           └── js/
-├── docs/                       # Documentation
-├── _archived_docs/             # Old docs (archived)
 └── README.md
 ```
 
